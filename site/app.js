@@ -1,0 +1,78 @@
+import { neighborhood } from './relationships.js';
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const colors = {Physlib:'#002fa7',PhyslibAlpha:'#5372c0',QuantumInfo:'#8a8a8d',map:'#151515',external:'#b3b3b6'};
+const canvas = $('#graph'), ctx = canvas.getContext('2d');
+let data, modules, areas, areaOf, selected = null, view = 'overview', currentArea = null, tab = 'areas';
+let nodes = [], edges = [], camera = {x:0,y:0,scale:1}, drag = null, hovered = null, overviewMode = 'network';
+const source = p => `${data.source.repository}/blob/${data.source.revision}/${p.split('/').map(encodeURIComponent).join('/')}`;
+const short = s => s.length > 26 ? `…${s.slice(-25)}` : s;
+const color = n => colors[n.type === 'map' ? 'map' : n.library] || colors.external;
+const relationColors = {selected:'#161616', importer:'#2166ac', import:'#cf593e', map:'#7354a5'};
+const itemButton = (id, label) => `<button data-open="${esc(id)}">${esc(label)}</button>`;
+const list = a => a.length ? `<ul class="inspect-list">${a.map(x => `<li>${x}</li>`).join('')}</ul>` : '<p class="note">None recorded.</p>';
+const stats = a => `<div class="stat-grid">${a.map(([n,label]) => `<div class="stat"><strong>${n}</strong><small>${esc(label)}</small></div>`).join('')}</div>`;
+function areaKey(m) { const bits=m.id.split('.'); return bits.length > 1 ? `${bits[0]}.${bits[1]}` : bits[0]; }
+function buildIndex() {
+  modules = new Map(data.modules.map(m=>[m.id,m])); areas = new Map(); areaOf = new Map();
+  for(const m of data.modules){const key=areaKey(m); areaOf.set(m.id,key); if(!areas.has(key)) areas.set(key,{id:key,library:m.library,modules:[]}); areas.get(key).modules.push(m);}
+  for(const a of areas.values()) a.modules.sort((x,y)=>x.id.localeCompare(y.id));
+}
+function size() {const d=window.devicePixelRatio||1; const r=canvas.getBoundingClientRect(); canvas.width=Math.round(r.width*d); canvas.height=Math.round(r.height*d); ctx.setTransform(d,0,0,d,0,0); render();}
+function fit(){const scale=view==='overview'&&overviewMode==='districts'?Math.min(1,Math.max(.25,Math.min((canvas.clientWidth-45)/980,(canvas.clientHeight-55)/540))):1;camera={x:0,y:0,scale};render();}
+function render(){
+  if(!canvas.width)return; const w=canvas.clientWidth,h=canvas.clientHeight;ctx.clearRect(0,0,w,h);ctx.save();ctx.translate(w/2+camera.x,h/2+camera.y);ctx.scale(camera.scale,camera.scale);
+  const pos=new Map(nodes.map(n=>[n.id,n]));
+  for(const e of edges){const a=pos.get(e.from), b=pos.get(e.to);if(!a||!b)continue;const isMap=e.kind==='api-map';ctx.beginPath();ctx.setLineDash(isMap?[5,4]:[]);ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.strokeStyle=isMap?'#7354a5aa':view==='module'?(a.role==='importer'?'#2166acaa':'#cf593eaa'):'#002fa733';ctx.lineWidth=Math.min(2.3,.65+Math.log1p(e.weight||1)*.35);ctx.stroke();ctx.setLineDash([]);if(view==='module'&&!isMap){const angle=Math.atan2(b.y-a.y,b.x-a.x),tx=b.x-Math.cos(angle)*(b.r+3),ty=b.y-Math.sin(angle)*(b.r+3);ctx.beginPath();ctx.moveTo(tx,ty);ctx.lineTo(tx-7*Math.cos(angle-.45),ty-7*Math.sin(angle-.45));ctx.lineTo(tx-7*Math.cos(angle+.45),ty-7*Math.sin(angle+.45));ctx.fillStyle=a.role==='importer'?'#2166ac':'#cf593e';ctx.fill();}}
+  for(const n of nodes){const c=n.role?relationColors[n.role]:color(n);if(n.district){ctx.fillStyle='#fff';ctx.strokeStyle=n.id===hovered?c:'#b8b8bc';ctx.lineWidth=n.id===hovered?2:1;ctx.fillRect(n.x-62,n.y-27,124,54);ctx.strokeRect(n.x-62,n.y-27,124,54);ctx.fillStyle=c;ctx.fillRect(n.x-62,n.y-27,4,54);ctx.textAlign='left';ctx.fillStyle='#151515';ctx.font='600 10px Helvetica, Arial, sans-serif';ctx.fillText(n.label.length>18?n.label.slice(0,17)+'…':n.label,n.x-51,n.y-4);ctx.font='9px Helvetica, Arial, sans-serif';ctx.fillStyle='#666';ctx.fillText(`${n.count} modules`,n.x-51,n.y+14);continue;}ctx.beginPath();ctx.arc(n.x,n.y,n.r+5,0,Math.PI*2);ctx.fillStyle=c+'14';ctx.fill();ctx.beginPath();if(n.role==='map')ctx.rect(n.x-n.r,n.y-n.r,n.r*2,n.r*2);else ctx.arc(n.x,n.y,n.r,0,Math.PI*2);ctx.fillStyle=c;ctx.globalAlpha=n.id===selected||n.id===hovered?1:.82;ctx.fill();ctx.globalAlpha=1;if(n.library==='external'){ctx.setLineDash([2,2]);ctx.strokeStyle='#151515';ctx.lineWidth=1;ctx.stroke();ctx.setLineDash([]);}else if(n.id===selected||n.id===hovered){ctx.strokeStyle='#151515';ctx.lineWidth=1.5;ctx.stroke();}if(n.id===selected||n.id===hovered||nodes.length<=12){ctx.font=`${view==='overview'?'600 11px':'10px'} Helvetica, Arial, sans-serif`;ctx.textAlign='center';ctx.fillStyle='#151515';ctx.fillText(short(n.label),n.x,n.y+n.r+16);if(view==='overview'){ctx.fillStyle='#666666';ctx.font='9px Helvetica, Arial, sans-serif';ctx.fillText(`${n.count} modules`,n.x,n.y+n.r+29);}}}
+  ctx.restore();
+}
+function positions(items, radiusX, radiusY){const count=items.length;items.forEach((n,i)=>{const a=(i/count)*Math.PI*2-Math.PI/2;n.x=Math.cos(a)*radiusX;n.y=Math.sin(a)*radiusY;});}
+function overview(){
+  view='overview';currentArea=null;selected=null;const arr=[...areas.values()].sort((a,b)=>b.modules.length-a.modules.length); nodes=arr.map(a=>({id:`area:${a.id}`,label:a.id.replace(/^Physlib\./,''),library:a.library,count:a.modules.length,r:Math.min(14,5+Math.sqrt(a.modules.length)*.65)}));
+  $('.canvas-wrap').classList.toggle('district-mode',overviewMode==='districts');
+  libraryLegend();
+  const w=canvas.clientWidth,h=canvas.clientHeight;if(overviewMode==='districts'){nodes.forEach((n,i)=>{n.district=true;n.x=(i%7-3)*138;n.y=(Math.floor(i/7)-3)*72;});}else positions(nodes,Math.max(200,Math.min(w*.34,430)),Math.max(140,Math.min(h*.32,280)));
+  for(const mode of ['network','district']){const button=$(`#${mode}-view`),active=overviewMode===(mode==='district'?'districts':'network');button.classList.toggle('active',active);button.setAttribute('aria-pressed',String(active));}
+  const weights=new Map();for(const m of data.modules)for(const i of m.imports){const a=areaOf.get(m.id),b=areaOf.get(i.module);if(!b||a===b)continue;const key=`${a}|${b}`;weights.set(key,(weights.get(key)||0)+1);}
+  edges=[...weights].filter(([,v])=>v>=2).map(([k,weight])=>{const [a,b]=k.split('|');return {from:`area:${a}`,to:`area:${b}`,weight};});
+  $('#title').innerHTML='Explore the<br>knowledge graph.';$('#subtitle').textContent=overviewMode==='districts'?'Directory-based districts grouped from Physlib source.':'A map of the modules and connections that make up Physlib.';$('#crumb').textContent='Overview';$('#scope-label').textContent=overviewMode==='districts'?'Directory districts':'Library overview';$('#graph-counts').textContent=`${areas.size} areas · ${data.modules.length} modules · lines show 2+ cross-area imports`;
+  $('#inspector-content').innerHTML=`<div class="empty"><div class="empty-index">01—</div><h2>Explore a<br>connection.</h2><p>Select an area in the graph or sidebar to start exploring the library.</p></div>`;fit();renderSidebar();
+}
+function openArea(id){
+  const a=areas.get(id);if(!a)return;view='area';currentArea=id;selected=`area:${id}`;const all=a.modules;const shown=all.slice().sort((x,y)=>y.imports.length-x.imports.length).slice(0,100);const ids=new Set(shown.map(m=>m.id));
+  $('.canvas-wrap').classList.remove('district-mode');
+  libraryLegend();
+  nodes=shown.map(m=>({id:m.id,label:m.id.split('.').slice(-2).join('.'),library:m.library,r:4+Math.min(3,Math.sqrt(m.imports.length))}));positions(nodes,Math.max(180,Math.min(canvas.clientWidth*.34,390)),Math.max(130,Math.min(canvas.clientHeight*.33,260)));
+  edges=shown.flatMap(m=>m.imports.filter(i=>ids.has(i.module)).map(i=>({from:m.id,to:i.module})));
+  $('#title').textContent=id;$('#subtitle').textContent='Select a module to explore its direct dependencies and API maps.';$('#crumb').textContent=id;$('#scope-label').textContent='Area · modules';$('#graph-counts').textContent=`${shown.length} of ${all.length} modules shown · ${edges.length} visible imports`;
+  $('#inspector-content').innerHTML=`<span class="label">LIBRARY AREA</span><h2>${esc(id)}</h2><p>Modules grouped by their top-level directory. Connections represent direct imports.</p>${stats([[all.length,'modules'],[edges.length,'visible imports']])}<h3>Modules</h3>${list(all.slice(0,30).map(m=>itemButton(m.id,m.id.split('.').slice(1).join('.'))))}${all.length>30?'<p class="note">Showing 30 here. Search for any module.</p>':''}`;fit();renderSidebar();
+}
+function openModule(id){
+  const m=modules.get(id);if(!m)return;view='module';currentArea=areaOf.get(id);selected=id;const hood=neighborhood(m,data.modules,data.maps);const {incoming,outgoing,mapRefs}=hood;
+  $('.canvas-wrap').classList.remove('district-mode');
+  nodes=[{...hood.nodes[0],label:short(m.id),r:13,x:0,y:0}];
+  const vertical=(arr,x,make)=>arr.forEach((v,i)=>{const step=Math.min(28,Math.max(14,420/Math.max(arr.length,1)));nodes.push({...make(v),x,y:(i-(arr.length-1)/2)*step});});
+  vertical(hood.nodes.filter(n=>n.role==='importer'),-230,v=>({...v,label:short(v.id),r:6}));vertical(hood.nodes.filter(n=>n.role==='import'),230,v=>({...v,label:short(v.id),r:6}));
+  const mapNodes=hood.nodes.filter(n=>n.role==='map');nodes.push(...mapNodes.map((x,i)=>({...x,label:x.title,r:6,x:(i-(mapNodes.length-1)/2)*125,y:190})));edges=hood.edges;
+  $('#graph-legend').innerHTML='<span class="index-label">Direct relationships</span><span><i class="selected-role"></i> Selected file</span><span><i class="importer-role"></i> Imported by</span><span><i class="import-role"></i> Imports</span><span><i class="map-role"></i> API map reference</span><span class="legend-note">Dashed outline: external or unresolved</span>';
+  $('#title').textContent=m.id;$('#subtitle').textContent='Arrows point from an importing module to its dependency.';$('#crumb').textContent=m.id;$('#scope-label').textContent='Direct neighborhood';$('#graph-counts').textContent=`${incoming.length} importers · ${outgoing.length} imports · ${mapRefs.length} API maps`;
+  $('#inspector-content').innerHTML=`<span class="label">${esc(m.library)} · MODULE</span><h2>${esc(m.id)}</h2><p>Direct relationships at the indexed revision.</p>${stats([[incoming.length,'imported by'],[outgoing.length,'imports']])}<a class="source-link" href="${source(m.path)}" target="_blank" rel="noreferrer">View source ↗</a><h3>API maps</h3>${list(mapRefs.map(x=>itemButton(`map:${x.path}`,x.title)))}<h3>Imports</h3>${list(outgoing.map(x=>modules.has(x.module)?itemButton(x.module,x.module):esc(x.module)+' <span class="note">· external or unresolved</span>'))}<h3>Imported by</h3>${list(incoming.map(x=>itemButton(x.id,x.id)))}<p class="note">Graph shows up to 24 imports and 24 importers; full lists appear above. Import edges indicate availability, not actual use.</p>`;fit();renderSidebar();
+}
+function openMap(id){const m=data.maps.find(x=>x.path===id);if(!m)return;selected=`map:${id}`;$('#inspector-content').innerHTML=`<span class="label">API MAP</span><h2>${esc(m.title)}</h2><p>${esc(m.abstract||'No abstract recorded.')}</p><a class="source-link" href="${source(m.path)}" target="_blank" rel="noreferrer">Read API map ↗</a><h3>Referenced files</h3>${list(m.references.map(p=>{const x=data.modules.find(y=>y.path===p);return x?itemButton(x.id,p):esc(p)+' · unresolved';}))}<p class="note">See the source for the map’s review status and full content.</p>`;render();renderSidebar();}
+function libraryLegend(){$('#graph-legend').innerHTML='<span class="index-label">Library</span><span><i class="green"></i> Physlib</span><span><i class="violet"></i> PhyslibAlpha</span><span><i class="amber"></i> QuantumInfo</span>';}
+function open(id){if(id.startsWith('area:'))openArea(id.slice(5));else if(id.startsWith('map:'))openMap(id.slice(4));else openModule(id);}
+function renderSidebar(){const q=$('#search').value.trim().toLowerCase();$('#tab-areas').classList.toggle('active',tab==='areas');$('#tab-search').classList.toggle('active',tab==='search');$('#area-count').textContent=areas.size;$('#total-areas').textContent=String(areas.size).padStart(2,'0');
+  if(tab==='areas'&&!q){$('#sidebar-content').innerHTML='<div class="section-label">Library areas</div>'+[...areas.values()].sort((a,b)=>a.id.localeCompare(b.id)).map(a=>`<button class="entry ${currentArea===a.id?'active':''}" data-open="area:${esc(a.id)}"><span class="entry-name">${esc(a.id)}</span><span class="entry-count">${a.modules.length}</span></button>`).join('');$('#result-count').textContent='';return;}
+  const entries=[...data.modules.map(m=>({id:m.id,title:m.id,type:'MODULE'})),...data.maps.map(m=>({id:`map:${m.path}`,title:m.title,type:'API MAP',sub:m.path}))].filter(x=>`${x.title} ${x.sub||''}`.toLowerCase().includes(q));$('#result-count').textContent=entries.length;$('#sidebar-content').innerHTML=`<div class="section-label">${entries.length} results${entries.length>100?' · first 100':''}</div>`+entries.slice(0,100).map(x=>`<button class="entry ${selected===x.id?'active':''}" data-open="${esc(x.id)}"><span class="entry-name">${esc(x.title)}<br><span class="entry-sub">${x.type} ${esc(x.sub||'')}</span></span></button>`).join('');}
+function at(e){const r=canvas.getBoundingClientRect();return {x:(e.clientX-r.left-r.width/2-camera.x)/camera.scale,y:(e.clientY-r.top-r.height/2-camera.y)/camera.scale};}
+function hit(p){return [...nodes].reverse().find(n=>n.district?Math.abs(n.x-p.x)<=62&&Math.abs(n.y-p.y)<=27:Math.hypot(n.x-p.x,n.y-p.y)<n.r+8);}
+canvas.addEventListener('pointerdown',e=>{canvas.setPointerCapture(e.pointerId);drag={x:e.clientX,y:e.clientY,ox:camera.x,oy:camera.y,moved:false};});
+canvas.addEventListener('pointermove',e=>{if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;camera.x=drag.ox+dx;camera.y=drag.oy+dy;render();return;}const n=hit(at(e));hovered=n?.id||null;canvas.style.cursor=n?'pointer':'grab';canvas.title=n?.id||'';render();});
+canvas.addEventListener('pointerup',e=>{if(drag&&!drag.moved){const n=hit(at(e));if(n)open(n.id);}drag=null;});
+canvas.addEventListener('wheel',e=>{e.preventDefault();camera.scale=Math.max(.35,Math.min(3,camera.scale*(e.deltaY>0?.9:1.1)));render();},{passive:false});
+$('#zoom-in').onclick=()=>{camera.scale=Math.min(3,camera.scale*1.2);render();};$('#zoom-out').onclick=()=>{camera.scale=Math.max(.35,camera.scale/1.2);render();};$('#zoom-reset').onclick=fit;$('#home').onclick=overview;
+$('#network-view').onclick=()=>{overviewMode='network';overview();};$('#district-view').onclick=()=>{overviewMode='districts';overview();};
+$('#tab-areas').onclick=()=>{tab='areas';$('#search').value='';renderSidebar();};$('#tab-search').onclick=()=>{tab='search';renderSidebar();$('#search').focus();};$('#search').addEventListener('input',()=>{tab=$('#search').value?'search':'areas';renderSidebar();});
+document.addEventListener('click',e=>{const el=e.target.closest('[data-open]');if(el)open(el.dataset.open);});document.addEventListener('keydown',e=>{if(e.key==='/'&&!['INPUT','TEXTAREA'].includes(document.activeElement.tagName)){e.preventDefault();$('#search').focus();}});window.addEventListener('resize',size);
+try {const r=await fetch('data/graph.json');if(!r.ok)throw Error('Snapshot missing. Run npm run build:data.');data=await r.json();buildIndex();$('#snapshot').innerHTML=`<a href="${data.source.repository}/commit/${data.source.revision}">${esc(data.source.revision.slice(0,10))} ↗</a><br>Generated ${esc(new Date(data.source.generatedAt).toLocaleString())}`;$('#loading').hidden=true;size();overview();}catch(e){$('#loading').innerHTML=`<div class="error">Could not load graph: ${esc(e.message)}</div>`;}

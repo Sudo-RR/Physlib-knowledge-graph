@@ -1,0 +1,5 @@
+.physlib-source/
+.reference-lean-vouch/
+.issue-publish/
+site/data/
+node_modules/
