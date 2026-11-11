@@ -1,0 +1,31 @@
+# Declaration browser prototype
+
+This is a **provisional interface for review**, not a commitment to lean-vouch's output format and not an extractor. The existing `graph.json` contract remains unchanged. The browser optionally reads `site/data/declarations.json`; no declaration data is generated or published by the current pipeline. If the file is absent, it says so rather than implying that files have no declarations.
+
+For a controlled prototype, the companion JSON has this shape:
+
+```json
+{
+  "schemaVersion": 1,
+  "source": {
+    "revision": "<same 40-character Physlib commit as graph.json>",
+    "toolchain": "<same toolchain as graph.json>",
+    "extractor": { "name": "<producer>", "version": "<version>" }
+  },
+  "coverage": [{ "module": "Physlib.Example", "status": "partial" }],
+  "declarations": [{
+    "id": "Physlib.Example.example",
+    "module": "Physlib.Example",
+    "kind": "theorem",
+    "statement": null,
+    "line": null
+  }],
+  "dependencies": [{ "from": "Physlib.Example.example", "to": "External.name", "kind": "unspecified" }]
+}
+```
+
+This example illustrates the shape only; it does not assert that these declarations exist. `id` and dependency endpoints are qualified names. A declaration belongs to an indexed module listed in `coverage`. Coverage is `complete` or `partial`; an omitted module has unavailable coverage. `statement` and one-based source `line` are strings/positive integers or `null` when unavailable. Supported provisional kinds are `definition`, `structure`, `class`, `instance`, `theorem`, `lemma` and `other`; a producer must not fabricate a more specific kind than it can establish.
+
+A dependency points from a declaration to a prerequisite. Its kind is `statement`, `proof` or `unspecified`; use `unspecified` unless the producing tool justifies a distinction. The source must be indexed; the target may be outside the snapshot, in which case it is shown as not indexed. No edge or empty reverse list proves absence of a dependency or use. The interface displays only recorded edges and does not claim whole-library coverage.
+
+The browser rejects mismatched revisions or toolchains and malformed records before use. It lists declarations by file and provides name and kind filters, source links when available, and recorded prerequisites and dependents. The canvas remains a **module-import** graph; the declaration details are currently a text view, not a declaration graph visualization. Map-to-declaration links, declaration extraction, stable identities, edge provenance and complete coverage semantics require agreement based on real tool output before production integration. Review these choices with Jonathan as part of the pilot; the proposed format may change.

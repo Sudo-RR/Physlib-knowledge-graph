@@ -5,6 +5,7 @@ An experimental descriptive browser for [Physlib](https://github.com/leanprover-
 See [reference projects and roadmap](docs/reference-projects.md) for related Lean tools and proposed extensions.
 The [graph data contract](docs/graph-data-contract.md) defines the current snapshot and its limits.
 An [experimental clustering analysis](docs/module-clustering.md) groups files by shared imports and records the evidence.
+The [declaration browser proposal](docs/declaration-browser-proposal.md) documents an experimental, optional data interface. Declaration extraction is not yet integrated.
 
 ## Run locally
 

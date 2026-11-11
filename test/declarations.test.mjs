@@ -1,0 +1,11 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { validateDeclarations, declarationsForModule, declarationNeighborhood } from '../site/declarations.js';
+
+const graph = {source:{revision:'a'.repeat(40),toolchain:'lean:v1'},modules:[{id:'Physlib.A'},{id:'Physlib.B'}]};
+const fixture = () => ({schemaVersion:1,source:{revision:graph.source.revision,toolchain:'lean:v1',extractor:{name:'fixture',version:'1'}},coverage:[{module:'Physlib.A',status:'partial'},{module:'Physlib.B',status:'complete'}],declarations:[{id:'A.result',module:'Physlib.A',kind:'theorem',statement:'A → B',line:12},{id:'A.value',module:'Physlib.A',kind:'definition',statement:null,line:null}],dependencies:[{from:'A.result',to:'A.value',kind:'proof'},{from:'A.result',to:'External.name',kind:'unspecified'}]});
+
+test('validates matching provenance and allows explicit external dependencies',()=>assert.deepEqual(validateDeclarations(fixture(),graph),[]));
+test('rejects mismatched revisions, duplicate IDs and missing dependency sources',()=>{const s=fixture();s.source.revision='b'.repeat(40);s.declarations.push({...s.declarations[0]});s.dependencies.push({from:'missing',to:'A.value',kind:'proof'});const errors=validateDeclarations(s,graph);assert.ok(errors.some(x=>x.includes('does not match')));assert.ok(errors.some(x=>x.includes('Duplicate declaration')));assert.ok(errors.some(x=>x.includes('dependency')));});
+test('keeps unavailable, complete empty, partial and filtered results distinct',()=>{const s=fixture();assert.equal(declarationsForModule(null,'Physlib.A').coverage,'unavailable');assert.deepEqual(declarationsForModule(s,'Physlib.B'),{coverage:'complete',total:0,matches:[]});const partial=declarationsForModule(s,'Physlib.A',{query:'RESULT',kind:'theorem'});assert.equal(partial.coverage,'partial');assert.equal(partial.total,2);assert.deepEqual(partial.matches.map(d=>d.id),['A.result']);assert.equal(declarationsForModule(s,'Physlib.A',{kind:'lemma'}).matches.length,0);});
+test('preserves dependency direction and unindexed targets',()=>{const n=declarationNeighborhood(fixture(),'A.value');assert.deepEqual(n.incoming.map(e=>e.from),['A.result']);assert.deepEqual(n.outgoing,[]);assert.equal(declarationNeighborhood(fixture(),'A.result').outgoing[1].to,'External.name');});
