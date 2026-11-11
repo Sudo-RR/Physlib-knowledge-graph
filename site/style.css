@@ -3,3 +3,7 @@
 :root .legend .selected-role{background:#161616;border-radius:50%}:root .legend .importer-role{background:#2166ac;border-radius:50%}:root .legend .import-role{background:#cf593e;border-radius:50%}:root .legend .map-role{background:#7354a5}.legend-note{max-width:145px;font-size:9px;color:#666;line-height:1.4}
 .view-switch{border:0;border-bottom:2px solid transparent;background:transparent;padding:6px 2px;color:#666;font-size:10px}.view-switch.active{border-color:#002fa7;color:#002fa7;font-weight:700}@media(max-width:760px){.toolbar{padding:0 8px}.toolbar-label{gap:6px}.toolbar-label>strong,.toolbar-label .divider,#scope-label,.controls>span{display:none}}
 .district-mode .canvas-caption{display:none}.district-mode .legend{top:auto;bottom:12px}
+.tree-directory{padding-left:10px}.tree-directory summary{font-size:11px;padding:8px 4px;cursor:pointer;color:#333;overflow-wrap:anywhere}.tree-directory summary:hover{color:#002fa7}.tree-entry{padding-left:16px}
+.legend:has(input){pointer-events:auto}.legend label{display:flex;align-items:center;gap:5px;cursor:pointer}.legend input{accent-color:#002fa7}
+.evidence{display:inline-block;margin-left:5px;color:#666;font-size:9px;text-decoration:underline}
+#path-form{display:grid;gap:7px}#path-form label{font-size:10px;color:#555}#path-form input,#path-form select,#path-form button{width:100%;font:11px Helvetica,Arial,sans-serif;padding:8px;border:1px solid #b8b8bc;background:#fff;color:#151515}#path-form button{cursor:pointer;color:#002fa7;font-weight:700}

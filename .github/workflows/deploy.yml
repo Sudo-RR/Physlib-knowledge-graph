@@ -13,10 +13,12 @@ permissions:
   id-token: write
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      physlib_sha: ${{ steps.provenance.outputs.physlib_sha }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/checkout@v4
@@ -24,11 +26,15 @@ jobs:
           repository: leanprover-community/physlib
           ref: master
           path: .physlib-source
+      - name: Record Physlib revision
+        id: provenance
+        run: echo "physlib_sha=$(git -C .physlib-source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
       - run: npm test
       - run: npm run build:data
+      - run: npm run validate:data
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -40,5 +46,17 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Check revisions before publication
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          BUILT_PHYSLIB_SHA: ${{ needs.build.outputs.physlib_sha }}
+        run: |
+          set -eu
+          graph_head=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/${DEFAULT_BRANCH}" | cut -f1)
+          physlib_head=$(git ls-remote https://github.com/leanprover-community/physlib.git refs/heads/master | cut -f1)
+          if [ "$graph_head" != "$GITHUB_SHA" ] || [ "$physlib_head" != "$BUILT_PHYSLIB_SHA" ]; then
+            echo 'A source branch advanced since this build started; the existing site remains published.' >&2
+            exit 1
+          fi
       - id: deployment
         uses: actions/deploy-pages@v4

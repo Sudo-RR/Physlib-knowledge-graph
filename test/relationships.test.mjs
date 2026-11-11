@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { neighborhood } from '../site/relationships.js';
+import { neighborhood, findImportPath } from '../site/relationships.js';
 
 test('classifies direct relationships and preserves arrow direction', () => {
   const selected = { id:'Physlib.A', path:'Physlib/A.lean', library:'Physlib', imports:[{module:'Mathlib.B'}] };
@@ -17,4 +17,12 @@ test('reports omitted nodes without changing full counts', () => {
   assert.equal(result.outgoing.length,2);
   assert.equal(result.truncated.outgoing,true);
   assert.equal(result.edges.length,1);
+});
+
+test('finds shortest local import paths and reverse paths without cycling',()=>{
+  const modules=[{id:'A',imports:[{module:'B'},{module:'C'}]},{id:'B',imports:[{module:'A'},{module:'C'}]},{id:'C',imports:[]}];
+  assert.deepEqual(findImportPath(modules,'A','C'),['A','C']);
+  assert.deepEqual(findImportPath(modules,'C','B','importers'),['C','B']);
+  assert.equal(findImportPath(modules,'C','A'),null);
+  assert.equal(findImportPath(modules,'A','missing'),null);
 });
