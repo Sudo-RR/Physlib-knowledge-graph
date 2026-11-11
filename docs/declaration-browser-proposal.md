@@ -1,6 +1,6 @@
 # Declaration browser prototype
 
-This is a **provisional interface for review**, not a commitment to lean-vouch's output format and not an extractor. The existing `graph.json` contract remains unchanged. The browser optionally reads `site/data/declarations.json`; no declaration data is generated or published by the current pipeline. If the file is absent, it says so rather than implying that files have no declarations.
+This is a **provisional interface for review**. The existing `graph.json` contract remains unchanged. The browser optionally reads `site/data/declarations.json`; the normal refresh pipeline does not yet generate or publish this file. If it is absent, the browser says so rather than implying that files have no declarations. An experimental adapter can now consume output from a pinned lean-vouch checkout as described below.
 
 For a controlled prototype, the companion JSON has this shape:
 
@@ -28,7 +28,21 @@ This example illustrates the shape only; it does not assert that these declarati
 
 A dependency points from a declaration to a prerequisite. Its kind is `statement`, `proof` or `unspecified`; use `unspecified` unless the producing tool justifies a distinction. The source must be indexed; the target may be outside the snapshot, in which case it is shown as not indexed. No edge or empty reverse list proves absence of a dependency or use. The interface displays only recorded edges and does not claim whole-library coverage.
 
-The browser rejects mismatched revisions or toolchains and malformed records before use. It lists declarations by file and provides name and kind filters, source links when available, and recorded prerequisites and dependents. The canvas remains a **module-import** graph; the declaration details are currently a text view, not a declaration graph visualization. Map-to-declaration links, declaration extraction, stable identities, edge provenance and complete coverage semantics require agreement based on real tool output before production integration. Review these choices with Jonathan as part of the pilot; the proposed format may change.
+The browser rejects mismatched revisions or toolchains and malformed records before use. It lists declarations by file and provides name and kind filters, source links when available, and recorded prerequisites and dependents. The canvas remains a **module-import** graph; the declaration details are currently a text view, not a declaration graph visualization. Map-to-declaration links, stable identities, edge provenance and complete coverage semantics require agreement based on real tool output before production integration. Review these choices with Jonathan as part of the pilot; the proposed format may change.
+
+## Experimental lean-vouch adapter
+
+The adapter reads lean-vouch's declaration graph generated from compiled Lean, without copying lean-vouch code into this repository. It currently supports **only** lean-vouch revision `b235856d959bdd7c20df734af35d8bad579d6a4c` (release 0.1.1). Later versions must be inspected and explicitly supported before use. Start with a clean Physlib checkout whose commit and toolchain match the module snapshot, and a clean lean-vouch checkout at that revision. Lake and the matching Lean toolchain must be installed.
+
+```sh
+node scripts/run-lean-vouch.mjs .physlib-source site/data/graph.json /path/to/lean-vouch site/data/declarations.json Physlib.ClassicalMechanics.EulerLagrange
+```
+
+This builds the requested module and its dependencies, then runs lean-vouch's graph program in the Physlib project and writes the companion snapshot after checking both repositories again. Multiple module names can be supplied. The first build can download dependencies and use substantial time and disk space. Building a Lean project executes its build scripts and initializers; only run this on trusted projects. The module list controls extraction scope; a one-file pilot is not whole-library coverage. The stored provenance includes the pinned lean-vouch revision, source revision, toolchain, roots and SHA-256 of its raw graph. The raw graph does not itself include a Physlib commit, so the wrapper records provenance from the checked-out source rather than inferring it from the graph.
+
+Lean-vouch's `deps` and `uses` are both recorded as `unspecified` dependencies: they cover what lean-vouch reviews, including a theorem's statement and a definition's type and body. **They do not represent all theorem-proof dependencies.** Lean-vouch also looks through or excludes generated helpers and some other declarations. Consequently every covered module is marked `partial`, and an absent declaration or edge does not establish absence of a result or usage. Original kinds and docstrings are retained where supplied; kinds without an exact match are shown as `other`. Lean-vouch does not distinguish the original `lemma` spelling from `theorem` here, and its structure classification does not establish whether a structure was declared as a class.
+
+The lower-level `scripts/adapt-lean-vouch.mjs` accepts an existing graph plus an explicit provenance JSON containing `physlibRevision`, `toolchain`, `vouchRevision` and `graphSha256`. That file is a producer's assertion about the graph, not independent proof of which sources built it; prefer the wrapper for reproducibility.
 
 ## Validate, query and compare
 
