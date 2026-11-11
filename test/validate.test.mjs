@@ -12,3 +12,4 @@ function fixture() {
 test('accepts complete diagnostics including missing local references',()=>assert.deepEqual(validateGraph(fixture()),[]));
 test('rejects duplicate IDs and stale diagnostics',()=>{const g=fixture();g.modules.push({...g.modules[0],path:'Physlib/Other.lean'});g.externalImports=[];const errors=validateGraph(g);assert.ok(errors.some(e=>e.includes('Duplicate module ID')));assert.ok(errors.some(e=>e.includes('externalImports')));});
 test('rejects unsupported schemas and missing provenance',()=>{const g=fixture();g.schemaVersion=2;delete g.source.toolchain;const errors=validateGraph(g);assert.ok(errors.some(e=>e.includes('schema')));assert.ok(errors.some(e=>e.includes('metadata')));});
+test('rejects declaration references with invalid source locations',()=>{const g=fixture();g.maps[0].declarationReferences=[{path:'Physlib/Missing.lean',name:'X',line:0}];assert.ok(validateGraph(g).some(e=>e.includes('declaration references')));});

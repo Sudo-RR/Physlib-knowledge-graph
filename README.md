@@ -8,6 +8,7 @@ An [experimental clustering analysis](docs/module-clustering.md) groups files by
 The [declaration browser proposal](docs/declaration-browser-proposal.md) documents an experimental lean-vouch adapter and its optional data interface. Automatic publication includes only a three-module declaration pilot; full-library extraction is not yet enabled.
 See the [Euler–Lagrange pilot](docs/lean-vouch-pilot.md) for a real Physlib example and the limits of the extracted dependencies.
 The [discovery and website notes](docs/discovery-and-website.md) cover search links, duplicate candidates and possible website integration.
+The [contributor evaluation protocol](docs/contributor-evaluation.md) provides tasks for testing discovery and accessibility; no sessions are claimed yet.
 
 ## Run locally
 
