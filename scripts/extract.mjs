@@ -2,6 +2,7 @@ import { readdir, readFile, mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { validateGraph } from './validate.mjs';
 
 // Preserve line breaks and character positions while discarding nested Lean comments.
 export function stripComments(text) {
@@ -74,13 +75,21 @@ export async function buildGraph(root) {
     else maps.push(mapFromSource(text, file));
   }
   const paths = new Set(modules.map(m => m.path));
-  return { schemaVersion: 1, source: { repository: 'https://github.com/leanprover-community/physlib', revision: sha, generatedAt: new Date().toISOString(), method: 'source-header scan; API-map Lean References' }, modules, maps, unresolvedMapReferences: maps.flatMap(m => m.references.filter(p => !paths.has(p)).map(p => ({ map: m.path, path: p }))) };
+  const ids = new Set(modules.map(m => m.id));
+  const localRoots = new Set(roots);
+  const unresolvedLocalImports = modules.flatMap(m => m.imports.filter(i => localRoots.has(i.module.split('.')[0]) && !ids.has(i.module)).map(i => ({ source: m.id, target: i.module, line: i.line })));
+  const externalImports = modules.flatMap(m => m.imports.filter(i => !localRoots.has(i.module.split('.')[0])).map(i => ({ source: m.id, target: i.module, line: i.line })));
+  const unresolvedMapReferences = maps.flatMap(m => m.references.filter(p => !paths.has(p)).map(p => ({ map: m.path, path: p })));
+  const toolchain = (await readFile(path.join(root, 'lean-toolchain'), 'utf8')).trim();
+  return { schemaVersion: 1, source: { repository: 'https://github.com/leanprover-community/physlib', revision: sha, generatedAt: new Date().toISOString(), toolchain, extractor: { name: 'physlib-source-scan', version: '1.1.0' }, method: 'source-header scan; API-map Lean References' }, counts: { modules: modules.length, maps: maps.length, imports: modules.reduce((n, m) => n + m.imports.length, 0), unresolvedLocalImports: unresolvedLocalImports.length, externalImports: externalImports.length, unresolvedMapReferences: unresolvedMapReferences.length }, modules, maps, unresolvedMapReferences, unresolvedLocalImports, externalImports };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {
   const root = path.resolve(process.argv[2] || '.physlib-source');
   const output = path.resolve(process.argv[3] || 'site/data/graph.json');
   const graph = await buildGraph(root);
+  const errors = validateGraph(graph);
+  if (errors.length) throw new Error(`Snapshot validation failed:\n${errors.join('\n')}`);
   await mkdir(path.dirname(output), { recursive: true });
   await writeFile(output, JSON.stringify(graph));
   console.log(`Extracted ${graph.modules.length} modules, ${graph.maps.length} API maps, ${graph.unresolvedMapReferences.length} unresolved map references from ${graph.source.revision}.`);

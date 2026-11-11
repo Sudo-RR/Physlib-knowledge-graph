@@ -4,6 +4,8 @@
   "type": "module",
   "scripts": {
     "build:data": "node scripts/extract.mjs",
+    "validate:data": "node scripts/validate.mjs",
+    "compare:imports": "node scripts/compare-imports.mjs",
     "test": "node --test",
     "serve": "node scripts/serve.mjs"
   },

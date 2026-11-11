@@ -24,3 +24,20 @@ export function neighborhood(module, allModules, maps, limit = 24, mapLimit = 6)
     truncated: { incoming: incoming.length > incomingShown.length, outgoing: outgoing.length > outgoingShown.length, maps: mapRefs.length > mapShown.length }
   };
 }
+
+// Breadth-first search over local module imports only; not declaration usage.
+export function findImportPath(modules, from, to, direction = 'imports') {
+  const byId = new Map(modules.map(m=>[m.id,m]));
+  if(!byId.has(from)||!byId.has(to))return null;
+  const adjacency=new Map(modules.map(m=>[m.id,[]]));
+  for(const m of modules)for(const edge of m.imports)if(byId.has(edge.module)) {
+    if(direction==='importers') adjacency.get(edge.module).push(m.id);
+    else adjacency.get(m.id).push(edge.module);
+  }
+  const previous=new Map([[from,null]]), queue=[from];
+  for(let index=0;index<queue.length;index++){
+    const current=queue[index];if(current===to){const path=[];for(let n=to;n!==null;n=previous.get(n))path.push(n);return path.reverse();}
+    for(const next of adjacency.get(current))if(!previous.has(next)){previous.set(next,current);queue.push(next);}
+  }
+  return null;
+}

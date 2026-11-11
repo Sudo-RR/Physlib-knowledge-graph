@@ -1,0 +1,9 @@
+# Exploratory module clustering
+
+Run `node scripts/cluster-modules.mjs site/data/graph.json` to produce JSON with the source revision, parameters, groups, and the specific shared imports behind each similarity link.
+
+The prototype uses explicit local module imports only. It excludes modules with 50 or more explicit imports as umbrella-like importers. An imported module with more than 25 remaining importers is treated as a hub and excluded as similarity evidence. Two remaining modules are linked if they share at least two non-hub imports; a group is a connected component of these links. External imports and API-map references are not used. Modules with no qualifying similarity link are omitted, not classified as unrelated. Thresholds are heuristics, not Lean semantics.
+
+For Physlib revision `4e2182f2b6f0a54207a2fa62002c264217f875d6`, the prototype produced 61 groups; the largest had 47 modules, illustrating how chains can join files that do not directly share imports. For example, `Physlib.ClassicalMechanics.HarmonicOscillator.Basic` and `PhyslibAlpha.ClassicalMechanics.NortonDome.Basic` are in different library directories but are linked because both import `Physlib.ClassicalMechanics.EulerLagrange` and `Physlib.Mathematics.Calculus.Gradient`. Likewise, `Physlib.FluidDynamics.Basic` and `Physlib.SpaceAndTime.ReferenceFrame` share the local Space and Time basic imports despite their different directories. The full output shows the evidence for every link.
+
+These groups are prompts for exploration, not claims that files implement the same physics, duplicate one another, or deserve a development priority. A connected group need not be internally similar at every pair, and changing the thresholds or revision changes the result. Compare with directory navigation and consult contributors before relying on these groups for organization decisions.
