@@ -6,6 +6,7 @@ See [reference projects and roadmap](docs/reference-projects.md) for related Lea
 The [graph data contract](docs/graph-data-contract.md) defines the current snapshot and its limits.
 An [experimental clustering analysis](docs/module-clustering.md) groups files by shared imports and records the evidence.
 The [declaration browser proposal](docs/declaration-browser-proposal.md) documents an experimental lean-vouch adapter and its optional data interface. Declaration extraction is not yet part of automatic publication.
+See the [Euler–Lagrange pilot](docs/lean-vouch-pilot.md) for a real Physlib example and the limits of the extracted dependencies.
 
 ## Run locally
 
