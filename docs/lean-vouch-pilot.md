@@ -1,0 +1,11 @@
+# Lean-vouch pilot: Euler–Lagrange
+
+The experimental adapter was run locally on Physlib commit `4e2182f2b6f0a54207a2fa62002c264217f875d6`, Lean `v4.35.0`, and lean-vouch commit `b235856d959bdd7c20df734af35d8bad579d6a4c` (0.1.1). The chosen root was `Physlib.ClassicalMechanics.EulerLagrange`. This is one pinned pilot, not a whole-library index.
+
+The resulting companion snapshot contained **9 declarations and 200 recorded dependency edges**, including external Lean and Mathlib names. For example, `ClassicalMechanics.eulerLagrangeOp_eq` is recorded as depending on `ClassicalMechanics.eulerLagrangeOp`; its Lean-printed statement and [source line 60](https://github.com/leanprover-community/physlib/blob/4e2182f2b6f0a54207a2fa62002c264217f875d6/Physlib/ClassicalMechanics/EulerLagrange.lean#L60) were checked in the browser. Lean-vouch reports this source `lemma` as `theorem`; the adapter retains the extractor's classification rather than guessing the original spelling. External declarations are shown as not indexed for this pilot.
+
+Lake restored cached dependencies and completed the selected build; lean-vouch's first extraction on this machine took several minutes after the build. A separate lightweight Physlib meta module and a small independent Lean project also worked. Runtime, disk cost and behavior for all three Physlib library roots have not been measured. The present refresh workflow does not run this extraction.
+
+Lean-vouch tracks dependencies for the declarations it reviews: theorem statements and definition types/bodies, with its own treatment of helpers and library uses. It does **not** enumerate most theorem-proof dependencies. The adapter consequently marks every edge `unspecified` and coverage `partial`; neither an absent declaration nor an absent edge establishes nonexistence or non-use. Further review with lean-vouch maintainers should check semantic coverage and output compatibility before production use.
+
+See [the adapter instructions](declaration-browser-proposal.md#experimental-lean-vouch-adapter) for reproduction. Generated snapshots are local artifacts and are not checked into the repository.

@@ -5,6 +5,8 @@ An experimental descriptive browser for [Physlib](https://github.com/leanprover-
 See [reference projects and roadmap](docs/reference-projects.md) for related Lean tools and proposed extensions.
 The [graph data contract](docs/graph-data-contract.md) defines the current snapshot and its limits.
 An [experimental clustering analysis](docs/module-clustering.md) groups files by shared imports and records the evidence.
+The [declaration browser proposal](docs/declaration-browser-proposal.md) documents an experimental lean-vouch adapter and its optional data interface. Declaration extraction is not yet part of automatic publication.
+See the [Euler–Lagrange pilot](docs/lean-vouch-pilot.md) for a real Physlib example and the limits of the extracted dependencies.
 
 ## Run locally
 
@@ -26,7 +28,7 @@ The extractor scans Lean source for explicit import commands, ignoring nested co
 
 The overview groups modules by top-level directory and draws cross-area connections with at least two imports. Select an area to explore up to 100 modules, then a module to see up to 24 direct imports and 24 importers, alongside complete lists and linked API maps. Browse the directory tree or search to reach modules outside the displayed subset. Module views support filters, shareable links and a shortest import-path search across local modules. These directory groups are not algorithmic communities, and an import path does not demonstrate declaration usage. The viewer does not assess duplicate implementations. API-map abstracts retain their original Alpha/review status in the source; follow the source link for full context.
 
-The interface takes inspiration from the navigable dependency diagrams in [lean-vouch](https://github.com/jjeffrey/lean-vouch) and the graph explorer in [GitNexus](https://github.com/abhigyanpatwari/GitNexus). This project does not currently integrate either tool: in particular, its source-scanned file imports are not lean-vouch's elaborated declaration dependencies.
+The interface takes inspiration from the navigable dependency diagrams in [lean-vouch](https://github.com/jjeffrey/lean-vouch) and the graph explorer in [GitNexus](https://github.com/abhigyanpatwari/GitNexus). The optional lean-vouch adapter is experimental and must be run separately; its elaborated declaration dependencies are distinct from the source-scanned file imports. GitNexus is not integrated.
 
 The experimental **Districts** overview borrows the district metaphor from [Strata](https://github.com/themonk911/strata), but is independently implemented as a 2D directory grouping; no Strata source code is included. Select a module to see a color-coded relationship lens: blue importers, orange imports, a black selected file and purple API-map references. Arrows identify direct imports; dashed lines identify map references. External or unresolved imports have a dashed outline. This is not Strata's 3D city, history view, boundary checker, or a determination that an import needs fixing. The accompanying full text lists remain available for keyboard and screen-reader navigation.
 
