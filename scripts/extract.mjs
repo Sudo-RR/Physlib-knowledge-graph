@@ -42,13 +42,23 @@ export function importsFromSource(text) {
 export function mapFromSource(text, file) {
   const title = text.match(/^#\s+(.+)$/m)?.[1]?.trim() || file;
   const abstract = text.match(/^## Abstract(?: \(Alpha\))?\s*\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1]?.trim().replace(/\s+/g, ' ') || '';
-  const section = text.match(/^## Lean References\s*\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1] || '';
-  const references = [];
-  for (const line of section.split(/\r?\n/)) {
-    const match = line.match(/^\s*\d+\.\s+`?((?:Physlib|PhyslibAlpha|QuantumInfo)\/[^\s`]+?\.lean)`?/);
-    if (match) references.push(match[1]);
+  const references = [], declarationReferences = [];
+  const allLines = text.split(/\r?\n/);
+  const heading = allLines.findIndex(line => /^## Lean References\s*$/.test(line));
+  let currentPath = null;
+  if (heading >= 0) for (let i = heading + 1; i < allLines.length; i++) {
+    const line = allLines[i];
+    if (/^##\s/.test(line)) break;
+    const item = line.match(/^\s*\d+\.\s+`?((?:Physlib|PhyslibAlpha|QuantumInfo)\/[^\s`]+?\.lean)`?/);
+    if (/^\s*\d+\./.test(line)) currentPath = item?.[1] ?? null;
+    else if (line.trim() && !/^\s{2,}/.test(line)) currentPath = null;
+    if (item) references.push(currentPath);
+    if (!currentPath) continue;
+    for (const match of line.matchAll(/`([^`]+)`/g)) {
+      if (match[1] !== currentPath) declarationReferences.push({path:currentPath,name:match[1],line:i+1});
+    }
   }
-  return { path: file, title, abstract, references: [...new Set(references)] };
+  return { path: file, title, abstract, references: [...new Set(references)], declarationReferences };
 }
 
 async function walk(dir, root) {
@@ -81,7 +91,7 @@ export async function buildGraph(root) {
   const externalImports = modules.flatMap(m => m.imports.filter(i => !localRoots.has(i.module.split('.')[0])).map(i => ({ source: m.id, target: i.module, line: i.line })));
   const unresolvedMapReferences = maps.flatMap(m => m.references.filter(p => !paths.has(p)).map(p => ({ map: m.path, path: p })));
   const toolchain = (await readFile(path.join(root, 'lean-toolchain'), 'utf8')).trim();
-  return { schemaVersion: 1, source: { repository: 'https://github.com/leanprover-community/physlib', revision: sha, generatedAt: new Date().toISOString(), toolchain, extractor: { name: 'physlib-source-scan', version: '1.1.0' }, method: 'source-header scan; API-map Lean References' }, counts: { modules: modules.length, maps: maps.length, imports: modules.reduce((n, m) => n + m.imports.length, 0), unresolvedLocalImports: unresolvedLocalImports.length, externalImports: externalImports.length, unresolvedMapReferences: unresolvedMapReferences.length }, modules, maps, unresolvedMapReferences, unresolvedLocalImports, externalImports };
+  return { schemaVersion: 1, source: { repository: 'https://github.com/leanprover-community/physlib', revision: sha, generatedAt: new Date().toISOString(), toolchain, extractor: { name: 'physlib-source-scan', version: '1.2.0' }, method: 'source-header scan; API-map Lean References' }, counts: { modules: modules.length, maps: maps.length, imports: modules.reduce((n, m) => n + m.imports.length, 0), unresolvedLocalImports: unresolvedLocalImports.length, externalImports: externalImports.length, unresolvedMapReferences: unresolvedMapReferences.length }, modules, maps, unresolvedMapReferences, unresolvedLocalImports, externalImports };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

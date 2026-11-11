@@ -14,5 +14,10 @@ test('extracts direct imports while ignoring nested comments', () => {
 
 test('extracts only Lean References and handles repeated references', () => {
   const source = '# Energy\n\n## Abstract (Alpha)\n\nA short\nsummary.\n\n## Content\n\nPhyslib/Other.lean\n\n## Lean References\n\n1. Physlib/Energy/Basic.lean — `energy`\n2. Physlib/Energy/Basic.lean — `mass`\n3. QuantumInfo/Basic.lean — `x`\n\n## References\n\nPhyslib/NotAReference.lean\n';
-  assert.deepEqual(mapFromSource(source, 'Physlib/Energy/API-map.md'), { path: 'Physlib/Energy/API-map.md', title: 'Energy', abstract: 'A short summary.', references: ['Physlib/Energy/Basic.lean', 'QuantumInfo/Basic.lean'] });
+  assert.deepEqual(mapFromSource(source, 'Physlib/Energy/API-map.md'), { path: 'Physlib/Energy/API-map.md', title: 'Energy', abstract: 'A short summary.', references: ['Physlib/Energy/Basic.lean', 'QuantumInfo/Basic.lean'], declarationReferences:[{path:'Physlib/Energy/Basic.lean',name:'energy',line:14},{path:'Physlib/Energy/Basic.lean',name:'mass',line:15},{path:'QuantumInfo/Basic.lean',name:'x',line:16}] });
+});
+
+test('records multiline citations without attaching unrelated list items',()=>{
+  const source='## Lean References\n\n1. `Physlib/A.lean` — `A.one`,\n   `A.two`\n2. Other — `notAReference`\n## References\n`notAReference`';
+  assert.deepEqual(mapFromSource(source,'Physlib/API-map.md').declarationReferences,[{path:'Physlib/A.lean',name:'A.one',line:3},{path:'Physlib/A.lean',name:'A.two',line:4}]);
 });

@@ -20,6 +20,7 @@ export function validateGraph(g) {
   const mapPaths = new Set();
   for (const m of g.maps) {
     if (!m || typeof m.path !== 'string' || !m.path.endsWith('/API-map.md') || typeof m.title !== 'string' || typeof m.abstract !== 'string' || !Array.isArray(m.references) || m.references.some(p => typeof p !== 'string' || !p.endsWith('.lean'))) { errors.push('Invalid API map.'); continue; }
+    if (m.declarationReferences !== undefined && (!Array.isArray(m.declarationReferences) || m.declarationReferences.some(r => !r || !m.references.includes(r.path) || typeof r.name !== 'string' || !r.name || !Number.isInteger(r.line) || r.line < 1))) errors.push(`Invalid declaration references in ${m.path}.`);
     if (mapPaths.has(m.path)) errors.push(`Duplicate API map path: ${m.path}`); mapPaths.add(m.path);
   }
   const roots = new Set(['Physlib', 'PhyslibAlpha', 'QuantumInfo']);

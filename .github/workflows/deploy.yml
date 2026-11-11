@@ -17,6 +17,7 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     outputs:
       physlib_sha: ${{ steps.provenance.outputs.physlib_sha }}
     steps:
@@ -26,6 +27,11 @@ jobs:
           repository: leanprover-community/physlib
           ref: master
           path: .physlib-source
+      - uses: actions/checkout@v4
+        with:
+          repository: jjeffrey/lean-vouch
+          ref: b235856d959bdd7c20df734af35d8bad579d6a4c
+          path: .reference-lean-vouch
       - name: Record Physlib revision
         id: provenance
         run: echo "physlib_sha=$(git -C .physlib-source rev-parse HEAD)" >> "$GITHUB_OUTPUT"
@@ -35,12 +41,41 @@ jobs:
       - run: npm test
       - run: npm run build:data
       - run: npm run validate:data
+      # The declaration pilot is optional: a failed extraction publishes the
+      # fresh module graph and an explicit failure state, never stale declarations.
+      - name: Prepare Lean for declaration pilot
+        id: prepare_lean
+        continue-on-error: true
+        uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: .physlib-source
+          auto-config: false
+          use-mathlib-cache: true
+      - name: Generate declaration pilot
+        id: declaration_pilot
+        if: steps.prepare_lean.outcome == 'success'
+        continue-on-error: true
+        run: >-
+          node scripts/run-lean-vouch.mjs
+          .physlib-source site/data/graph.json .reference-lean-vouch site/data/declarations.json
+          Physlib.ClassicalMechanics.EulerLagrange
+          Physlib.ClassicalMechanics.HarmonicOscillator.Basic
+          Physlib.ClassicalMechanics.Pendulum.SimplePendulum.Basic
+      - name: Record declaration refresh status
+        env:
+          PREPARE_OUTCOME: ${{ steps.prepare_lean.outcome }}
+          PILOT_OUTCOME: ${{ steps.declaration_pilot.outcome }}
+        run: node scripts/write-declaration-status.mjs
+      - name: Validate declaration pilot if available
+        if: steps.declaration_pilot.outcome == 'success'
+        run: node scripts/validate-declarations.mjs site/data/graph.json site/data/declarations.json
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
   deploy:
     needs: build
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

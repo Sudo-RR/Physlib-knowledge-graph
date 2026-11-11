@@ -41,3 +41,34 @@ export function declarationNeighborhood(snapshot, id) {
     incoming: snapshot.dependencies.filter(e => e.to === id)
   };
 }
+
+// External search results can only be matched to the exact indexed name.
+export function resolveDeclarationLink(snapshot, id, sourceRevision = '') {
+  if (!snapshot) return {status:'unavailable'};
+  if (sourceRevision && sourceRevision !== snapshot.source.revision) return {status:'revision-mismatch'};
+  const declaration=snapshot.declarations.find(d=>d.id===id);
+  return declaration ? {status:'found',declaration,revisionVerified:!!sourceRevision} : {status:'not-indexed'};
+}
+
+// Only accept an exact qualified name in the explicitly cited source file.
+// Partial snapshots and notation/instance expressions remain unresolved.
+export function resolveMapReferences(graph, snapshot) {
+  if (!snapshot) return { resolved: [], candidates: [], unresolved: [] };
+  const byPath = new Map(graph.modules.map(m=>[m.path,m.id]));
+  const declarations = new Map(snapshot.declarations.map(d=>[d.id,d]));
+  const byModule = new Map();
+  for(const d of snapshot.declarations){if(!byModule.has(d.module))byModule.set(d.module,[]);byModule.get(d.module).push(d);}
+  const covered = new Set(snapshot.coverage.map(c=>c.module));
+  const resolved=[], candidates=[], unresolved=[];
+  for (const map of graph.maps) for (const ref of map.declarationReferences ?? []) {
+    const module=byPath.get(ref.path), d=declarations.get(ref.name);
+    const record={map:map.path,title:map.title,...ref};
+    if (d && d.module===module) resolved.push({...record,declaration:d.id});
+    else {
+      const possible=/^[\p{L}\p{N}_'.]+$/u.test(ref.name)?(byModule.get(module) ?? []).filter(x=>x.id.endsWith(`.${ref.name}`)):[];
+      if(possible.length===1)candidates.push({...record,declaration:possible[0].id});
+      unresolved.push({...record,reason:!module?'missing file':!covered.has(module)?'module not indexed':possible.length>1?'ambiguous name':'name not resolved'});
+    }
+  }
+  return {resolved,candidates,unresolved};
+}

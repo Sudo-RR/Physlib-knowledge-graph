@@ -1,6 +1,6 @@
 # Declaration browser prototype
 
-This is a **provisional interface for review**. The existing `graph.json` contract remains unchanged. The browser optionally reads `site/data/declarations.json`; the normal refresh pipeline does not yet generate or publish this file. If it is absent, the browser says so rather than implying that files have no declarations. An experimental adapter can now consume output from a pinned lean-vouch checkout as described below.
+This is a **provisional interface for review**. The existing `graph.json` contract remains unchanged. The browser optionally reads `site/data/declarations.json`; the refresh pipeline attempts to generate it for three selected classical-mechanics modules. If extraction fails, the module graph can still be published and the browser reports the failure. If a file is outside the pilot, the browser says declaration data is unavailable rather than implying the file has no declarations.
 
 For a controlled prototype, the companion JSON has this shape:
 
@@ -28,7 +28,7 @@ This example illustrates the shape only; it does not assert that these declarati
 
 A dependency points from a declaration to a prerequisite. Its kind is `statement`, `proof` or `unspecified`; use `unspecified` unless the producing tool justifies a distinction. The source must be indexed; the target may be outside the snapshot, in which case it is shown as not indexed. No edge or empty reverse list proves absence of a dependency or use. The interface displays only recorded edges and does not claim whole-library coverage.
 
-The browser rejects mismatched revisions or toolchains and malformed records before use. It lists declarations by file and provides name and kind filters, source links when available, and recorded prerequisites and dependents. The canvas remains a **module-import** graph; the declaration details are currently a text view, not a declaration graph visualization. Map-to-declaration links, stable identities, edge provenance and complete coverage semantics require agreement based on real tool output before production integration. Review these choices with Jonathan as part of the pilot; the proposed format may change.
+The browser rejects mismatched revisions or toolchains and malformed records before use. It lists declarations by file and provides name and kind filters, source links, and a bounded one- or two-edge declaration graph with recorded prerequisites and dependents. Module imports and declaration dependencies have distinct views. API-map references are linked automatically only for exact qualified names in the cited file; unique shortened names are shown as unconfirmed candidates. Stable identities, richer edge provenance and complete coverage semantics require agreement based on real tool output before production integration. Review these choices with Jonathan as part of the pilot; the proposed format may change.
 
 ## Experimental lean-vouch adapter
 
