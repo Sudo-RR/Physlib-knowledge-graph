@@ -25,6 +25,7 @@
 ## Identity and relationships
 
 - A module ID is its source path without `.lean`, with `/` replaced by `.`. IDs are unique **within a snapshot**; they are not guaranteed to survive renames.
+- A module may have `lineCount`, a nonnegative count of source lines including comments and blank lines. It is optional for backward compatibility and does not count declarations or assess quality.
 - An import record is a directed explicit source reference **from the containing module to `module`**; `line` is one-based, and `kind` records the parsed modifiers. It indicates availability, not actual use of a declaration. The source scanner is not Lean's parser and does not record implicit imports.
 - An API map is identified by its repository-relative `path`. Its `references` array lists file paths explicitly found in its `Lean References` section. These are curated source references extracted by a simple scanner, not verified declaration-level links. Individual citation locations and declared names are not yet retained.
 - An import whose target has a Physlib, PhyslibAlpha or QuantumInfo root but is missing from `modules` is listed in `unresolvedLocalImports`. A target outside those roots is listed in `externalImports`; it is not thereby verified to exist. A map path absent from the indexed modules is listed in `unresolvedMapReferences`.

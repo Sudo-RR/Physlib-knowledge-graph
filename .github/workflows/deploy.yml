@@ -32,15 +32,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm ci
       - run: npm test
+      - run: npm run build:city
       - run: npm run build:data
       - run: npm run validate:data
+      - name: Read Mathlib revision pinned by Physlib
+        id: mathlib_pin
+        run: echo "revision=$(node scripts/mathlib-pin.mjs .physlib-source)" >> "$GITHUB_OUTPUT"
+      - name: Checkout pinned Mathlib
+        uses: actions/checkout@v4
+        with:
+          repository: leanprover-community/mathlib4
+          ref: ${{ steps.mathlib_pin.outputs.revision }}
+          path: .physlib-source/.lake/packages/mathlib
+      - run: npm run build:mathlib
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: site
   deploy:
     needs: build
+    if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

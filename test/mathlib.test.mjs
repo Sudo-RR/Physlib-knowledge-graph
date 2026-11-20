@@ -1,0 +1,10 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { buildMathlibBridge } from '../scripts/extract-mathlib.mjs';
+
+const revision='a'.repeat(40), mathRevision='b'.repeat(40);
+const source=(repository,rev)=>({repository,revision:rev,generatedAt:'2026-11-20T00:00:00Z',toolchain:'leanprover/lean4:v4.35.0',extractor:{name:'test',version:'1'}});
+const physlib=()=>({schemaVersion:1,source:source('https://github.com/leanprover-community/physlib',revision),modules:[{id:'Physlib.A',path:'Physlib/A.lean',library:'Physlib',imports:[{module:'Mathlib.X',line:3,kind:'import'},{module:'Mathlib.Missing',line:4,kind:'import'}]}],maps:[],unresolvedLocalImports:[],externalImports:[{source:'Physlib.A',target:'Mathlib.X',line:3},{source:'Physlib.A',target:'Mathlib.Missing',line:4}],unresolvedMapReferences:[],counts:{modules:1,maps:0,imports:2,unresolvedLocalImports:0,externalImports:2,unresolvedMapReferences:0}});
+const mathlib=()=>({schemaVersion:1,source:{...source('https://github.com/leanprover-community/mathlib4',mathRevision),physlibRevision:revision,localRoots:['Mathlib']},modules:[{id:'Mathlib.X',path:'Mathlib/X.lean',library:'Mathlib',imports:[]}],maps:[],unresolvedLocalImports:[],externalImports:[],unresolvedMapReferences:[],counts:{modules:1,maps:0,imports:0,unresolvedLocalImports:0,externalImports:0,unresolvedMapReferences:0}});
+test('links explicit Physlib imports to the exact Mathlib snapshot',()=>{const r=buildMathlibBridge(physlib(),mathlib());assert.deepEqual(r.edges,[{from:'Physlib.A',to:'Mathlib.X',line:3}]);assert.deepEqual(r.unresolved,[{from:'Physlib.A',to:'Mathlib.Missing',line:4}]);assert.equal(r.source.mathlibRevision,mathRevision);});
+test('rejects mismatched provenance and malformed snapshots',()=>{const m=mathlib();m.source.physlibRevision='c'.repeat(40);assert.throws(()=>buildMathlibBridge(physlib(),m),/not paired/);const broken=mathlib();broken.counts.modules=0;assert.throws(()=>buildMathlibBridge(physlib(),broken),/Invalid input/);});

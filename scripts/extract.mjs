@@ -39,6 +39,11 @@ export function importsFromSource(text) {
   return result;
 }
 
+export function sourceLineCount(text) {
+  if(!text.length)return 0;
+  return text.split(/\r\n|\n|\r/).length - (/\r\n$|\n$|\r$/.test(text)?1:0);
+}
+
 export function mapFromSource(text, file) {
   const title = text.match(/^#\s+(.+)$/m)?.[1]?.trim() || file;
   const abstract = text.match(/^## Abstract(?: \(Alpha\))?\s*\r?\n([\s\S]*?)(?=^## |$(?![\s\S]))/m)?.[1]?.trim().replace(/\s+/g, ' ') || '';
@@ -71,7 +76,7 @@ export async function buildGraph(root) {
   const modules = [], maps = [];
   for (const file of files) {
     const text = await readFile(path.join(root, file), 'utf8');
-    if (file.endsWith('.lean')) modules.push({ id: file.slice(0, -5).replaceAll('/', '.'), path: file, library: file.split(/[/.]/)[0], imports: importsFromSource(text) });
+    if (file.endsWith('.lean')) modules.push({ id: file.slice(0, -5).replaceAll('/', '.'), path: file, library: file.split(/[/.]/)[0], lineCount:sourceLineCount(text), imports: importsFromSource(text) });
     else maps.push(mapFromSource(text, file));
   }
   const paths = new Set(modules.map(m => m.path));
@@ -81,7 +86,7 @@ export async function buildGraph(root) {
   const externalImports = modules.flatMap(m => m.imports.filter(i => !localRoots.has(i.module.split('.')[0])).map(i => ({ source: m.id, target: i.module, line: i.line })));
   const unresolvedMapReferences = maps.flatMap(m => m.references.filter(p => !paths.has(p)).map(p => ({ map: m.path, path: p })));
   const toolchain = (await readFile(path.join(root, 'lean-toolchain'), 'utf8')).trim();
-  return { schemaVersion: 1, source: { repository: 'https://github.com/leanprover-community/physlib', revision: sha, generatedAt: new Date().toISOString(), toolchain, extractor: { name: 'physlib-source-scan', version: '1.1.0' }, method: 'source-header scan; API-map Lean References' }, counts: { modules: modules.length, maps: maps.length, imports: modules.reduce((n, m) => n + m.imports.length, 0), unresolvedLocalImports: unresolvedLocalImports.length, externalImports: externalImports.length, unresolvedMapReferences: unresolvedMapReferences.length }, modules, maps, unresolvedMapReferences, unresolvedLocalImports, externalImports };
+  return { schemaVersion: 1, source: { repository: 'https://github.com/leanprover-community/physlib', revision: sha, generatedAt: new Date().toISOString(), toolchain, extractor: { name: 'physlib-source-scan', version: '1.3.0' }, method: 'source-header scan; API-map Lean References' }, counts: { modules: modules.length, maps: maps.length, imports: modules.reduce((n, m) => n + m.imports.length, 0), unresolvedLocalImports: unresolvedLocalImports.length, externalImports: externalImports.length, unresolvedMapReferences: unresolvedMapReferences.length }, modules, maps, unresolvedMapReferences, unresolvedLocalImports, externalImports };
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

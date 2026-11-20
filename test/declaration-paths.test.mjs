@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createDeclarationPathIndex,findDeclarationPath,findDeclarationDependents} from '../site/declaration-paths.js';
+const snapshot={declarations:['A','B','C','D'].map(id=>({id})),dependencies:[{from:'A',to:'B',kind:'statement'},{from:'B',to:'C',kind:'proof'},{from:'D',to:'A',kind:'unspecified'},{from:'C',to:'A',kind:'proof'},{from:'A',to:'External',kind:'unspecified'}]};
+test('finds shortest recorded paths and preserves original edge direction',()=>{const i=createDeclarationPathIndex(snapshot);assert.deepEqual(findDeclarationPath(i,'A','C').nodes,['A','B','C']);const reverse=findDeclarationPath(i,'B','D',{direction:'dependents'});assert.deepEqual(reverse.nodes,['B','A','D']);assert.deepEqual(reverse.edges.map(e=>[e.from,e.to]),[['A','B'],['D','A']]);assert.equal(findDeclarationPath(i,'A','External').status,'missing');});
+test('distinguishes no path from a bounded search and stops cycles',()=>{const i=createDeclarationPathIndex(snapshot);assert.equal(findDeclarationPath(i,'D','C',{limit:1}).status,'truncated');assert.equal(findDeclarationPath(i,'A','D').status,'no-path');const result=findDeclarationDependents(i,'B',{depth:2,limit:1});assert.deepEqual(result.nodes.map(n=>n.id),['A']);assert.equal(result.truncated,true);});
