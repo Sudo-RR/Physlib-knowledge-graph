@@ -27,7 +27,7 @@ Open <http://127.0.0.1:4173>. To use a different clean Physlib checkout or outpu
 
 To enable the Mathlib explorer locally, populate `.physlib-source/.lake/packages/mathlib` with a clean checkout at the revision printed by `node scripts/mathlib-pin.mjs .physlib-source`, then run `npm run build:mathlib`. See the [Mathlib instructions](docs/mathlib-graph.md) for details. Physlib browsing still works without these optional files.
 
-The **3D city pilot** uses the same pinned snapshots. It displays up to 60 classical-mechanics files, the Physlib gradient file when present, and the Mathlib files they explicitly import. Buildings represent files; arrows run from importer to import. It does not yet show declaration dependencies. The list and inspector provide keyboard access and links to the complete file views; omitted files are counted. Build the browser bundle with `npm ci` and `npm run build:city` before opening `city.html`. The GitHub Actions refresh builds it automatically.
+The **3D city pilot** uses the same pinned snapshots. It shows a small gradient and Euler–Lagrange neighbourhood, with a folder explorer, directory-based districts, and 3D and top-down views of the same selection. Buildings represent files; arrows run from importer to import. An optional, separately generated declaration pilot appears in the inspector with its limited coverage. The explorer and inspector provide keyboard access and links to complete file views. Build the browser bundle with `npm ci` and `npm run build:city` before opening `city.html`. The GitHub Actions refresh builds it automatically.
 
 ## What the data means
 

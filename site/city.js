@@ -1,29 +1,91 @@
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import {buildCity,cityNeighborhood} from './city-model.js';
+import { buildReviewCity, cityNeighborhood } from './city-model.js';
+import { makeFolderTree, renderFolderTree } from './city-explorer.js';
+import { createCityScene } from './city-scene.js';
 
-const $=s=>document.querySelector(s);
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-let city,physlib,mathlib,scene,camera,renderer,controls,selected=null,objects=[],edgeGroup,positions=new Map(),declarationPilot=null;
-const color={Physlib:0x002fa7,Mathlib:0x858991};
-const source=(repo,rev,path,line)=>`${repo}/blob/${rev}/${path.split('/').map(encodeURIComponent).join('/')}${line?'#L'+line:''}`;
-const nodeById=id=>city.nodes.find(n=>n.id===id);
-function list(){const q=$('#search').value.toLowerCase().trim();const nodes=city.nodes.filter(n=>n.id.toLowerCase().includes(q));$('#city-list').innerHTML=nodes.map(n=>`<button class="entry ${n.id===selected?'active':''}" data-node="${esc(n.id)}"><span class="entry-name">${esc(n.id)}</span><span class="entry-count">${n.library}</span></button>`).join('')||'<p class="city-status">No displayed files match.</p>';}
-function relationList(edges,field){return edges.length?`<ul class="inspect-list">${edges.map(e=>{const id=e[field],n=nodeById(e.from),s=n.library==='Mathlib'?mathlib.source:physlib.source;return `<li><button data-node="${esc(id)}">${esc(id)}</button> <a href="${source(s.repository,s.revision,n.module.path,e.line)}" target="_blank" rel="noreferrer">import line ${e.line} ↗</a></li>`;}).join('')}</ul>`:'<p class="note">None among displayed buildings.</p>';}
-function select(id){const hood=cityNeighborhood(city,id);if(!hood)return;selected=id;const {node,imports,importers}=hood,s=node.library==='Mathlib'?mathlib.source:physlib.source;
-  const declarations=declarationPilot?.declarations.filter(d=>d.module===id)??[];
-  const targets=declarationPilot?.targets.filter(d=>d.module===id)??[];
-  const declarationSection=node.library==='Physlib'?`<h3>Declaration pilot${declarations.length?` (${declarations.length})`:''}</h3>${declarations.length?`<p class="note">Partial result-graph extraction; select a declaration to inspect recorded Mathlib relationships.</p><ul class="inspect-list">${declarations.map(d=>`<li><button data-city-declaration="${esc(d.id)}">${esc(d.id)}</button> · ${esc(d.kind)}</li>`).join('')}</ul><div id="city-declaration-result" aria-live="polite"></div>`:`<p class="note">${declarationPilot?'No declarations indexed for this file in the partial pilot.':'Declaration pilot data is unavailable for this snapshot.'}</p>`}`:targets.length?`<h3>Mathlib declarations in pilot</h3><p class="note">Recorded links are limited to the Physlib declarations in this pilot.</p><ul class="inspect-list">${targets.map(d=>`<li><button data-city-target="${esc(d.id)}">${esc(d.id)}</button></li>`).join('')}</ul><div id="city-target-result" aria-live="polite"></div>`:'';
-  $('#city-inspector').innerHTML=`<span class="label">${node.library.toUpperCase()} · FILE</span><h2>${esc(id)}</h2><p class="city-note">Connections shown are direct imports between displayed buildings. They do not establish use of a theorem or definition.</p><a class="source-link" href="${source(s.repository,s.revision,node.module.path)}" target="_blank" rel="noreferrer">View source ↗</a><p><a href="${node.library==='Mathlib'?'mathlib.html':'index.html'}?node=${encodeURIComponent(id)}">Open full file view ↗</a></p>${declarationSection}<h3>Imports (${imports.length} displayed)</h3>${relationList(imports,'to')}<h3>Imported by (${importers.length} displayed)</h3>${relationList(importers,'from')}<p class="note">Other imports and importers may lie outside this pilot. Open the full file view for complete lists.</p>`;
-  for(const obj of objects)obj.material.color.setHex(obj.userData.id===id?0x151515:color[obj.userData.library]);
-  for(const arrow of edgeGroup.children)arrow.dispose();edgeGroup.clear();
-  for(const e of [...imports,...importers]){const a=positions.get(e.from).clone().add(new THREE.Vector3(0,2.2,0)),b=positions.get(e.to).clone().add(new THREE.Vector3(0,2.2,0));const direction=b.clone().sub(a),arrow=new THREE.ArrowHelper(direction.clone().normalize(),a,direction.length(),0x002fa7,1,.5);arrow.line.material.depthTest=false;arrow.cone.material.depthTest=false;arrow.renderOrder=100;arrow.line.renderOrder=100;arrow.cone.renderOrder=100;edgeGroup.add(arrow);}
-  list();
+const $ = selector => document.querySelector(selector);
+const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sourceUrl = (source, path, line) => `${source.repository}/blob/${source.revision}/${path.split('/').map(encodeURIComponent).join('/')}${line ? `#L${line}` : ''}`;
+let city, physlib, mathlib, scene, tree, selected, declarationPilot;
+const expanded = new Set(['Physlib','Physlib/Mathematics','Physlib/Mathematics/Calculus','Mathlib']);
+
+function renderExplorer() {
+  $('#city-list').innerHTML = renderFolderTree(tree, {selected, query:$('#search').value, expanded, escape:esc});
 }
-function plane(y,hex){const g=new THREE.Mesh(new THREE.BoxGeometry(32,.18,32),new THREE.MeshBasicMaterial({color:hex,transparent:true,opacity:.16,depthWrite:false}));g.position.y=y;scene.add(g);const grid=new THREE.GridHelper(32,16,0xaeb7c9,0xd8dce5);grid.position.y=y+.1;scene.add(grid);}
-function init(){const host=$('#city-canvas');scene=new THREE.Scene();scene.background=new THREE.Color(0xf7f7f8);camera=new THREE.PerspectiveCamera(33,1,.1,250);camera.position.set(34,23,45);renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,2));host.append(renderer.domElement);controls=new OrbitControls(camera,renderer.domElement);controls.target.set(0,6,0);controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.49;controls.update();scene.add(new THREE.HemisphereLight(0xffffff,0xbfc9da,2));const light=new THREE.DirectionalLight(0xffffff,2);light.position.set(25,40,30);scene.add(light);plane(0,0x9da9bb);plane(11,0x98abe0);
-  for(const library of ['Mathlib','Physlib']){const group=city.nodes.filter(n=>n.library===library);const side=Math.ceil(Math.sqrt(group.length));for(let i=0;i<group.length;i++){const n=group[i],x=(i%side-(side-1)/2)*3,z=(Math.floor(i/side)-(side-1)/2)*3,y=library==='Physlib'?11:0;const mesh=new THREE.Mesh(new THREE.BoxGeometry(1.65,2.8,1.65),new THREE.MeshLambertMaterial({color:color[library]}));mesh.position.set(x,y+1.5,z);mesh.userData={id:n.id,library};scene.add(mesh);objects.push(mesh);positions.set(n.id,new THREE.Vector3(x,y,z));}}
-  edgeGroup=new THREE.Group();scene.add(edgeGroup);const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>4)return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);const hit=ray.intersectObjects(objects)[0];if(hit)select(hit.object.userData.id);});
-  function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}new ResizeObserver(resize).observe(host);resize();renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);});$('#reset').addEventListener('click',()=>{camera.position.set(34,23,45);controls.target.set(0,6,0);controls.update();});}
-document.addEventListener('click',e=>{const n=e.target.closest('[data-node]');if(n)select(n.dataset.node);const d=e.target.closest('[data-city-declaration]');if(d&&declarationPilot){const id=d.dataset.cityDeclaration,edges=declarationPilot.edges.filter(x=>x.from===id),targets=new Map(declarationPilot.targets.map(x=>[x.id,x]));$('#city-declaration-result').innerHTML=`<h3>${esc(id)}</h3><p class="note">${edges.length} recorded Mathlib relationships in the pilot scope. Value includes definition bodies or theorem proofs. Some edges may be routed through omitted declarations; source locations are module-level. Absence does not establish non-use.</p>${edges.length?`<ul class="inspect-list">${edges.map(x=>{const target=targets.get(x.to);return `<li>${esc(x.to)} · ${esc(x.kind)}<br><a href="mathlib.html?node=${encodeURIComponent(target.module)}">${esc(target.module)} ↗</a></li>`;}).join('')}</ul>`:'<p class="note">No Mathlib relationships recorded within the included scope.</p>'}`;}const t=e.target.closest('[data-city-target]');if(t&&declarationPilot){const id=t.dataset.cityTarget,edges=declarationPilot.edges.filter(x=>x.to===id),decls=new Map(declarationPilot.declarations.map(x=>[x.id,x]));$('#city-target-result').innerHTML=`<h3>${esc(id)}</h3><p class="note">${edges.length} recorded Physlib relationships in the partial pilot. Some may be routed through omitted declarations.</p><ul class="inspect-list">${edges.map(x=>{const declaration=decls.get(x.from);return `<li>${esc(x.from)} · ${esc(x.kind)}<br><button data-node="${esc(declaration.module)}">${esc(declaration.module)}</button></li>`;}).join('')}</ul>`;}});$('#search').addEventListener('input',list);
-try{const names=['graph','mathlib','mathlib-bridge'];const responses=await Promise.all(names.map(n=>fetch(`data/${n}.json`)));if(responses.some(r=>!r.ok))throw Error('Missing graph data. Run npm run build:data and npm run build:mathlib.');const [p,m,b]=await Promise.all(responses.map(r=>r.json()));physlib=p;mathlib=m;city=buildCity(p,m,b);try{const r=await fetch('data/city-declarations.json');if(r.ok){const d=await r.json();if(d?.source?.physlibRevision===p.source.revision&&d.source.mathlibRevision===m.source.revision&&d.source.toolchain===p.source.toolchain&&Array.isArray(d.declarations)&&Array.isArray(d.targets)&&Array.isArray(d.edges)&&d.edges.every(e=>d.targets.some(t=>t.id===e.to)))declarationPilot=d;}}catch{}$('#count').textContent=city.nodes.length;$('#city-counts').textContent=`${city.nodes.filter(n=>n.library==='Physlib').length} Physlib files · ${city.mathlibModules} Mathlib files · ${city.edges.length} displayed imports${city.omittedPhyslib?` · ${city.omittedPhyslib} classical-mechanics files omitted`:''}`;$('#snapshot').innerHTML=`Physlib <a href="${p.source.repository}/commit/${p.source.revision}">${esc(p.source.revision.slice(0,10))} ↗</a><br>Mathlib <a href="${m.source.repository}/commit/${m.source.revision}">${esc(m.source.revision.slice(0,10))} ↗</a><br>${esc(p.source.toolchain)}`;list();init();$('#loading').hidden=true;const requested=new URL(location.href).searchParams.get('node');const initial=requested||'Physlib.Mathematics.Calculus.Gradient';if(nodeById(initial))select(initial);}catch(e){$('#loading').innerHTML=`<div class="error">Could not load city: ${esc(e.message)}</div>`;}
+
+function relationList(edges, endpoint) {
+  if(!edges.length) return '<p class="note">None among the displayed files.</p>';
+  const byId=new Map(city.nodes.map(node=>[node.id,node]));
+  return `<ul class="inspect-list">${edges.map(edge=>{
+    const importer=byId.get(edge.from), source=importer.library==='Mathlib'?mathlib.source:physlib.source;
+    return `<li><button data-node="${esc(edge[endpoint])}">${esc(edge[endpoint])}</button> <a class="evidence" href="${sourceUrl(source,importer.module.path,edge.line)}" target="_blank" rel="noreferrer">line ${edge.line} ↗</a></li>`;
+  }).join('')}</ul>`;
+}
+
+function declarationSection(node) {
+  const declarations=declarationPilot?.declarations.filter(d=>d.module===node.id)??[];
+  const targets=declarationPilot?.targets.filter(d=>d.module===node.id)??[];
+  if(node.library==='Physlib') {
+    if(!declarations.length)return `<h3>Declarations</h3><p class="note">${declarationPilot?'No declarations indexed for this file in the partial pilot.':'Declaration pilot data is unavailable for this snapshot.'}</p>`;
+    return `<h3>Declarations · partial pilot</h3><p class="note">Select a declaration to inspect recorded Mathlib relationships.</p><ul class="inspect-list">${declarations.map(d=>`<li><button data-declaration="${esc(d.id)}">${esc(d.id)}</button> · ${esc(d.kind)}</li>`).join('')}</ul><div id="declaration-result" aria-live="polite"></div>`;
+  }
+  if(!targets.length)return '<h3>Declarations</h3><p class="note">No declarations from this file are linked in the partial pilot.</p>';
+  return `<h3>Declarations · partial pilot</h3><p class="note">Select a result to see recorded Physlib dependents.</p><ul class="inspect-list">${targets.map(d=>`<li><button data-target="${esc(d.id)}">${esc(d.id)}</button></li>`).join('')}</ul><div id="target-result" aria-live="polite"></div>`;
+}
+
+function inspectDeclaration(id) {
+  const targets=new Map(declarationPilot.targets.map(d=>[d.id,d]));
+  const edges=declarationPilot.edges.filter(edge=>edge.from===id);
+  $('#declaration-result').innerHTML=`<h3>${esc(id)}</h3><p class="note">${edges.length} recorded Mathlib relationships in the pilot scope. “Value” includes definition bodies or theorem proofs. Some edges may be routed through omitted declarations.</p>${edges.length?`<ul class="inspect-list">${edges.map(edge=>{const target=targets.get(edge.to);return `<li>${esc(edge.to)} · ${esc(edge.kind)}<br><a href="mathlib.html?node=${encodeURIComponent(target.module)}">${esc(target.module)} ↗</a></li>`;}).join('')}</ul>`:'<p class="note">No Mathlib relationships recorded within the included scope.</p>'}<p class="note">Absence does not establish non-use.</p>`;
+  const shown=scene.showDeclarationLinks(edges.map(edge=>({from:selected,to:targets.get(edge.to).module})));
+  $('#relation-mode').textContent=`Declaration links · ${shown} displayed module pairs · partial, may be routed`;
+}
+
+function inspectTarget(id) {
+  const declarations=new Map(declarationPilot.declarations.map(d=>[d.id,d]));
+  const edges=declarationPilot.edges.filter(edge=>edge.to===id);
+  $('#target-result').innerHTML=`<h3>${esc(id)}</h3><p class="note">${edges.length} recorded Physlib relationships in the partial pilot. Some may be routed through omitted declarations.</p><ul class="inspect-list">${edges.map(edge=>{const declaration=declarations.get(edge.from);return `<li>${esc(edge.from)} · ${esc(edge.kind)}<br><button data-node="${esc(declaration.module)}">${esc(declaration.module)}</button></li>`;}).join('')}</ul>`;
+  const shown=scene.showDeclarationLinks(edges.map(edge=>({from:declarations.get(edge.from).module,to:selected})));
+  $('#relation-mode').textContent=`Declaration links · ${shown} displayed module pairs · partial, may be routed`;
+}
+
+function select(id,{focus=true}={}) {
+  const hood=cityNeighborhood(city,id);if(!hood)return;
+  selected=id;const {node,imports,importers}=hood,source=node.library==='Mathlib'?mathlib.source:physlib.source;
+  const folder=node.module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/');
+  const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));
+  const maps=node.library==='Physlib'?physlib.maps.filter(map=>map.references.includes(node.module.path)):[];
+  $('#city-inspector').innerHTML=`<span class="label">${node.library.toUpperCase()} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a><a href="${node.library==='Mathlib'?'mathlib.html':'index.html'}?node=${encodeURIComponent(id)}">Full file view ↗</a></div>${declarationSection(node)}<h3>Imports · ${imports.length} in pilot</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in pilot</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="index.html?node=${encodeURIComponent('map:'+map.path)}">${esc(map.title)}</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this pilot.</p>`;
+  $('#current-selection').innerHTML=`<span>Selected file</span><strong>${esc(id)}</strong><small id="relation-mode">Solid arrows · explicit file imports</small>`;
+  scene.select(id);if(focus)scene.focusFolder(folder);renderExplorer();
+  const url=new URL(location.href);url.searchParams.set('node',id);history.replaceState(null,'',url);
+}
+
+function switchView(mode) {
+  scene.setView(mode);
+  for(const name of ['city','map']){$(`#view-${name}`).classList.toggle('active',name===mode);$(`#view-${name}`).setAttribute('aria-pressed',String(name===mode));}
+}
+
+document.addEventListener('click',event=>{
+  const folder=event.target.closest('summary')?.parentElement;if(folder?.dataset.folder)scene?.focusFolder(folder.dataset.folder);
+  const node=event.target.closest('[data-node]');if(node)select(node.dataset.node);
+  const declaration=event.target.closest('[data-declaration]');if(declaration&&declarationPilot)inspectDeclaration(declaration.dataset.declaration);
+  const target=event.target.closest('[data-target]');if(target&&declarationPilot)inspectTarget(target.dataset.target);
+});
+document.addEventListener('toggle',event=>{const folder=event.target;if(!folder.matches?.('details[data-folder]'))return;if(folder.open)expanded.add(folder.dataset.folder);else expanded.delete(folder.dataset.folder);},true);
+$('#search').addEventListener('input',renderExplorer);
+$('#view-city').addEventListener('click',()=>switchView('city'));
+$('#view-map').addEventListener('click',()=>switchView('map'));
+$('#reset').addEventListener('click',()=>scene.reset());
+
+try {
+  const responses=await Promise.all(['graph','mathlib','mathlib-bridge'].map(name=>fetch(`data/${name}.json`)));
+  if(responses.some(response=>!response.ok))throw Error('Missing graph data. Run npm run build:data and npm run build:mathlib.');
+  const [p,m,bridge]=await Promise.all(responses.map(response=>response.json()));physlib=p;mathlib=m;city=buildReviewCity(p,m,bridge);
+  try {const response=await fetch('data/city-declarations.json');if(response.ok){const d=await response.json();if(d?.source?.physlibRevision===p.source.revision&&d.source.mathlibRevision===m.source.revision&&d.source.toolchain===p.source.toolchain&&Array.isArray(d.declarations)&&Array.isArray(d.targets)&&Array.isArray(d.edges)&&d.edges.every(e=>d.targets.some(t=>t.id===e.to)&&d.declarations.some(v=>v.id===e.from)))declarationPilot=d;}} catch {}
+  tree=makeFolderTree(city.nodes);$('#count').textContent=city.nodes.length;
+  $('#city-counts').textContent=`${city.nodes.filter(n=>n.library==='Physlib').length} Physlib files · ${city.mathlibModules} Mathlib files · ${city.edges.length} imports in this pilot`;
+  $('#snapshot').innerHTML=`Physlib <a href="${p.source.repository}/commit/${p.source.revision}">${esc(p.source.revision.slice(0,10))} ↗</a><br>Mathlib <a href="${m.source.repository}/commit/${m.source.revision}">${esc(m.source.revision.slice(0,10))} ↗</a><br>${esc(p.source.toolchain)}`;
+  renderExplorer();scene=createCityScene($('#city-canvas'),city,id=>select(id));$('#loading').hidden=true;
+  const requested=new URL(location.href).searchParams.get('node');const initial=requested||'Physlib.Mathematics.Calculus.Gradient';
+  if(city.nodes.some(node=>node.id===initial))select(initial,{focus:false});
+} catch(error) {$('#loading').innerHTML=`<div class="error">Could not load city: ${esc(error.message)}</div>`;}
