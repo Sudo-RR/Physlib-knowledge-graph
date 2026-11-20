@@ -33,6 +33,8 @@ function inspectFloor(id,index) {
   if(id!==selected)return;
   const data=floorIndex.get(id),floor=data?.floors[index];if(!floor)return;
   const result=$('#floor-result');if(!result)return;
+  $('#declaration-result').innerHTML='';$('#target-result').innerHTML='';
+  scene.select(id);$('#relation-mode').textContent='Solid arrows · explicit file imports';
   const pilotPhys=new Set(declarationPilot?.declarations.map(d=>d.id)??[]),pilotMath=new Set(declarationPilot?.targets.map(d=>d.id)??[]);
   const node=city.nodes.find(item=>item.id===id),source=node.library==='Mathlib'?mathlib.source:physlib.source;
   result.innerHTML=`<h3>Floor ${index+1} · ${floor.items.length} recorded declaration${floor.items.length===1?'':'s'}</h3><ul class="inspect-list">${floor.items.map(d=>{
