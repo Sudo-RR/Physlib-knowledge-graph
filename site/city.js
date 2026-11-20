@@ -1,11 +1,13 @@
 import { buildReviewCity, cityNeighborhood } from './city-model.js';
 import { makeFolderTree, renderFolderTree } from './city-explorer.js';
 import { createCityScene } from './city-scene.js';
+import { buildFloorIndex } from './city-floors.js';
+import { validateDeclarations } from './declarations.js';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sourceUrl = (source, path, line) => `${source.repository}/blob/${source.revision}/${path.split('/').map(encodeURIComponent).join('/')}${line ? `#L${line}` : ''}`;
-let city, physlib, mathlib, scene, tree, selected, declarationPilot;
+let city, physlib, mathlib, scene, tree, selected, declarationPilot, declarationSnapshot, floorIndex;
 const expanded = new Set(['Physlib','Physlib/Mathematics','Physlib/Mathematics/Calculus','Mathlib']);
 
 function renderExplorer() {
@@ -22,14 +24,24 @@ function relationList(edges, endpoint) {
 }
 
 function declarationSection(node) {
-  const declarations=declarationPilot?.declarations.filter(d=>d.module===node.id)??[];
-  const targets=declarationPilot?.targets.filter(d=>d.module===node.id)??[];
-  if(node.library==='Physlib') {
-    if(!declarations.length)return `<h3>Declarations</h3><p class="note">${declarationPilot?'No declarations indexed for this file in the partial pilot.':'Declaration pilot data is unavailable for this snapshot.'}</p>`;
-    return `<h3>Declarations · partial pilot</h3><p class="note">Select a declaration to inspect recorded Mathlib relationships.</p><ul class="inspect-list">${declarations.map(d=>`<li><button data-declaration="${esc(d.id)}">${esc(d.id)}</button> · ${esc(d.kind)}</li>`).join('')}</ul><div id="declaration-result" aria-live="polite"></div>`;
-  }
-  if(!targets.length)return '<h3>Declarations</h3><p class="note">No declarations from this file are linked in the partial pilot.</p>';
-  return `<h3>Declarations · partial pilot</h3><p class="note">Select a result to see recorded Physlib dependents.</p><ul class="inspect-list">${targets.map(d=>`<li><button data-target="${esc(d.id)}">${esc(d.id)}</button></li>`).join('')}</ul><div id="target-result" aria-live="polite"></div>`;
+  const data=floorIndex.get(node.id),count=data.items.length;
+  if(!count)return `<h3>Floors</h3><p class="note">${data.coverage==='complete'?'No declarations recorded for this file.':data.coverage==='partial'?'No declarations recorded in the partial snapshot. Its building has a placeholder height.':'Declaration coverage is unavailable for this file. Its building has a placeholder height.'}</p>`;
+  return `<h3>Floors · ${count} recorded declarations</h3><p class="note">${data.coverage==='complete'?'Recorded coverage is complete.':'Partial coverage: the file may contain more.'} ${count>data.floors.length?'Each floor groups several recorded declarations.':'Each floor represents one recorded declaration.'} Select a floor here or on the selected building.</p><div class="floor-list">${data.floors.map(f=>`<button data-floor="${f.index}"><span>Floor ${f.index+1}</span><small>${f.items.length===1?esc(f.items[0].id):`${f.items.length} declarations`}</small></button>`).join('')}</div><div id="floor-result" aria-live="polite"></div><div id="declaration-result" aria-live="polite"></div><div id="target-result" aria-live="polite"></div>`;
+}
+
+function inspectFloor(id,index) {
+  if(id!==selected)return;
+  const data=floorIndex.get(id),floor=data?.floors[index];if(!floor)return;
+  const result=$('#floor-result');if(!result)return;
+  const pilotPhys=new Set(declarationPilot?.declarations.map(d=>d.id)??[]),pilotMath=new Set(declarationPilot?.targets.map(d=>d.id)??[]);
+  const node=city.nodes.find(item=>item.id===id),source=node.library==='Mathlib'?mathlib.source:physlib.source;
+  result.innerHTML=`<h3>Floor ${index+1} · ${floor.items.length} recorded declaration${floor.items.length===1?'':'s'}</h3><ul class="inspect-list">${floor.items.map(d=>{
+    const action=pilotPhys.has(d.id)?`<button data-declaration="${esc(d.id)}">${esc(d.id)}</button>`:pilotMath.has(d.id)?`<button data-target="${esc(d.id)}">${esc(d.id)}</button>`:esc(d.id);
+    const link=d.line?` <a class="evidence" href="${sourceUrl(source,node.module.path,d.line)}" target="_blank" rel="noreferrer">line ${d.line} ↗</a>`:'';
+    return `<li>${action} <span class="note">· ${esc(d.kind)}</span>${link}${d.statement?`<pre class="floor-statement">${esc(d.statement)}</pre>`:''}</li>`;
+  }).join('')}</ul><p class="note">Declarations with recorded cross-library relationships can be selected.</p>`;
+  for(const button of document.querySelectorAll('[data-floor]'))button.classList.toggle('active',Number(button.dataset.floor)===index);
+  scene.selectFloor(id,index);
 }
 
 function inspectDeclaration(id) {
@@ -56,7 +68,7 @@ function select(id,{focus=true}={}) {
   const maps=node.library==='Physlib'?physlib.maps.filter(map=>map.references.includes(node.module.path)):[];
   $('#city-inspector').innerHTML=`<span class="label">${node.library.toUpperCase()} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a><a href="${node.library==='Mathlib'?'mathlib.html':'index.html'}?node=${encodeURIComponent(id)}">Full file view ↗</a></div>${declarationSection(node)}<h3>Imports · ${imports.length} in pilot</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in pilot</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="index.html?node=${encodeURIComponent('map:'+map.path)}">${esc(map.title)}</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this pilot.</p>`;
   $('#current-selection').innerHTML=`<span>Selected file</span><strong>${esc(id)}</strong><small id="relation-mode">Solid arrows · explicit file imports</small>`;
-  scene.select(id);if(focus)scene.focusFolder(folder);renderExplorer();
+  scene.select(id);if(focus)scene.focusBuilding(id);renderExplorer();
   const url=new URL(location.href);url.searchParams.set('node',id);history.replaceState(null,'',url);
 }
 
@@ -68,6 +80,7 @@ function switchView(mode) {
 document.addEventListener('click',event=>{
   const folder=event.target.closest('summary')?.parentElement;if(folder?.dataset.folder)scene?.focusFolder(folder.dataset.folder);
   const node=event.target.closest('[data-node]');if(node)select(node.dataset.node);
+  const floor=event.target.closest('[data-floor]');if(floor)inspectFloor(selected,Number(floor.dataset.floor));
   const declaration=event.target.closest('[data-declaration]');if(declaration&&declarationPilot)inspectDeclaration(declaration.dataset.declaration);
   const target=event.target.closest('[data-target]');if(target&&declarationPilot)inspectTarget(target.dataset.target);
 });
@@ -82,10 +95,12 @@ try {
   if(responses.some(response=>!response.ok))throw Error('Missing graph data. Run npm run build:data and npm run build:mathlib.');
   const [p,m,bridge]=await Promise.all(responses.map(response=>response.json()));physlib=p;mathlib=m;city=buildReviewCity(p,m,bridge);
   try {const response=await fetch('data/city-declarations.json');if(response.ok){const d=await response.json();if(d?.source?.physlibRevision===p.source.revision&&d.source.mathlibRevision===m.source.revision&&d.source.toolchain===p.source.toolchain&&Array.isArray(d.declarations)&&Array.isArray(d.targets)&&Array.isArray(d.edges)&&d.edges.every(e=>d.targets.some(t=>t.id===e.to)&&d.declarations.some(v=>v.id===e.from)))declarationPilot=d;}} catch {}
+  try {const response=await fetch('data/declarations.json');if(response.ok){const candidate=await response.json();if(!validateDeclarations(candidate,p).length)declarationSnapshot=candidate;}} catch {}
+  floorIndex=buildFloorIndex(city.nodes,declarationSnapshot,declarationPilot);
   tree=makeFolderTree(city.nodes);$('#count').textContent=city.nodes.length;
   $('#city-counts').textContent=`${city.nodes.filter(n=>n.library==='Physlib').length} Physlib files · ${city.mathlibModules} Mathlib files · ${city.edges.length} imports in this pilot`;
   $('#snapshot').innerHTML=`Physlib <a href="${p.source.repository}/commit/${p.source.revision}">${esc(p.source.revision.slice(0,10))} ↗</a><br>Mathlib <a href="${m.source.repository}/commit/${m.source.revision}">${esc(m.source.revision.slice(0,10))} ↗</a><br>${esc(p.source.toolchain)}`;
-  renderExplorer();scene=createCityScene($('#city-canvas'),city,id=>select(id));$('#loading').hidden=true;
+  renderExplorer();scene=createCityScene($('#city-canvas'),city,floorIndex,id=>select(id),inspectFloor);$('#loading').hidden=true;
   const requested=new URL(location.href).searchParams.get('node');const initial=requested||'Physlib.Mathematics.Calculus.Gradient';
   if(city.nodes.some(node=>node.id===initial))select(initial,{focus:false});
 } catch(error) {$('#loading').innerHTML=`<div class="error">Could not load city: ${esc(error.message)}</div>`;}
