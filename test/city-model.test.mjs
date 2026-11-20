@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildCity, buildReviewCity, buildDistricts, cityNeighborhood } from '../site/city-model.js';
+import { buildCity, buildReviewCity, buildFullCity, buildDistricts, cityNeighborhood } from '../site/city-model.js';
+import { layoutFullCity } from '../site/city-layout.js';
 import { makeFolderTree, renderFolderTree } from '../site/city-explorer.js';
 
 test('city preserves explicit import directions and reports omitted files',()=>{
@@ -13,6 +14,17 @@ test('city preserves explicit import directions and reports omitted files',()=>{
  assert.deepEqual(cityNeighborhood(city,'Mathlib.A').importers,[{from:'Physlib.ClassicalMechanics.A',to:'Mathlib.A',line:2}]);
  assert.equal(cityNeighborhood(city,'Mathlib.A').imports.length,0);
  assert.throws(()=>buildCity(phys,math,{...bridge,source:{...bridge.source,mathlibRevision:'wrong'}}),/do not match/);
+});
+
+test('full city includes all Physlib roots and each directly imported Mathlib file once',()=>{
+ const source={repository:'https://github.com/leanprover-community/physlib',revision:'p',toolchain:'v'};
+ const phys={source,modules:[{id:'Physlib.A',path:'Physlib/A.lean',imports:[{module:'Mathlib.A',line:1}]},{id:'PhyslibAlpha.B',path:'PhyslibAlpha/B.lean',imports:[{module:'Mathlib.A',line:2}]},{id:'QuantumInfo.C',path:'QuantumInfo/C.lean',imports:[]}]};
+ const math={source:{repository:'https://github.com/leanprover-community/mathlib4',physlibRevision:'p',revision:'m',toolchain:'v'},modules:[{id:'Mathlib.A',path:'Mathlib/A.lean',imports:[]},{id:'Mathlib.Unused',path:'Mathlib/Unused.lean',imports:[]}]};
+ const bridge={source:{physlibRevision:'p',mathlibRevision:'m',toolchain:'v'},edges:[{from:'Physlib.A',to:'Mathlib.A',line:1},{from:'PhyslibAlpha.B',to:'Mathlib.A',line:2}],unresolved:[]};
+ const city=buildFullCity(phys,math,bridge),layout=layoutFullCity(city);
+ assert.equal(city.nodes.length,4);assert.equal(city.mathlibModules,1);assert.equal(city.edges.length,2);
+ assert.equal(layout.positions.size,4);assert.ok(layout.positions.has('Mathlib.A'));assert.ok(!layout.positions.has('Mathlib.Unused'));
+ assert.deepEqual(buildDistricts(city.nodes.filter(n=>n.library==='Physlib')).map(d=>d.id).sort(),['Physlib','PhyslibAlpha','QuantumInfo']);
 });
 
 test('review slice follows real files, paths and import edges',()=>{

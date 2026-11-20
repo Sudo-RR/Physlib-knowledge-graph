@@ -1,127 +1,72 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { buildDistricts, districtFor } from './city-model.js';
+import { districtFor } from './city-model.js';
+import { layoutFullCity } from './city-layout.js';
 
-const palette={Physlib:0x002fa7,Mathlib:0x838997};
+function facade(base,windowColor) {
+  const canvas=document.createElement('canvas');canvas.width=64;canvas.height=128;
+  const ctx=canvas.getContext('2d');ctx.fillStyle=base;ctx.fillRect(0,0,64,128);
+  for(let y=4;y<128;y+=12)for(let x=5;x<64;x+=12){ctx.fillStyle=(x+y)%3===0?windowColor:'#8ca0b0';ctx.fillRect(x,y,6,7);ctx.fillStyle='rgba(255,255,255,.18)';ctx.fillRect(x,y,6,1);}
+  const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture;
+}
 
-// The renderer knows positions, not Lean semantics. The caller owns selection.
-export function createCityScene(host, city, floors, onSelect, onFloor) {
-  const scene=new THREE.Scene();
-  scene.background=new THREE.Color(0xf7f7f8);
-  const camera=new THREE.PerspectiveCamera(37,1,.1,500);
-  const renderer=new THREE.WebGLRenderer({antialias:true});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
-  host.append(renderer.domElement);
+export function createCityScene(host,city,floors,onSelect,onFloor) {
+  const layout=layoutFullCity(city), scene=new THREE.Scene();scene.background=new THREE.Color(0xe9edf1);
+  const camera=new THREE.PerspectiveCamera(40,1,.1,3000),renderer=new THREE.WebGLRenderer({antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;host.append(renderer.domElement);
   const overlay=document.createElement('div');overlay.className='city-labels';overlay.setAttribute('aria-hidden','true');host.append(overlay);
-  const controls=new OrbitControls(camera,renderer.domElement);
-  controls.enableDamping=true;controls.maxPolarAngle=Math.PI*.49;controls.minDistance=5;controls.maxDistance=180;
-  scene.add(new THREE.HemisphereLight(0xffffff,0xc6ccdb,2));
-  const sunlight=new THREE.DirectionalLight(0xffffff,2);sunlight.position.set(15,40,25);scene.add(sunlight);
-  const buildings=new Map(),positions=new Map(),districts=new Map(),labels=[],edges=new THREE.Group();
-  const grouped=buildDistricts(city.nodes);
-  for(const library of ['Physlib','Mathlib']) {
-    const items=grouped.filter(d=>d.library===library);
-    items.forEach((district,index)=>{
-      const x=(library==='Physlib'?-14:14)+(index%2)*11-5.5;
-      const z=(Math.floor(index/2)-(Math.ceil(items.length/2)-1)/2)*11;
-      const y=library==='Physlib'?7:0;
-      const plate=new THREE.Mesh(new THREE.BoxGeometry(10,.2,10),new THREE.MeshLambertMaterial({color:library==='Physlib'?0xdce4fb:0xe4e5e8}));
-      plate.position.set(x,y,z);scene.add(plate);
-      const outline=new THREE.LineSegments(new THREE.EdgesGeometry(plate.geometry),new THREE.LineBasicMaterial({color:library==='Physlib'?0x9aafe5:0xb6b9c0}));outline.position.copy(plate.position);scene.add(outline);
-      const label=document.createElement('span');label.className='city-district-label';label.textContent=district.id.split('/').slice(-2).join(' / ');overlay.append(label);
-      labels.push({id:district.id,element:label,position:new THREE.Vector3(x,y+.2,z-5.4)});
-      districts.set(district.id,{...district,x,y,z,outline});
-      const side=Math.ceil(Math.sqrt(district.nodes.length));
-      district.nodes.forEach((node,i)=>{
-        const px=x+(i%side-(side-1)/2)*2.25,pz=z+(Math.floor(i/side)-(side-1)/2)*2.25;
-        const data=floors.get(node.id), group=new THREE.Group(), count=data.floors.length;
-        group.position.set(px,y+.1,pz);group.userData.id=node.id;
-        if(!count){
-          const box=new THREE.Mesh(new THREE.BoxGeometry(1.35,data.height,1.35),new THREE.MeshLambertMaterial({color:0xc9cbd0}));
-          box.position.y=data.height/2;box.userData={id:node.id};group.add(box);
-        } else {
-          const floorHeight=data.height/count;
-          for(const floor of data.floors){
-            const mesh=new THREE.Mesh(new THREE.BoxGeometry(1.35,Math.max(.08,floorHeight-.08),1.35),new THREE.MeshLambertMaterial({color:palette[library]}));
-            mesh.position.y=(floor.index+.5)*floorHeight;mesh.userData={id:node.id,floor:floor.index};group.add(mesh);
-          }
-        }
-        scene.add(group);buildings.set(node.id,group);positions.set(node.id,new THREE.Vector3(px,y+.1+data.height,pz));
-      });
-    });
+  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.maxPolarAngle=Math.PI-.03;controls.minDistance=3;controls.maxDistance=1500;
+  scene.add(new THREE.HemisphereLight(0xe8f3ff,0x566372,2.1));
+  const sun=new THREE.DirectionalLight(0xfff5e6,2.7);sun.position.set(-80,160,90);scene.add(sun);
+  const materials={
+    Physlib:new THREE.MeshStandardMaterial({map:facade('#2d4f73','#cce4f5'),roughness:.42,metalness:.32}),
+    Mathlib:new THREE.MeshStandardMaterial({map:facade('#384a5b','#a9c4d5'),roughness:.5,metalness:.28}),
+    selected:new THREE.MeshStandardMaterial({map:facade('#234985','#e5f1ff'),roughness:.35,metalness:.4}),
+    floor:new THREE.MeshStandardMaterial({color:0x76bdff,roughness:.3,metalness:.3})
+  };
+  const nodeById=new Map(city.nodes.map(n=>[n.id,n])), buildings=new Map(),positions=new Map(),districts=new Map(),labels=[],edges=new THREE.Group();
+  const ground=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(100,layout.width+20),Math.max(100,layout.depth+20)),new THREE.MeshBasicMaterial({color:0xbacbd8,transparent:true,opacity:.12,depthWrite:false,side:THREE.DoubleSide}));ground.rotation.x=-Math.PI/2;ground.position.y=-.05;scene.add(ground);
+  for(const district of layout.districts){
+    const block=new THREE.Mesh(new THREE.BoxGeometry(district.size,.15,district.size),new THREE.MeshStandardMaterial({color:0xa9b7c2,transparent:true,opacity:.24,depthWrite:false,roughness:1}));block.position.set(district.x,-.11,district.z);scene.add(block);
+    const label=document.createElement('span');label.className='city-district-label';label.textContent=district.id.split('/').slice(-2).join(' / ');overlay.append(label);
+    labels.push({id:district.id,element:label,position:new THREE.Vector3(district.x,.2,district.z-district.size/2)});districts.set(district.id,district);
   }
-  scene.add(edges);
-  let mode='city', selected=null;
-  const fitTarget=new THREE.Vector3(0,3.5,0);
-  function setView(next,focus=controls.target.clone()) {
-    mode=next;controls.target.copy(focus);
-    camera.position.copy(focus).add(next==='map'?new THREE.Vector3(0,80,.01):new THREE.Vector3(34,32,48));
-    controls.update();
+  for(const node of city.nodes){
+    const point=layout.positions.get(node.id),data=floors.get(node.id),direction=node.library==='Mathlib'?-1:1;
+    const group=new THREE.Group(),body=new THREE.Mesh(new THREE.BoxGeometry(1.9,data.height,1.9),materials[node.library]);
+    group.position.set(point.x,0,point.z);body.position.y=direction*data.height/2;body.userData={id:node.id};group.add(body);scene.add(group);
+    buildings.set(node.id,{group,body,node,direction});positions.set(node.id,new THREE.Vector3(point.x,direction*data.height,point.z));
   }
-  function focusFolder(folder) {
-    const members=city.nodes.filter(n=>n.module.path.replaceAll('\\','/').startsWith(`${folder}/`));
-    if(!members.length)return;
-    const centre=new THREE.Vector3();for(const node of members)centre.add(positions.get(node.id));centre.divideScalar(members.length);
-    controls.target.copy(centre);camera.position.copy(centre).add(mode==='map'?new THREE.Vector3(0,24,.01):new THREE.Vector3(17,15,22));controls.update();
-    for(const district of districts.values())district.outline.material.color.setHex(district.id===folder?0x002fa7:district.library==='Physlib'?0x9aafe5:0xb6b9c0);
+  scene.add(edges);let mode='city',selected=null,currentDistance=Math.max(layout.width,layout.depth,90)*1.15;
+  const extent=Math.max(layout.width,layout.depth,90),fitTarget=new THREE.Vector3(0,0,0);
+  function setView(next,focus=controls.target.clone(),distance=currentDistance){mode=next;currentDistance=distance;controls.target.copy(focus);const offset=next==='map'?new THREE.Vector3(0,distance,.01):next==='section'?new THREE.Vector3(distance*.15,distance*.08,distance):new THREE.Vector3(distance*.55,distance*.65,distance*.7);camera.position.copy(focus).add(offset);controls.update();}
+  function focusFolder(folder){const members=city.nodes.filter(n=>n.module.path.replaceAll('\\','/').startsWith(`${folder}/`));if(!members.length)return;const points=members.map(n=>positions.get(n.id)),centre=points.reduce((a,p)=>a.add(p),new THREE.Vector3()).divideScalar(points.length);let radius=10;for(const p of points)radius=Math.max(radius,p.distanceTo(centre));setView(mode,centre,Math.max(25,radius*3));}
+  function focusBuilding(id){const b=buildings.get(id);if(!b)return;const height=floors.get(id).height,centre=b.group.position.clone().add(new THREE.Vector3(0,b.direction*height/2,0)),distance=Math.max(12,height*2.1);setView(mode,centre,distance);if(b.direction<0&&mode==='city'){camera.position.copy(centre).add(new THREE.Vector3(distance*.55,-distance*.5,distance*.7));controls.update();}}
+  function clearFloors(building){for(const child of [...building.group.children])if(child!==building.body){building.group.remove(child);child.geometry.dispose();}building.body.visible=true;}
+  function select(id){
+    if(selected&&buildings.has(selected)){const previous=buildings.get(selected);clearFloors(previous);previous.body.material=materials[previous.node.library];}
+    selected=id;const b=buildings.get(id);if(!b)return;b.body.material=materials.selected;
+    const data=floors.get(id);if(data.floors.length){b.body.visible=false;const h=data.height/data.floors.length;
+      for(const floor of data.floors){const mesh=new THREE.Mesh(new THREE.BoxGeometry(1.9,Math.max(.1,h-.08),1.9),materials.selected);mesh.position.y=b.direction*(floor.index+.5)*h;mesh.userData={id,floor:floor.index};b.group.add(mesh);}}
+    return drawLinks(city.edges.filter(e=>e.from===id||e.to===id),false);
   }
-  function focusBuilding(id) {
-    const building=buildings.get(id), data=floors.get(id);if(!building)return;
-    const centre=building.position.clone().add(new THREE.Vector3(0,data.height/2,0));
-    const distance=Math.max(10,data.height*1.7);
-    controls.target.copy(centre);camera.position.copy(centre).add(mode==='map'?new THREE.Vector3(0,distance*1.5,.01):new THREE.Vector3(distance*.9,distance*.55,distance));controls.update();
-  }
-  function selectFloor(id,index) {
-    const group=buildings.get(id);if(!group||id!==selected)return;
-    for(const mesh of group.children)mesh.material.color.setHex(mesh.userData.floor===index?0x101827:0x4566ae);
-  }
-  function select(id) {
-    selected=id;
-    for(const [key,group] of buildings){const node=city.nodes.find(n=>n.id===key),data=floors.get(key);for(const mesh of group.children)mesh.material.color.setHex(key===id?0x253e79:data.floors.length?palette[node.library]:0xc9cbd0);}
-    for(const edge of edges.children)edge.dispose();edges.clear();
-    for(const e of city.edges.filter(e=>e.from===id||e.to===id)) {
-      const from=positions.get(e.from),to=positions.get(e.to),direction=to.clone().sub(from);
-      if(direction.length()<.01)continue;
-      const arrow=new THREE.ArrowHelper(direction.clone().normalize(),from,direction.length(),0x002fa7,.8,.4);
+  function selectFloor(id,index){const b=buildings.get(id);if(!b||id!==selected)return;for(const mesh of b.group.children)if(mesh!==b.body)mesh.material=mesh.userData.floor===index?materials.floor:materials.selected;}
+  function drawLinks(links,dashed){
+    for(const item of edges.children)item.dispose();edges.clear();const pairs=new Set();let drawn=0;
+    for(const link of links){if(!positions.has(link.from)||!positions.has(link.to))continue;const key=JSON.stringify([link.from,link.to]);if(pairs.has(key))continue;pairs.add(key);
+      if(drawn>=80)continue;const from=positions.get(link.from),to=positions.get(link.to),vector=to.clone().sub(from);if(vector.length()<.01)continue;drawn++;
+      const arrow=new THREE.ArrowHelper(vector.clone().normalize(),from,vector.length(),dashed?0x49576c:0x0055c9,1,.5);
+      if(dashed){arrow.line.material.dispose();arrow.line.material=new THREE.LineDashedMaterial({color:0x49576c,dashSize:1,gapSize:.6,depthTest:false});arrow.line.computeLineDistances();}
       arrow.line.material.depthTest=false;arrow.cone.material.depthTest=false;arrow.line.renderOrder=100;arrow.cone.renderOrder=100;edges.add(arrow);
-    }
-    const node=city.nodes.find(n=>n.id===id);
-    for(const district of districts.values())district.outline.material.color.setHex(district.id===districtFor(node)?0x002fa7:district.library==='Physlib'?0x9aafe5:0xb6b9c0);
-  }
-  function showDeclarationLinks(links) {
-    for(const edge of edges.children)edge.dispose();edges.clear();
-    const pairs=new Set();
-    for(const link of links){
-      if(!positions.has(link.from)||!positions.has(link.to))continue;
-      const key=JSON.stringify([link.from,link.to]);if(pairs.has(key))continue;pairs.add(key);
-      const from=positions.get(link.from),to=positions.get(link.to),direction=to.clone().sub(from);
-      if(direction.length()<.01)continue;
-      const arrow=new THREE.ArrowHelper(direction.clone().normalize(),from,direction.length(),0x555d70,.8,.4);
-      arrow.line.material.dispose();arrow.line.material=new THREE.LineDashedMaterial({color:0x555d70,dashSize:.8,gapSize:.5,depthTest:false});arrow.line.computeLineDistances();arrow.cone.material.depthTest=false;arrow.line.renderOrder=100;arrow.cone.renderOrder=100;edges.add(arrow);
-    }
-    return pairs.size;
+    }return {drawn,total:pairs.size};
   }
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
   renderer.domElement.addEventListener('pointerdown',e=>down=[e.clientX,e.clientY]);
-  renderer.domElement.addEventListener('pointerup',e=>{
-    if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>4)return;
-    const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);
-    const hit=ray.intersectObjects([...buildings.values()],true)[0];
-    if(hit){const {id,floor}=hit.object.userData;if(id===selected&&Number.isInteger(floor))onFloor(id,floor);else onSelect(id);}
+  renderer.domElement.addEventListener('pointerup',e=>{if(!down||Math.hypot(e.clientX-down[0],e.clientY-down[1])>4)return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);const visible=[...buildings.values()].flatMap(b=>b.group.children.filter(child=>child.visible));const hit=ray.intersectObjects(visible,false)[0];if(hit){const {id,floor}=hit.object.userData;if(id===selected&&Number.isInteger(floor))onFloor(id,floor);else if(id)onSelect(id);}});
+  function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}new ResizeObserver(resize).observe(host);resize();setView('city',fitTarget);
+  renderer.setAnimationLoop(()=>{controls.update();renderer.render(scene,camera);const active=nodeById.get(selected),activeDistrict=active&&districtFor(active),occupied=[];
+    for(const label of [...labels].sort((a,b)=>Number(b.id===activeDistrict)-Number(a.id===activeDistrict))){const p=label.position.clone().project(camera),x=(p.x+1)*host.clientWidth/2,y=(1-p.y)*host.clientHeight/2,width=Math.min(160,label.element.textContent.length*5.5+14),box={left:x-width/2,right:x+width/2,top:y-10,bottom:y+10};const hidden=occupied.length>=8||p.z>1||box.left<0||box.right>host.clientWidth||box.top<0||box.bottom>host.clientHeight||(x>host.clientWidth-170&&y<160)||occupied.some(o=>box.left<o.right&&box.right>o.left&&box.top<o.bottom&&box.bottom>o.top);label.element.hidden=hidden;label.element.classList.toggle('active',label.id===activeDistrict);if(!hidden)occupied.push(box);label.element.style.transform=`translate(-50%,-50%) translate(${x}px,${y}px)`;}
   });
-  function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}
-  new ResizeObserver(resize).observe(host);resize();setView('city',fitTarget);
-  renderer.setAnimationLoop(()=>{
-    controls.update();renderer.render(scene,camera);
-    const active=city.nodes.find(node=>node.id===selected);const activeDistrict=active&&districtFor(active);const occupied=[];
-    for(const label of [...labels].sort((a,b)=>Number(b.id===activeDistrict)-Number(a.id===activeDistrict))){
-      const p=label.position.clone().project(camera),x=(p.x+1)*host.clientWidth/2,y=(1-p.y)*host.clientHeight/2;
-      const width=Math.min(160,label.element.textContent.length*5.5+14),bounds={left:x-width/2,right:x+width/2,top:y-10,bottom:y+10};
-      const hidden=p.z>1||bounds.left<0||bounds.right>host.clientWidth||bounds.top<0||bounds.bottom>host.clientHeight||(x>host.clientWidth-170&&y<155)||occupied.some(o=>bounds.left<o.right&&bounds.right>o.left&&bounds.top<o.bottom&&bounds.bottom>o.top);
-      label.element.hidden=hidden;label.element.classList.toggle('active',label.id===activeDistrict);
-      if(!hidden)occupied.push(bounds);
-      label.element.style.transform=`translate(-50%,-50%) translate(${x}px,${y}px)`;
-    }
-  });
-  return {select,selectFloor,showDeclarationLinks,focusFolder,focusBuilding,setView,reset:()=>setView(mode,fitTarget),get selected(){return selected;}};
+  function zoom(factor){camera.position.sub(controls.target).multiplyScalar(factor).add(controls.target);currentDistance=camera.position.distanceTo(controls.target);controls.update();}
+  return {select,selectFloor,showDeclarationLinks:links=>drawLinks(links,true).drawn,focusFolder,focusBuilding,setView,zoom,reset:()=>setView(mode,fitTarget,extent*1.15),get selected(){return selected;}};
 }

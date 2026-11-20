@@ -34,10 +34,15 @@ export function buildReviewCity(physlib,mathlib,bridge) {
   return cityFromModules(physlib,mathlib,bridge,selected,{totalPhyslib:selected.length,omittedPhyslib:0});
 }
 
+// Include every Physlib-family module and each directly imported Mathlib module.
+export function buildFullCity(physlib,mathlib,bridge) {
+  return cityFromModules(physlib,mathlib,bridge,physlib.modules,{totalPhyslib:physlib.modules.length,omittedPhyslib:0});
+}
+
 // Group by real directory path; the district key is not a dependency cluster.
 export function districtFor(node) {
   const parts=node.module.path.replaceAll('\\','/').split('/').slice(0,-1);
-  return parts.slice(0,Math.min(parts.length,3)).join('/') || node.library;
+  return parts.slice(0,Math.min(parts.length,3)).join('/') || node.id.split('.')[0];
 }
 
 export function buildDistricts(nodes) {

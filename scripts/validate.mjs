@@ -15,6 +15,7 @@ export function validateGraph(g) {
     if (!m || typeof m.id !== 'string' || !m.id || typeof m.path !== 'string' || !m.path.endsWith('.lean') || typeof m.library !== 'string' || !Array.isArray(m.imports)) { errors.push('Invalid module.'); continue; }
     if (ids.has(m.id)) errors.push(`Duplicate module ID: ${m.id}`); ids.add(m.id);
     if (paths.has(m.path)) errors.push(`Duplicate module path: ${m.path}`); paths.add(m.path);
+    if (m.lineCount !== undefined && (!Number.isInteger(m.lineCount) || m.lineCount < 0)) errors.push(`Invalid source line count in ${m.id}.`);
     for (const i of m.imports) if (!i || typeof i.module !== 'string' || !i.module || !Number.isInteger(i.line) || i.line < 1 || typeof i.kind !== 'string') errors.push(`Invalid import in ${m.id}.`);
   }
   const mapPaths = new Set();

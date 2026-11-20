@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { importsFromSource } from './extract.mjs';
+import { importsFromSource, sourceLineCount } from './extract.mjs';
 import { validateGraph } from './validate.mjs';
 
 const git = (root, ...args) => execFileSync('git', ['-C', root, ...args], { encoding:'utf8' }).trim();
@@ -46,7 +46,7 @@ export async function buildMathlibGraph(physlibRoot) {
     const texts = await Promise.all(batch.map(file => readFile(path.join(mathlib, file), 'utf8')));
     for (let j = 0; j < batch.length; j++) {
       const file = batch[j];
-      modules.push({ id:file.slice(0,-5).replaceAll('/','.'), path:file, library:'Mathlib', imports:importsFromSource(texts[j]) });
+      modules.push({ id:file.slice(0,-5).replaceAll('/','.'), path:file, library:'Mathlib', lineCount:sourceLineCount(texts[j]), imports:importsFromSource(texts[j]) });
     }
   }
   const ids = new Set(modules.map(m=>m.id)), unresolvedLocalImports = [], externalImports = [];
@@ -59,7 +59,7 @@ export async function buildMathlibGraph(physlibRoot) {
   checkClean(physlib); checkClean(mathlib);
   const result = {
     schemaVersion:1,
-    source:{repository:'https://github.com/leanprover-community/mathlib4',revision,generatedAt:new Date().toISOString(),toolchain,localRoots:['Mathlib'],extractor:{name:'mathlib-source-scan',version:'1.0.0'},method:'explicit source import scan',physlibRevision},
+    source:{repository:'https://github.com/leanprover-community/mathlib4',revision,generatedAt:new Date().toISOString(),toolchain,localRoots:['Mathlib'],extractor:{name:'mathlib-source-scan',version:'1.1.0'},method:'explicit source import scan',physlibRevision},
     counts:{modules:modules.length,maps:0,imports:modules.reduce((n,m)=>n+m.imports.length,0),unresolvedLocalImports:unresolvedLocalImports.length,externalImports:externalImports.length,unresolvedMapReferences:0},
     modules,maps:[],unresolvedLocalImports,externalImports,unresolvedMapReferences:[]
   };
