@@ -47,10 +47,11 @@ jobs:
           ref: ${{ steps.mathlib_pin.outputs.revision }}
           path: .physlib-source/.lake/packages/mathlib
       - run: npm run build:mathlib
+      - run: npm run package:site
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: site
+          path: dist/site
   deploy:
     needs: build
     if: github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
