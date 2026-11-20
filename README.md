@@ -7,6 +7,7 @@ The [graph data contract](docs/graph-data-contract.md) defines the current snaps
 An [experimental clustering analysis](docs/module-clustering.md) groups files by shared imports and records the evidence.
 The [declaration browser proposal](docs/declaration-browser-proposal.md) documents an experimental lean-vouch adapter and its optional data interface. Declaration extraction is not yet part of automatic publication.
 See the [Euler–Lagrange pilot](docs/lean-vouch-pilot.md) for a real Physlib example and the limits of the extracted dependencies.
+The [Mathlib explorer](docs/mathlib-graph.md) connects Physlib's explicit imports to the exact Mathlib revision pinned by Physlib.
 
 ## Run locally
 
@@ -22,6 +23,8 @@ npm run serve
 
 Open <http://127.0.0.1:4173>. To use a different clean Physlib checkout or output path, run `node scripts/extract.mjs /path/to/physlib site/data/graph.json`. The checkout must be clean so that the recorded commit accurately identifies the source.
 
+To enable the Mathlib explorer locally, populate `.physlib-source/.lake/packages/mathlib` with a clean checkout at the revision printed by `node scripts/mathlib-pin.mjs .physlib-source`, then run `npm run build:mathlib`. See the [Mathlib instructions](docs/mathlib-graph.md) for details. Physlib browsing still works without these optional files.
+
 ## What the data means
 
 The extractor scans Lean source for explicit import commands, ignoring nested comments. An edge A → B means A explicitly imports B, not that A actually uses a declaration from B. External imports and unresolved local imports are reported separately; standard implicit imports are not included. Module and API-map data cover `Physlib`, `PhyslibAlpha`, and `QuantumInfo`, including root modules. Map links are extracted from the `Lean References` section of `API-map.md`; references are file-level, not verified declaration-level links. Missing referenced files are reported in the JSON snapshot. This is a lightweight source scan, not Lean's parser: unusual syntax may be missed. Its direct import names matched Lean's parser across one complete Physlib checkout; see the [comparison and its limitations](docs/import-comparison.md).
@@ -34,7 +37,7 @@ The experimental **Districts** overview borrows the district metaphor from [Stra
 
 ## Automatic updates and deployment
 
-The included GitHub Actions workflow checks out Physlib `master` at the start of each build, runs tests, regenerates and validates the snapshot, and deploys `site/` to GitHub Pages on pushes, hourly, manually, or on a `physlib-updated` repository dispatch. Enable Pages with **Settings → Pages → Build and deployment → GitHub Actions** in this repository. Runs are serialized and check both source branches immediately before deployment; if either has advanced, the run fails rather than knowingly publishing stale data. A branch can still advance during deployment, and scheduling can be delayed, so this is not an instantaneous freshness guarantee. The previous successful site remains available if a run fails; its timestamp and revision are displayed, and failure details are in this repository's Actions tab. The workflow builds the latest checkout even when a dispatch arrives; it does not trust a supplied SHA.
+The included GitHub Actions workflow checks out Physlib `master` at the start of each build and the Mathlib revision pinned by that checkout, runs tests, regenerates and validates the snapshots, and deploys `site/` to GitHub Pages on pushes, hourly, manually, or on a `physlib-updated` repository dispatch. Enable Pages with **Settings → Pages → Build and deployment → GitHub Actions** in this repository. Runs are serialized and check both source branches immediately before deployment; if either has advanced, the run fails rather than knowingly publishing stale data. A branch can still advance during deployment, and scheduling can be delayed, so this is not an instantaneous freshness guarantee. The previous successful site remains available if a run fails; its timestamp and revision are displayed, and failure details are in this repository's Actions tab. The workflow builds the latest checkout even when a dispatch arrives; it does not trust a supplied SHA. A manual run on a non-default branch builds an artifact but does not deploy it.
 
 For a faster refresh, Physlib maintainers could configure a workflow on merges to `master` that sends a `repository_dispatch` event of type `physlib-updated` to this repository, using an appropriately scoped credential stored as a GitHub Actions secret. This requires coordination and an authorized sender; no upstream workflow or credential is configured here. The hourly schedule remains a fallback.
 

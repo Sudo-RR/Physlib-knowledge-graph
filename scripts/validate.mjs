@@ -22,7 +22,9 @@ export function validateGraph(g) {
     if (!m || typeof m.path !== 'string' || !m.path.endsWith('/API-map.md') || typeof m.title !== 'string' || typeof m.abstract !== 'string' || !Array.isArray(m.references) || m.references.some(p => typeof p !== 'string' || !p.endsWith('.lean'))) { errors.push('Invalid API map.'); continue; }
     if (mapPaths.has(m.path)) errors.push(`Duplicate API map path: ${m.path}`); mapPaths.add(m.path);
   }
-  const roots = new Set(['Physlib', 'PhyslibAlpha', 'QuantumInfo']);
+  const configuredRoots = g.source.localRoots;
+  if (configuredRoots !== undefined && (!Array.isArray(configuredRoots) || !configuredRoots.length || configuredRoots.some(r => typeof r !== 'string' || !/^[\p{L}_][\p{L}\p{N}_']*$/u.test(r)) || new Set(configuredRoots).size !== configuredRoots.length)) return [...errors, 'Invalid local module roots.'];
+  const roots = new Set(configuredRoots ?? ['Physlib', 'PhyslibAlpha', 'QuantumInfo']);
   const expectedLocal = [], expectedExternal = [], expectedMaps = [];
   for (const m of g.modules) if (m && Array.isArray(m.imports)) for (const i of m.imports) {
     if (!i || typeof i.module !== 'string') continue;
