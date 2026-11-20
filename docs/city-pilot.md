@@ -28,3 +28,9 @@ node scripts/adapt-result-city.mjs raw.json site/data/graph.json site/data/mathl
 ```
 
 The file is ignored and not produced by the current Pages workflow. A missing, stale or incompatible pilot is not treated as evidence that the file contains no declarations. Automating a reproducible extractor wrapper, complete coverage tests and refresh strategy remains future work.
+
+### Local lean-graph observation
+
+The compatibility-adjusted CLI was run on the same Euler–Lagrange module with `--mode unified --readable --edge-types proof,sig`. It reported writing 210,684 nodes and 4,418,297 edges to a 356 MB NDJSON file, then exited unsuccessfully while attempting a further DOT/Graphviz output. All 210,684 lines in the file parsed as JSON, but the failed exit means the export must not be treated as a validated production artifact. The process reached at least 3.7 GB resident memory on this machine.
+
+An inspection of the output found `ContDiff` as a signature relationship and `gradient` and `contDiff_id` as proof relationships of `ClassicalMechanics.euler_lagrange_varGradient`. It also found `gradient` in the signature of `ClassicalMechanics.eulerLagrangeOp_eq`. These observations agree in broad terms with the result-graph pilot, but different filters, edge semantics and possible routed relationships prevent a claim that their complete outputs are equivalent. Investigate the post-export failure and benchmark a smaller scope before considering automatic refresh.
