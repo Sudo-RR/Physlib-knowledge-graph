@@ -9,10 +9,20 @@ const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sourceUrl = (source, path, line) => `${source.repository}/blob/${source.revision}/${path.split('/').map(encodeURIComponent).join('/')}${line ? `#L${line}` : ''}`;
 let city, physlib, mathlib, scene, tree, selected, declarationPilot, declarationSnapshot, floorIndex, floorRoom;
+let navIndex=0, navMax=0;
 const expanded = new Set(['Physlib','Physlib/ClassicalMechanics']);
 
 function renderExplorer() {
-  $('#city-list').innerHTML = renderFolderTree(tree, {selected, query:$('#search').value, expanded, escape:esc});
+  const list=$('#city-list'),scroll=list.scrollTop;
+  list.innerHTML = renderFolderTree(tree, {selected, query:$('#search').value, expanded, escape:esc});
+  list.scrollTop=scroll;
+}
+
+function updateHistoryButtons(){$('#nav-back').disabled=navIndex<=0;$('#nav-forward').disabled=navIndex>=navMax;}
+function mathlibTarget(target) {
+  if(city.nodes.some(node=>node.id===target.module))return `<button data-node="${esc(target.module)}">${esc(target.module)}</button>`;
+  const module=mathlib.modules.find(item=>item.id===target.module);
+  return module?`<a href="${sourceUrl(mathlib.source,module.path)}" target="_blank" rel="noreferrer">${esc(target.module)} · source ↗</a>`:`${esc(target.module)} · not in city`;
 }
 
 function relationList(edges, endpoint) {
@@ -61,7 +71,7 @@ function inspectFloor(id,index) {
 function inspectDeclaration(id) {
   const targets=new Map(declarationPilot.targets.map(d=>[d.id,d]));
   const edges=declarationPilot.edges.filter(edge=>edge.from===id);
-  $('#declaration-result').innerHTML=`<h3>${esc(id)}</h3><p class="note">${edges.length} recorded Mathlib relationships in the pilot scope. “Value” includes definition bodies or theorem proofs. Some edges may be routed through omitted declarations.</p>${edges.length?`<ul class="inspect-list">${edges.map(edge=>{const target=targets.get(edge.to);return `<li>${esc(edge.to)} · ${esc(edge.kind)}<br><a href="mathlib.html?node=${encodeURIComponent(target.module)}">${esc(target.module)} ↗</a></li>`;}).join('')}</ul>`:'<p class="note">No Mathlib relationships recorded within the included scope.</p>'}<p class="note">Absence does not establish non-use.</p>`;
+  $('#declaration-result').innerHTML=`<h3>${esc(id)}</h3><p class="note">${edges.length} recorded Mathlib relationships in the pilot scope. “Value” includes definition bodies or theorem proofs. Some edges may be routed through omitted declarations.</p>${edges.length?`<ul class="inspect-list">${edges.map(edge=>{const target=targets.get(edge.to);return `<li>${esc(edge.to)} · ${esc(edge.kind)}<br>${mathlibTarget(target)}</li>`;}).join('')}</ul>`:'<p class="note">No Mathlib relationships recorded within the included scope.</p>'}<p class="note">Absence does not establish non-use.</p>`;
   const shown=scene.showDeclarationLinks(edges.map(edge=>({from:selected,to:targets.get(edge.to).module})));
   $('#relation-mode').textContent=`Declaration links · ${shown} displayed module pairs · partial, may be routed`;
   if(!$('#floor-interior').hidden)$('#floor-dependencies').innerHTML=$('#declaration-result').innerHTML;
@@ -76,22 +86,20 @@ function inspectTarget(id) {
   if(!$('#floor-interior').hidden)$('#floor-dependencies').innerHTML=$('#target-result').innerHTML;
 }
 
-function select(id,{focus=true}={}) {
+function select(id,{focus=true,record=true}={}) {
   const hood=cityNeighborhood(city,id);if(!hood)return;
+  const changed=selected!==id;
   selected=id;$('#floor-interior').hidden=true;floorRoom?.hide();const {node,imports,importers}=hood,source=node.library==='Mathlib'?mathlib.source:physlib.source;
   const folder=node.module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/');
   const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));
   const maps=node.library==='Physlib'?physlib.maps.filter(map=>map.references.includes(node.module.path)):[];
   const measure=floorIndex.get(id).lineCount;
-  $('#city-inspector').innerHTML=`<span class="label">${node.library.toUpperCase()} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><p class="note">${measure===null?'Source line count unavailable; height uses available declaration data.':`${measure.toLocaleString()} source lines · height is logarithmic`}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a><a href="${node.library==='Mathlib'?'mathlib.html':'index.html'}?node=${encodeURIComponent(id)}">Full file view ↗</a></div>${declarationSection(node)}<h3>Imports · ${imports.length} in city</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in city</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="index.html?node=${encodeURIComponent('map:'+map.path)}">${esc(map.title)}</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this city.</p>`;
+  $('#city-inspector').innerHTML=`<span class="label">${node.library.toUpperCase()} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><p class="note">${measure===null?'Source line count unavailable; height uses available declaration data.':`${measure.toLocaleString()} source lines · height is logarithmic`}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a></div>${declarationSection(node)}<h3>Imports · ${imports.length} in city</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in city</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="${sourceUrl(physlib.source,map.path)}" target="_blank" rel="noreferrer">${esc(map.title)} ↗</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this city.</p>`;
   $('#current-selection').innerHTML=`<span>Selected file</span><strong>${esc(id)}</strong><small id="relation-mode">Solid arrows · explicit file imports</small>`;
   const graph=scene.select(id);if(graph.total>graph.drawn)$('#relation-mode').textContent=`Solid arrows · ${graph.drawn} of ${graph.total} file relationships shown`;if(focus)scene.focusBuilding(id);renderExplorer();
-  const url=new URL(location.href);url.searchParams.set('node',id);history.replaceState(null,'',url);
-}
-
-function switchView(mode) {
-  scene.setView(mode);
-  for(const name of ['city','section','map']){$(`#view-${name}`).classList.toggle('active',name===mode);$(`#view-${name}`).setAttribute('aria-pressed',String(name===mode));}
+  const url=new URL(location.href);url.searchParams.set('node',id);
+  if(record&&changed){navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);}else history.replaceState({cityIndex:navIndex},'',url);
+  updateHistoryButtons();
 }
 
 document.addEventListener('click',event=>{
@@ -103,9 +111,12 @@ document.addEventListener('click',event=>{
 });
 document.addEventListener('toggle',event=>{const folder=event.target;if(!folder.matches?.('details[data-folder]'))return;if(folder.open)expanded.add(folder.dataset.folder);else expanded.delete(folder.dataset.folder);},true);
 $('#search').addEventListener('input',renderExplorer);
-$('#view-city').addEventListener('click',()=>switchView('city'));
-$('#view-section').addEventListener('click',()=>switchView('section'));
-$('#view-map').addEventListener('click',()=>switchView('map'));
+$('#search').addEventListener('keydown',event=>{if(event.key==='Enter'){const first=$('#city-list [data-node]');if(first){event.preventDefault();select(first.dataset.node);}}});
+document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)){event.preventDefault();$('#search').focus();}if(event.key==='Escape'){if(!$('#floor-interior').hidden){$('#floor-interior').hidden=true;floorRoom?.hide();}else if(document.activeElement===$('#search')){$('#search').value='';renderExplorer();}}});
+$('#nav-back').addEventListener('click',()=>history.back());
+$('#nav-forward').addEventListener('click',()=>history.forward());
+window.addEventListener('popstate',event=>{const id=new URL(location.href).searchParams.get('node');navIndex=Number.isInteger(event.state?.cityIndex)?event.state.cityIndex:0;if(id&&city?.nodes.some(node=>node.id===id))select(id,{record:false});else if(!id&&scene){selected=null;scene.select(null);scene.reset();$('#current-selection').textContent='Select a file';$('#city-inspector').innerHTML='<div class="empty"><h2>Select a file.</h2><p>Explore its imports and recorded declarations.</p></div>';$('#floor-interior').hidden=true;floorRoom?.hide();renderExplorer();}updateHistoryButtons();});
+document.querySelectorAll('[data-move]').forEach(button=>button.addEventListener('click',()=>{const direction={forward:[8,0],back:[-8,0],left:[0,-8],right:[0,8]}[button.dataset.move];scene?.move(...direction);}));
 $('#reset').addEventListener('click',()=>scene.reset());
 $('#focus-selected').addEventListener('click',()=>{if(selected)scene.focusBuilding(selected);});
 $('#zoom-in').addEventListener('click',()=>scene.zoom(.7));
@@ -123,6 +134,7 @@ try {
   $('#city-counts').textContent=`${city.nodes.filter(n=>n.library==='Physlib').length} Physlib-family files · ${city.mathlibModules} directly imported Mathlib files · ${city.edges.length} shown imports`;
   $('#snapshot').innerHTML=`Physlib <a href="${p.source.repository}/commit/${p.source.revision}">${esc(p.source.revision.slice(0,10))} ↗</a><br>Mathlib <a href="${m.source.repository}/commit/${m.source.revision}">${esc(m.source.revision.slice(0,10))} ↗</a><br>${esc(p.source.toolchain)}`;
   renderExplorer();scene=createCityScene($('#city-canvas'),city,floorIndex,id=>select(id),inspectFloor);$('#loading').hidden=true;
-  const requested=new URL(location.href).searchParams.get('node');const initial=requested||'Physlib.ClassicalMechanics.EulerLagrange';
-  if(city.nodes.some(node=>node.id===initial))select(initial,{focus:false});
+  const requested=new URL(location.href).searchParams.get('node');
+  if(requested&&city.nodes.some(node=>node.id===requested))select(requested,{focus:true,record:false});
+  else if(requested){const map=requested.startsWith('map:')?p.maps.find(item=>item.path===requested.slice(4)):null;const module=m.modules.find(item=>item.id===requested);const link=map?sourceUrl(p.source,map.path):module?sourceUrl(m.source,module.path):null;$('#city-inspector').innerHTML=`<div class="empty"><h2>Not in this city</h2><p>${esc(requested)} is not a displayed file. Search the explorer for another file.${link?` <a href="${link}" target="_blank" rel="noreferrer">Open its source ↗</a>`:''}</p></div>`;}
 } catch(error) {$('#loading').innerHTML=`<div class="error">Could not load city: ${esc(error.message)}</div>`;}

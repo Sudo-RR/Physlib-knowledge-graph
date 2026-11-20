@@ -3,4 +3,5 @@
 .issue-publish/
 site/data/
 node_modules/
+dist/
 site/assets/city-bundle.js
