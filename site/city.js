@@ -3,11 +3,12 @@ import { makeFolderTree, renderFolderTree } from './city-explorer.js';
 import { createCityScene } from './city-scene.js';
 import { buildFloorIndex } from './city-floors.js';
 import { validateDeclarations } from './declarations.js';
+import { createFloorRoom } from './floor-room.js';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sourceUrl = (source, path, line) => `${source.repository}/blob/${source.revision}/${path.split('/').map(encodeURIComponent).join('/')}${line ? `#L${line}` : ''}`;
-let city, physlib, mathlib, scene, tree, selected, declarationPilot, declarationSnapshot, floorIndex;
+let city, physlib, mathlib, scene, tree, selected, declarationPilot, declarationSnapshot, floorIndex, floorRoom;
 const expanded = new Set(['Physlib','Physlib/ClassicalMechanics']);
 
 function renderExplorer() {
@@ -52,6 +53,7 @@ function inspectFloor(id,index) {
   $('#floor-interior-content').innerHTML=result.innerHTML;
   $('#floor-dependencies').innerHTML=floor.kind==='source-range'?`<h3>File relationships</h3><p>These apply to the file as a whole, not necessarily this floor.</p><h3>Imports</h3>${relationList(cityNeighborhood(city,id).imports,'to')}<h3>Imported by</h3>${relationList(cityNeighborhood(city,id).importers,'from')}`:'<p>Select a linked declaration to inspect its recorded dependencies.</p>';
   $('#floor-interior').hidden=false;
+  try {floorRoom??=createFloorRoom($('#floor-room'));floorRoom.show();} catch {$('#floor-room').classList.add('room-fallback');}
   for(const button of document.querySelectorAll('[data-floor]'))button.classList.toggle('active',Number(button.dataset.floor)===index);
   scene.selectFloor(id,index);
 }
@@ -76,7 +78,7 @@ function inspectTarget(id) {
 
 function select(id,{focus=true}={}) {
   const hood=cityNeighborhood(city,id);if(!hood)return;
-  selected=id;$('#floor-interior').hidden=true;const {node,imports,importers}=hood,source=node.library==='Mathlib'?mathlib.source:physlib.source;
+  selected=id;$('#floor-interior').hidden=true;floorRoom?.hide();const {node,imports,importers}=hood,source=node.library==='Mathlib'?mathlib.source:physlib.source;
   const folder=node.module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/');
   const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));
   const maps=node.library==='Physlib'?physlib.maps.filter(map=>map.references.includes(node.module.path)):[];
@@ -108,7 +110,7 @@ $('#reset').addEventListener('click',()=>scene.reset());
 $('#focus-selected').addEventListener('click',()=>{if(selected)scene.focusBuilding(selected);});
 $('#zoom-in').addEventListener('click',()=>scene.zoom(.7));
 $('#zoom-out').addEventListener('click',()=>scene.zoom(1.4));
-$('#floor-exit').addEventListener('click',()=>{$('#floor-interior').hidden=true;});
+$('#floor-exit').addEventListener('click',()=>{$('#floor-interior').hidden=true;floorRoom?.hide();});
 
 try {
   const responses=await Promise.all(['graph','mathlib','mathlib-bridge'].map(name=>fetch(`data/${name}.json`)));
