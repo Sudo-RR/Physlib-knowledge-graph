@@ -11,19 +11,23 @@ The [Mathlib explorer](docs/mathlib-graph.md) connects Physlib's explicit import
 
 ## Run locally
 
-Requires Git and Node.js 20 or newer. No package installation is needed.
+Requires Git and Node.js 20 or newer. The 3D city additionally uses the npm dependencies and build step below.
 
 ```sh
 git clone --depth 1 https://github.com/leanprover-community/physlib.git .physlib-source
 npm test
 npm run build:data
 npm run validate:data
+npm ci
+npm run build:city
 npm run serve
 ```
 
 Open <http://127.0.0.1:4173>. To use a different clean Physlib checkout or output path, run `node scripts/extract.mjs /path/to/physlib site/data/graph.json`. The checkout must be clean so that the recorded commit accurately identifies the source.
 
 To enable the Mathlib explorer locally, populate `.physlib-source/.lake/packages/mathlib` with a clean checkout at the revision printed by `node scripts/mathlib-pin.mjs .physlib-source`, then run `npm run build:mathlib`. See the [Mathlib instructions](docs/mathlib-graph.md) for details. Physlib browsing still works without these optional files.
+
+The **3D city pilot** uses the same pinned snapshots. It displays up to 60 classical-mechanics files, the Physlib gradient file when present, and the Mathlib files they explicitly import. Buildings represent files; arrows run from importer to import. It does not yet show declaration dependencies. The list and inspector provide keyboard access and links to the complete file views; omitted files are counted. Build the browser bundle with `npm ci` and `npm run build:city` before opening `city.html`. The GitHub Actions refresh builds it automatically.
 
 ## What the data means
 
