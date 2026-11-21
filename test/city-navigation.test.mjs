@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { layoutFullCity } from '../site/city-layout.js';
-import { visibleRelations, allMathlibPipelines, mathlibPipelines, relationGroups, clampLayerY } from '../site/city-relations.js';
+import { visibleRelations, allMathlibPipelines, mathlibPipelines, relationGroups, constrainSurfaceTarget } from '../site/city-relations.js';
 
 test('top-level libraries occupy separated regions and Mathlib has an underground region',()=>{
   const node=(id,path,library='Physlib')=>({id,library,module:{path}});
@@ -29,11 +29,11 @@ test('relationship groups separate Mathlib, dependencies and dependants',()=>{
   assert.deepEqual(relationGroups({nodes,edges},'A'),{mathlib:[edges[0]],uses:[edges[1]],usedBy:[edges[2]]});
 });
 
-test('navigation stays on its selected layer until explicitly changed',()=>{
-  assert.equal(clampLayerY(-20,'surface'),1);
-  assert.equal(clampLayerY(20,'surface'),20);
-  assert.equal(clampLayerY(20,'underground'),-1);
-  assert.equal(clampLayerY(-20,'underground'),-20);
+test('surface navigation stays near actual cities, ignoring underground bounds',()=>{
+  const zones=[{x:0,z:0,radius:10},{x:200,z:0,radius:10},{x:500,z:0,radius:900,underground:true}];
+  assert.deepEqual(constrainSurfaceTarget({x:5,z:0},zones,5),{x:5,z:0});
+  assert.deepEqual(constrainSurfaceTarget({x:100,z:0},zones,5),{x:15,z:0});
+  assert.deepEqual(constrainSurfaceTarget({x:300,z:0},zones,5),{x:215,z:0});
 });
 
 test('connection filters retain import direction, remove duplicates and report the full count',()=>{

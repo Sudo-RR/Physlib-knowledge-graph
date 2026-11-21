@@ -29,4 +29,10 @@ export function relationGroups(city,selected){
   };
 }
 
-export function clampLayerY(y,layer,clearance=1){return layer==='underground'?Math.min(y,-clearance):Math.max(y,clearance);}
+// Keep camera panning near at least one real surface region, including the roads between them.
+export function constrainSurfaceTarget(point,zones,margin=40){
+  const regions=zones.filter(zone=>!zone.underground);if(!regions.length)return {...point};
+  let best=null;
+  for(const region of regions){const dx=point.x-region.x,dz=point.z-region.z,distance=Math.hypot(dx,dz),radius=region.radius+margin;if(distance<=radius)return {...point};const factor=radius/distance,candidate={x:region.x+dx*factor,z:region.z+dz*factor},error=(candidate.x-point.x)**2+(candidate.z-point.z)**2;if(!best||error<best.error)best={...candidate,error};}
+  return {x:best.x,z:best.z};
+}
