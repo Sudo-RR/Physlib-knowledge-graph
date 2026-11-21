@@ -9,8 +9,9 @@ const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sourceUrl = (source, path, line) => `${source.repository}/blob/${source.revision}/${path.split('/').map(encodeURIComponent).join('/')}${line ? `#L${line}` : ''}`;
 let city, physlib, mathlib, scene, tree, selected, declarationPilot, declarationSnapshot, floorIndex, floorRoom;
-let navIndex=0, navMax=0;
+let navIndex=0, navMax=0, relationMode='imports';
 const expanded = new Set(['Physlib','Physlib/ClassicalMechanics']);
+function describeRelations(result){if(relationMode==='none')return 'Connections hidden';return `${result.drawn} of ${result.total} ${relationMode==='imports'?'imports':relationMode==='importers'?'importers':'relationships'} shown${result.total>result.drawn?' · all listed in inspector':''}`;}
 
 function renderExplorer() {
   const list=$('#city-list'),scroll=list.scrollTop;
@@ -47,7 +48,7 @@ function inspectFloor(id,index) {
   const data=floorIndex.get(id),floor=data?.floors[index];if(!floor)return;
   const result=$('#floor-result');if(!result)return;
   $('#declaration-result').innerHTML='';$('#target-result').innerHTML='';
-  const selection=scene.select(id);$('#relation-mode').textContent=selection.total>selection.drawn?`Solid arrows · ${selection.drawn} of ${selection.total} file relationships shown`:'Solid arrows · explicit file imports';
+  const selection=scene.select(id);$('#relation-mode').textContent=describeRelations(selection);
   const pilotPhys=new Set(declarationPilot?.declarations.map(d=>d.id)??[]),pilotMath=new Set(declarationPilot?.targets.map(d=>d.id)??[]);
   const node=city.nodes.find(item=>item.id===id),source=node.library==='Mathlib'?mathlib.source:physlib.source;
   if(floor.kind==='source-range'){
@@ -94,9 +95,10 @@ function select(id,{focus=true,record=true}={}) {
   const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));
   const maps=node.library==='Physlib'?physlib.maps.filter(map=>map.references.includes(node.module.path)):[];
   const measure=floorIndex.get(id).lineCount;
-  $('#city-inspector').innerHTML=`<span class="label">${node.library.toUpperCase()} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><p class="note">${measure===null?'Source line count unavailable; height uses available declaration data.':`${measure.toLocaleString()} source lines · height is logarithmic`}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a></div>${declarationSection(node)}<h3>Imports · ${imports.length} in city</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in city</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="${sourceUrl(physlib.source,map.path)}" target="_blank" rel="noreferrer">${esc(map.title)} ↗</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this city.</p>`;
-  $('#current-selection').innerHTML=`<span>Selected file</span><strong>${esc(id)}</strong><small id="relation-mode">Solid arrows · explicit file imports</small>`;
-  const graph=scene.select(id);if(graph.total>graph.drawn)$('#relation-mode').textContent=`Solid arrows · ${graph.drawn} of ${graph.total} file relationships shown`;if(focus)scene.focusBuilding(id);renderExplorer();
+  $('#city-inspector').innerHTML=`<span class="label">${esc(node.id.split('.')[0].toUpperCase())} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><p class="note">${measure===null?'Source line count unavailable; height uses available declaration data.':`${measure.toLocaleString()} source lines · height is logarithmic`}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a></div><div class="relation-controls"><label for="relation-filter">Connections in the city</label><select id="relation-filter"><option value="imports">Imports (${imports.length})</option><option value="importers">Imported by (${importers.length})</option><option value="both">Both directions</option><option value="none">Hide connections</option></select><p>Blue: this file imports. Amber: imports this file. Up to 12 lines are shown; complete lists are below.</p></div>${declarationSection(node)}<h3>Imports · ${imports.length} in city</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in city</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="${sourceUrl(physlib.source,map.path)}" target="_blank" rel="noreferrer">${esc(map.title)} ↗</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this city.</p>`;
+  $('#relation-filter').value=relationMode;
+  $('#current-selection').innerHTML=`<span>${esc(node.id.split('.')[0])} · Selected file</span><strong>${esc(id)}</strong><small id="relation-mode"></small>`;
+  const graph=scene.select(id);$('#relation-mode').textContent=describeRelations(graph);if(focus)scene.focusBuilding(id);renderExplorer();
   const url=new URL(location.href);url.searchParams.set('node',id);
   if(record&&changed){navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);}else history.replaceState({cityIndex:navIndex},'',url);
   updateHistoryButtons();
@@ -110,6 +112,7 @@ document.addEventListener('click',event=>{
   const target=event.target.closest('[data-target]');if(target&&declarationPilot)inspectTarget(target.dataset.target);
 });
 document.addEventListener('toggle',event=>{const folder=event.target;if(!folder.matches?.('details[data-folder]'))return;if(folder.open)expanded.add(folder.dataset.folder);else expanded.delete(folder.dataset.folder);},true);
+document.addEventListener('change',event=>{if(event.target.id==='relation-filter'&&scene){relationMode=event.target.value;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}});
 $('#search').addEventListener('input',renderExplorer);
 $('#search').addEventListener('keydown',event=>{if(event.key==='Enter'){const first=$('#city-list [data-node]');if(first){event.preventDefault();select(first.dataset.node);}}});
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)){event.preventDefault();$('#search').focus();}if(event.key==='Escape'){if(!$('#floor-interior').hidden){$('#floor-interior').hidden=true;floorRoom?.hide();}else if(document.activeElement===$('#search')){$('#search').value='';renderExplorer();}}});
