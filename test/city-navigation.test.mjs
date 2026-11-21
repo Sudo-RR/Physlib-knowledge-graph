@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { layoutFullCity } from '../site/city-layout.js';
-import { visibleRelations, allMathlibPipelines, mathlibPipelines } from '../site/city-relations.js';
+import { visibleRelations, allMathlibPipelines, mathlibPipelines, relationGroups, clampLayerY } from '../site/city-relations.js';
 
 test('top-level libraries occupy separated regions and Mathlib has an underground region',()=>{
   const node=(id,path,library='Physlib')=>({id,library,module:{path}});
@@ -21,6 +21,19 @@ test('pipelines contain all direct Mathlib imports and selection isolates the ma
   assert.deepEqual(mathlibPipelines({nodes,edges},'Physlib.A'),[edges[0]]);
   assert.deepEqual(mathlibPipelines({nodes,edges},'Mathlib.A'),[edges[0]]);
   assert.deepEqual(allMathlibPipelines({nodes,edges}),[edges[0],edges[2]]);
+});
+
+test('relationship groups separate Mathlib, dependencies and dependants',()=>{
+  const nodes=[{id:'A',library:'Physlib'},{id:'B',library:'Physlib'},{id:'C',library:'Physlib'},{id:'M',library:'Mathlib'}];
+  const edges=[{from:'A',to:'M'},{from:'A',to:'B'},{from:'C',to:'A'}];
+  assert.deepEqual(relationGroups({nodes,edges},'A'),{mathlib:[edges[0]],uses:[edges[1]],usedBy:[edges[2]]});
+});
+
+test('navigation stays on its selected layer until explicitly changed',()=>{
+  assert.equal(clampLayerY(-20,'surface'),1);
+  assert.equal(clampLayerY(20,'surface'),20);
+  assert.equal(clampLayerY(20,'underground'),-1);
+  assert.equal(clampLayerY(-20,'underground'),-20);
 });
 
 test('connection filters retain import direction, remove duplicates and report the full count',()=>{

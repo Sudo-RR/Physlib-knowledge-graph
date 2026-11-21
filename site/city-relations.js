@@ -18,3 +18,15 @@ export function allMathlibPipelines(city){
 export function mathlibPipelines(city,selected){
   return allMathlibPipelines(city).filter(edge=>edge.from===selected||edge.to===selected);
 }
+
+// The three categories aggregate real file edges; they are not extra Lean declarations.
+export function relationGroups(city,selected){
+  const nodes=new Map(city.nodes.map(node=>[node.id,node]));
+  return {
+    mathlib:mathlibPipelines(city,selected),
+    uses:city.edges.filter(edge=>edge.from===selected&&nodes.get(edge.to)?.library==='Physlib'),
+    usedBy:city.edges.filter(edge=>edge.to===selected&&nodes.get(edge.from)?.library==='Physlib')
+  };
+}
+
+export function clampLayerY(y,layer,clearance=1){return layer==='underground'?Math.min(y,-clearance):Math.max(y,clearance);}

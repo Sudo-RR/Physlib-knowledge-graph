@@ -2,16 +2,16 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { districtFor } from './city-model.js';
 import { layoutFullCity } from './city-layout.js';
-import { visibleRelations, allMathlibPipelines } from './city-relations.js';
+import { visibleRelations, allMathlibPipelines, relationGroups, clampLayerY } from './city-relations.js';
 
 function facade(base,windowColor) {
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=256;
-  const ctx=canvas.getContext('2d'),glass=ctx.createLinearGradient(0,0,128,0);glass.addColorStop(0,base);glass.addColorStop(.5,'#41596e');glass.addColorStop(1,base);ctx.fillStyle=glass;ctx.fillRect(0,0,128,256);
-  for(let y=6;y<256;y+=16){ctx.fillStyle='rgba(18,36,51,.58)';ctx.fillRect(0,y+11,128,3);for(let x=5;x<128;x+=16){ctx.fillStyle=(x+y)%3===0?windowColor:'#8ca8b8';ctx.fillRect(x,y,9,9);ctx.fillStyle='rgba(255,255,255,.25)';ctx.fillRect(x,y,9,1);}}
+  const ctx=canvas.getContext('2d'),tint=new THREE.Color(base),light=tint.clone().lerp(new THREE.Color(windowColor),.3),windowTint=tint.clone().lerp(new THREE.Color(windowColor),.18),dark=tint.clone().multiplyScalar(.75),glass=ctx.createLinearGradient(0,0,128,0);glass.addColorStop(0,`#${dark.getHexString()}`);glass.addColorStop(.5,`#${light.getHexString()}`);glass.addColorStop(1,`#${tint.getHexString()}`);ctx.fillStyle=glass;ctx.fillRect(0,0,128,256);
+  for(let y=6;y<256;y+=16){ctx.fillStyle='rgba(18,36,51,.45)';ctx.fillRect(0,y+11,128,3);for(let x=5;x<128;x+=16){ctx.fillStyle=(x+y)%3===0?`#${light.getHexString()}`:`#${windowTint.getHexString()}`;ctx.fillRect(x,y,9,9);ctx.fillStyle='rgba(255,255,255,.2)';ctx.fillRect(x,y,9,1);}}
   const texture=new THREE.CanvasTexture(canvas);texture.colorSpace=THREE.SRGBColorSpace;return texture;
 }
 
-function topicColor(id){let hash=0;for(const c of id)hash=(hash*31+c.charCodeAt(0))>>>0;return new THREE.Color().setHSL((hash%360)/360,.46,.52);}
+function topicColor(id){let hash=0;for(const c of id)hash=(hash*31+c.charCodeAt(0))>>>0;return new THREE.Color().setHSL((hash%360)/360,.62,.49);}
 function readable(name){return name==='General'?'General files':name.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Z])([A-Z][a-z])/g,'$1 $2');}
 
 export function createCityScene(host,city,floors,onSelect,onFloor) {
@@ -35,10 +35,10 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
     related:new THREE.MeshStandardMaterial({map:facade('#337f91','#e0ffff'),roughness:.4,metalness:.25}),
     floor:new THREE.MeshStandardMaterial({color:0x76bdff,roughness:.3,metalness:.3})
   };
-  const topicMaterials=new Map(layout.topics.map(topic=>{const base=new THREE.Color(topic.root==='PhyslibAlpha'?0x66513e:topic.root==='QuantumInfo'?0x31564b:0x273f59).lerp(topicColor(topic.id),.55);return [topic.id,new THREE.MeshStandardMaterial({map:facade(`#${base.getHexString()}`,'#d4e9f1'),roughness:.43,metalness:.28})];}));
+  const topicMaterials=new Map(layout.topics.map(topic=>{const base=new THREE.Color(topic.root==='PhyslibAlpha'?0x66513e:topic.root==='QuantumInfo'?0x31564b:0x273f59).lerp(topicColor(topic.id),.78);return [topic.id,new THREE.MeshStandardMaterial({map:facade(`#${base.getHexString()}`,'#d4e9f1'),roughness:.6,metalness:.12})];}));
   const districtTopics=new Map(layout.districts.flatMap(d=>d.nodes.map(node=>[node.id,d.topic])));
   const baseMaterial=node=>topicMaterials.get(districtTopics.get(node.id))||(node.library==='Mathlib'?materials.Mathlib:materials.Physlib);
-  const nodeById=new Map(city.nodes.map(n=>[n.id,n])), buildings=new Map(),positions=new Map(),districts=new Map(),labels=[],edges=new THREE.Group(),pipes=new THREE.Group(),aboveScenery=[],belowScenery=[];
+  const nodeById=new Map(city.nodes.map(n=>[n.id,n])), buildings=new Map(),positions=new Map(),districts=new Map(),labels=[],edges=new THREE.Group(),pipes=new THREE.Group(),hubs=new THREE.Group(),hubLabels=[],aboveScenery=[],belowScenery=[];
   function scenery(object,underground=false){scene.add(object);(underground?belowScenery:aboveScenery).push(object);}
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(180,layout.width+120),Math.max(180,layout.depth+120)),new THREE.MeshStandardMaterial({color:0x657f79,transparent:true,opacity:.72,depthWrite:false,roughness:1,side:THREE.DoubleSide}));ground.rotation.x=-Math.PI/2;ground.position.y=-.2;scene.add(ground);
   // Root boundary rings and roads are decorative geography, not dependency edges.
@@ -51,14 +51,18 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
     const color=topicColor(topic.id);if(!topic.underground){const park=new THREE.Mesh(new THREE.CircleGeometry(topic.radius+2,48),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.36,depthWrite:false,side:THREE.DoubleSide}));park.rotation.x=-Math.PI/2;park.position.set(topic.x,-.15,topic.z);scenery(park);}
     const label=document.createElement('span');label.className='city-district-label city-topic-label';label.style.borderLeftColor=`#${color.getHexString()}`;label.textContent=`${readable(topic.name)} · ${topic.root}`;overlay.append(label);labels.push({id:topic.id,element:label,topic:true,underground:topic.underground,position:new THREE.Vector3(topic.x,topic.underground?-4:3,topic.z)});
   }
-  for(const zone of layout.zones){const cities=layout.topics.filter(topic=>topic.root===zone.id);for(let i=1;i<cities.length;i++){const from=cities[i],to=cities.slice(0,i).reduce((best,c)=>Math.hypot(c.x-from.x,c.z-from.z)<Math.hypot(best.x-from.x,best.z-from.z)?c:best,cities[0]),y=zone.underground?-2:.05;const midpoint=new THREE.Vector3((from.x+to.x)/2,y,(from.z+to.z)/2),curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(from.x,y,from.z),midpoint,new THREE.Vector3(to.x,y,to.z));const road=new THREE.Mesh(new THREE.TubeGeometry(curve,20,.32,5,false),new THREE.MeshBasicMaterial({color:0xcdd4c8,transparent:true,opacity:.8,depthWrite:false}));scenery(road,zone.underground);}}
+  for(const zone of layout.zones){const cities=layout.topics.filter(topic=>topic.root===zone.id);for(let i=1;i<cities.length;i++){const from=cities[i],to=cities.slice(0,i).reduce((best,c)=>Math.hypot(c.x-from.x,c.z-from.z)<Math.hypot(best.x-from.x,best.z-from.z)?c:best,cities[0]),y=zone.underground?-2:.05;const dx=to.x-from.x,dz=to.z-from.z,midpoint=new THREE.Vector3((from.x+to.x)/2-dz*.1,y,(from.z+to.z)/2+dx*.1),curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(from.x,y,from.z),midpoint,new THREE.Vector3(to.x,y,to.z));const road=new THREE.Mesh(new THREE.TubeGeometry(curve,32,.55,6,false),new THREE.MeshBasicMaterial({color:0x788d8b,transparent:true,opacity:.9,depthWrite:false}));scenery(road,zone.underground);const stripe=new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(40)),new THREE.LineDashedMaterial({color:0xf1d99c,dashSize:2,gapSize:2,transparent:true,opacity:.9}));stripe.position.y=.2;stripe.computeLineDistances();scenery(stripe,zone.underground);}}
   for(const district of layout.districts){
     if(!district.underground){const block=new THREE.Mesh(new THREE.CircleGeometry(district.radius,32),new THREE.MeshStandardMaterial({color:0xd2d1bf,transparent:true,opacity:.7,depthWrite:false,roughness:1,side:THREE.DoubleSide}));block.rotation.x=-Math.PI/2;block.position.set(district.x,-.1,district.z);scenery(block);}
     const label=document.createElement('span');label.className='city-district-label';const parts=district.id.split('/');label.textContent=parts.length>2?`${parts[0]} / ${parts.slice(-2).join(' / ')}`:parts.join(' / ');overlay.append(label);
     labels.push({id:district.id,element:label,underground:district.underground,position:new THREE.Vector3(district.x,district.underground?-3:.2,district.z-district.size/2)});districts.set(district.id,district);
   }
   // Trees are environmental landmarks; unlike buildings, they do not represent modules.
-  const treePlaces=layout.districts.filter(d=>!d.underground).slice(0,80).flatMap(d=>[[d.x-d.size/2-1,d.z-d.size/2-1],[d.x+d.size/2+1,d.z+d.size/2+1]]);
+  const treePlaces=layout.topics.filter(topic=>!topic.underground).flatMap((topic,index)=>{
+    const neighbourhoods=layout.districts.filter(d=>d.topic===topic.id),places=[];
+    for(let i=0;i<56;i++){const angle=i*2.39996+index*.4,radius=i<20?topic.radius+2+(i%3)*3:topic.radius*Math.sqrt((i-19)/37),x=topic.x+Math.cos(angle)*radius,z=topic.z+Math.sin(angle)*radius;if(neighbourhoods.every(d=>Math.hypot(x-d.x,z-d.z)>d.radius+2))places.push([x,z]);}
+    return places;
+  });
   const trunks=new THREE.InstancedMesh(new THREE.CylinderGeometry(.12,.16,1.1,6),new THREE.MeshStandardMaterial({color:0x705c48,roughness:1}),treePlaces.length),canopies=new THREE.InstancedMesh(new THREE.IcosahedronGeometry(.8,1),new THREE.MeshStandardMaterial({color:0x557c68,roughness:1}),treePlaces.length),treeMatrix=new THREE.Matrix4();
   treePlaces.forEach(([x,z],i)=>{treeMatrix.makeTranslation(x,.55,z);trunks.setMatrixAt(i,treeMatrix);treeMatrix.makeTranslation(x,1.6,z);canopies.setMatrixAt(i,treeMatrix);});scenery(trunks);scenery(canopies);
   for(const node of city.nodes){
@@ -74,47 +78,58 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   }
   const segments=[];for(const link of pipelineLinks){const curve=pipelineCurve(link);if(!curve)continue;const points=curve.getPoints(16);for(let i=1;i<points.length;i++)segments.push(...points[i-1].toArray(),...points[i].toArray());}
   const networkGeometry=new THREE.BufferGeometry();networkGeometry.setAttribute('position',new THREE.Float32BufferAttribute(segments,3));
-  const network=new THREE.LineSegments(networkGeometry,new THREE.LineBasicMaterial({color:0x39e2df,transparent:true,opacity:.16,depthWrite:false}));network.frustumCulled=false;scene.add(network,edges,pipes);
-  let selected=null,transition=null,relationMode='imports',showPipes=true;
+  const network=new THREE.LineSegments(networkGeometry,new THREE.LineBasicMaterial({color:0x39e2df,transparent:true,opacity:.16,depthWrite:false}));network.frustumCulled=false;scene.add(network,edges,pipes,hubs);
+  let selected=null,transition=null,relationMode='imports',showPipes=true,layer='surface';const roadTraffic=[],pipeTraffic=[];
   const fadedMaterials=new Map();
-  function fadeMaterial(material){if(!fadedMaterials.has(material)){const faded=material.clone();faded.transparent=true;faded.opacity=.12;faded.depthWrite=false;fadedMaterials.set(material,faded);}return fadedMaterials.get(material);}
+  function fadeMaterial(material){if(!fadedMaterials.has(material)){const faded=material.clone();faded.transparent=true;faded.opacity=.72;faded.depthWrite=false;fadedMaterials.set(material,faded);}return fadedMaterials.get(material);}
+  const selectedMaterials=new Map();
+  function selectedMaterial(node){const base=baseMaterial(node);if(!selectedMaterials.has(base)){const material=base.clone();material.emissive=new THREE.Color(0x29404b);material.emissiveIntensity=.35;selectedMaterials.set(base,material);}return selectedMaterials.get(base);}
   function setBuildingFocus(){for(const [id,b] of buildings)if(id!==selected)b.body.material=selected?fadeMaterial(baseMaterial(b.node)):baseMaterial(b.node);}
   const anchor=layout.positions.get('Physlib.ClassicalMechanics.EulerLagrange')||layout.positions.get(city.nodes.find(n=>n.library==='Physlib')?.id)||{x:0,z:0};
   const homeTarget=new THREE.Vector3(anchor.x,6,anchor.z),homePosition=homeTarget.clone().add(new THREE.Vector3(25,5,32));
   function travel(focus,position){transition={start:performance.now(),from:camera.position.clone(),fromTarget:controls.target.clone(),to:position.clone(),toTarget:focus.clone()};}
   controls.addEventListener('start',()=>{transition=null;});
-  function lookAt(focus,distance,below=false){travel(focus,focus.clone().add(new THREE.Vector3(distance*.55,(below?-.18:.18)*distance,distance*.75)));}
+  function setLayer(value){layer=value;host.dispatchEvent(new CustomEvent('city-layer-change',{detail:{layer}}));}
+  function switchLayer(next){setLayer(next);const lower=next==='underground',focus=controls.target.clone();if(lower){const target=pipelineLinks.find(edge=>edge.from===selected),math=target&&buildings.get(target.to),zone=layout.zones.find(item=>item.id==='Mathlib');if(math){focus.x=math.group.position.x;focus.z=math.group.position.z;}else if(zone){focus.x=zone.x;focus.z=zone.z;}}focus.y=lower?-7:6;const offset=camera.position.clone().sub(controls.target);offset.y=lower?-12:10;if(Math.hypot(offset.x,offset.z)<12){offset.x=18;offset.z=24;}travel(focus,focus.clone().add(offset));}
+  function lookAt(focus,distance,below=false){setLayer(below?'underground':'surface');travel(focus,focus.clone().add(new THREE.Vector3(distance*.55,(below?-.18:.18)*distance,distance*.75)));}
   function showAll(){for(const b of buildings.values())b.group.visible=true;}
   function focusFolder(folder){showAll();const members=city.nodes.filter(n=>n.module.path.replaceAll('\\','/').startsWith(`${folder}/`));if(!members.length)return;const points=members.map(n=>positions.get(n.id)),centre=points.reduce((a,p)=>a.add(p),new THREE.Vector3()).divideScalar(points.length);let radius=10;for(const p of points)radius=Math.max(radius,p.distanceTo(centre));lookAt(centre,Math.max(25,radius*2),members.every(n=>n.library==='Mathlib'));}
   function focusBuilding(id){const b=buildings.get(id);if(!b)return;showAll();const height=floors.get(id).height,centre=b.group.position.clone().add(new THREE.Vector3(0,b.direction*height/2,0)),distance=Math.max(12,height*2.1);lookAt(centre,distance,b.direction<0);}
   function clearFloors(building){for(const child of [...building.group.children])if(child!==building.body){building.group.remove(child);child.geometry.dispose();}building.body.visible=true;}
+  function drawHubs(id){
+    for(const object of hubs.children){object.geometry?.dispose();object.material?.dispose();}hubs.clear();for(const label of hubLabels)label.element.remove();hubLabels.length=0;
+    const building=buildings.get(id);if(!building)return;const groups=relationGroups(city,id),items=[{name:'Mathlib',count:groups.mathlib.length,color:0x26c4c5,shape:'ring'},{name:'Uses',count:groups.uses.length,color:0x268cf0,shape:'diamond'},{name:'Used by',count:groups.usedBy.length,color:0xf4a640,shape:'cube'}].filter(item=>item.count);
+    const origin=building.group.position.clone().add(new THREE.Vector3(0,building.direction*floors.get(id).height*.55,0));
+    items.forEach((item,index)=>{const position=origin.clone().add(new THREE.Vector3((index-(items.length-1)/2)*3.2,1.6,3));const geometry=item.shape==='ring'?new THREE.TorusGeometry(.65,.17,8,20):item.shape==='diamond'?new THREE.OctahedronGeometry(.75):new THREE.BoxGeometry(1.1,1.1,1.1);const marker=new THREE.Mesh(geometry,new THREE.MeshBasicMaterial({color:item.color,depthTest:false}));marker.position.copy(position);marker.renderOrder=95;hubs.add(marker);const stem=new THREE.Line(new THREE.BufferGeometry().setFromPoints([origin,position]),new THREE.LineBasicMaterial({color:item.color,transparent:true,opacity:.8,depthTest:false}));stem.renderOrder=94;hubs.add(stem);const element=document.createElement('span');element.className='city-hub-label';element.textContent=`${item.name} · ${item.count}`;element.style.borderColor=`#${item.color.toString(16).padStart(6,'0')}`;overlay.append(element);hubLabels.push({element,position,marker,ring:item.shape==='ring'});});
+  }
   function select(id){
     if(selected&&buildings.has(selected)){const previous=buildings.get(selected);clearFloors(previous);previous.body.material=baseMaterial(previous.node);}
-    selected=id;setBuildingFocus();drawPipes();const b=buildings.get(id);if(!b)return drawLinks([],false);b.body.material=materials.selected;
+    selected=id;setBuildingFocus();drawPipes();drawHubs(id);const b=buildings.get(id);if(!b)return drawLinks([],false);b.body.material=selectedMaterial(b.node);
     const data=floors.get(id);if(data.floors.length){b.body.visible=false;const h=data.height/data.floors.length;
-      for(const floor of data.floors){const mesh=new THREE.Mesh(new THREE.BoxGeometry(1.9,Math.max(.1,h-.08),1.9),materials.selected);mesh.position.y=b.direction*(floor.index+.5)*h;mesh.userData={id,floor:floor.index};b.group.add(mesh);}}
+      for(const floor of data.floors){const mesh=new THREE.Mesh(new THREE.BoxGeometry(1.9,Math.max(.1,h-.08),1.9),selectedMaterial(b.node));mesh.position.y=b.direction*(floor.index+.5)*h;mesh.userData={id,floor:floor.index};b.group.add(mesh);}}
     return drawFileLinks();
   }
-  function selectFloor(id,index){const b=buildings.get(id);if(!b||id!==selected)return;for(const mesh of b.group.children)if(mesh!==b.body)mesh.material=mesh.userData.floor===index?materials.floor:materials.selected;}
+  function selectFloor(id,index){const b=buildings.get(id);if(!b||id!==selected)return;for(const mesh of b.group.children)if(mesh!==b.body)mesh.material=mesh.userData.floor===index?materials.floor:selectedMaterial(b.node);}
   function drawPipes(){
-    for(const mesh of pipes.children){mesh.geometry.dispose();mesh.material.dispose();}pipes.clear();
+    for(const mesh of pipes.children){mesh.geometry.dispose();mesh.material.dispose();}pipes.clear();pipeTraffic.length=0;
     const links=pipelineLinks.filter(edge=>edge.from===selected||edge.to===selected);network.visible=showPipes;network.material.opacity=selected ? .025 : .16;if(!showPipes)return links.length;
     for(const link of links){const curve=pipelineCurve(link);if(!curve)continue;
       const pipe=new THREE.Mesh(new THREE.TubeGeometry(curve,32,.18,6,false),new THREE.MeshBasicMaterial({color:0x34e5e3,transparent:true,opacity:.86,depthTest:false}));pipe.renderOrder=90;pipes.add(pipe);
+      if(pipeTraffic.length<24){const car=new THREE.Mesh(new THREE.SphereGeometry(.35,8,6),new THREE.MeshBasicMaterial({color:0xc8ffff,depthTest:false}));car.renderOrder=91;pipes.add(car);pipeTraffic.push({object:car,curve,phase:pipeTraffic.length*.17});}
     }return links.length;
   }
   function drawFileLinks(){return drawLinks(city.edges.filter(e=>e.from===selected||e.to===selected),false);}
   function drawLinks(links,dashed){
-    for(const item of edges.children){item.geometry?.dispose();item.material?.dispose();}edges.clear();
+    for(const item of edges.children){item.geometry?.dispose();item.material?.dispose();}edges.clear();roadTraffic.length=0;
     setBuildingFocus();
     const candidates=links.filter(link=>positions.has(link.from)&&positions.has(link.to));
     const result=visibleRelations(candidates,selected,dashed?'both':relationMode,12);let drawn=0;
     for(const link of result.links){const from=positions.get(link.from),to=positions.get(link.to),distance=from.distanceTo(to);if(distance<.01)continue;drawn++;
       if(!dashed&&showPipes&&link.from===selected&&nodeById.get(link.to)?.library==='Mathlib')continue;
       const middle=from.clone().add(to).multiplyScalar(.5);middle.y+=(from.y<0&&to.y<0?-1:1)*Math.min(12,Math.max(2,distance*.12));
-      const curve=new THREE.QuadraticBezierCurve3(from,middle,to),geometry=new THREE.BufferGeometry().setFromPoints(curve.getPoints(32));
-      const line=new THREE.Line(geometry,dashed?new THREE.LineDashedMaterial({color:0x235d70,dashSize:1,gapSize:.6}):new THREE.LineBasicMaterial({color:link.from===selected?0x0055c9:0xb36b16}));if(dashed)line.computeLineDistances();edges.add(line);
-      const direction=curve.getTangent(.96).normalize(),cone=new THREE.Mesh(new THREE.ConeGeometry(.36,1,8),new THREE.MeshBasicMaterial({color:link.from===selected?0x0055c9:0xb36b16}));cone.position.copy(curve.getPoint(.96));cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);edges.add(cone);
+      const curve=new THREE.QuadraticBezierCurve3(from,middle,to),color=link.from===selected?0x268cf0:0xf4a640;
+      if(dashed){const line=new THREE.Line(new THREE.BufferGeometry().setFromPoints(curve.getPoints(32)),new THREE.LineDashedMaterial({color:0x235d70,dashSize:1,gapSize:.6}));line.computeLineDistances();edges.add(line);}else{const road=new THREE.Mesh(new THREE.TubeGeometry(curve,24,.13,6,false),new THREE.MeshBasicMaterial({color,transparent:true,opacity:.85}));edges.add(road);const vehicle=new THREE.Mesh(new THREE.SphereGeometry(.36,8,6),new THREE.MeshBasicMaterial({color}));edges.add(vehicle);roadTraffic.push({object:vehicle,curve,phase:roadTraffic.length*.19});}
+      const direction=curve.getTangent(.96).normalize(),cone=new THREE.Mesh(new THREE.ConeGeometry(.36,1,8),new THREE.MeshBasicMaterial({color}));cone.position.copy(curve.getPoint(.96));cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);edges.add(cone);
     }return {drawn,total:result.total};
   }
   const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();let down;
@@ -126,11 +141,12 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   const keys=new Set(),clock=new THREE.Clock();
   window.addEventListener('keydown',event=>{if(event.ctrlKey||event.metaKey||event.altKey||/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(event.target.tagName)||event.target.isContentEditable)return;const key=event.key.toLowerCase();if(['w','a','s','d','q','e'].includes(key)){event.preventDefault();keys.add(key);transition=null;}});
   window.addEventListener('keyup',event=>keys.delete(event.key.toLowerCase()));window.addEventListener('blur',()=>keys.clear());
-  function move(forward,right,up=0){const direction=new THREE.Vector3();camera.getWorldDirection(direction);direction.y=0;if(direction.lengthSq()<.001)direction.set(0,0,-1);direction.normalize();const sideways=new THREE.Vector3().crossVectors(direction,camera.up).normalize();const delta=direction.multiplyScalar(forward).addScaledVector(sideways,right).add(new THREE.Vector3(0,up,0));camera.position.add(delta);controls.target.add(delta);}
+  function move(forward,right,up=0){const direction=new THREE.Vector3();camera.getWorldDirection(direction);direction.y=0;if(direction.lengthSq()<.001)direction.set(0,0,-1);direction.normalize();const sideways=new THREE.Vector3().crossVectors(direction,camera.up).normalize();const delta=direction.multiplyScalar(forward).addScaledVector(sideways,right).add(new THREE.Vector3(0,up,0));delta.y=clampLayerY(camera.position.y+delta.y,layer)-camera.position.y;camera.position.add(delta);controls.target.add(delta);}
   function resize(){const w=host.clientWidth,h=host.clientHeight;if(!w||!h)return;camera.aspect=w/h;camera.updateProjectionMatrix();renderer.setSize(w,h,false);}new ResizeObserver(resize).observe(host);resize();camera.position.copy(homePosition);controls.target.copy(homeTarget);controls.update();
-  renderer.setAnimationLoop(()=>{const step=Math.min(clock.getDelta(),.05)*18;if(keys.size)move((Number(keys.has('w'))-Number(keys.has('s')))*step,(Number(keys.has('d'))-Number(keys.has('a')))*step,(Number(keys.has('e'))-Number(keys.has('q')))*step);if(transition){const t=Math.min(1,(performance.now()-transition.start)/550),ease=1-(1-t)**3;camera.position.lerpVectors(transition.from,transition.to,ease);controls.target.lerpVectors(transition.fromTarget,transition.toTarget,ease);if(t===1)transition=null;}controls.update();const underground=camera.position.y<0;ground.material.opacity=underground ? .12 : .72;for(const object of aboveScenery)object.visible=!underground;for(const object of belowScenery)object.visible=underground;renderer.render(scene,camera);const active=nodeById.get(selected),activeDistrict=active&&districtFor(active),occupied=[];
+  renderer.setAnimationLoop(()=>{const step=Math.min(clock.getDelta(),.05)*18;if(keys.size)move((Number(keys.has('w'))-Number(keys.has('s')))*step,(Number(keys.has('d'))-Number(keys.has('a')))*step,(Number(keys.has('e'))-Number(keys.has('q')))*step);if(transition){const t=Math.min(1,(performance.now()-transition.start)/550),ease=1-(1-t)**3;camera.position.lerpVectors(transition.from,transition.to,ease);controls.target.lerpVectors(transition.fromTarget,transition.toTarget,ease);if(t===1)transition=null;}controls.update();if(!transition){camera.position.y=clampLayerY(camera.position.y,layer);controls.target.y=clampLayerY(controls.target.y,layer);camera.lookAt(controls.target);}for(const item of [...roadTraffic,...pipeTraffic])item.object.position.copy(item.curve.getPoint((performance.now()/6000+item.phase)%1));const underground=camera.position.y<0;hubs.visible=Boolean(selected)&&((nodeById.get(selected)?.library==='Mathlib')===underground);ground.material.opacity=underground ? .12 : .72;for(const object of aboveScenery)object.visible=!underground;for(const object of belowScenery)object.visible=underground;renderer.render(scene,camera);const active=nodeById.get(selected),activeDistrict=active&&districtFor(active),occupied=[];
+    for(const [index,label] of hubLabels.entries()){if(label.ring)label.marker.quaternion.copy(camera.quaternion);const p=label.position.clone().project(camera),x=(p.x+1)*host.clientWidth/2,y=(1-p.y)*host.clientHeight/2-index*20;label.element.hidden=!hubs.visible||p.z>1||x<0||x>host.clientWidth||y<0||y>host.clientHeight;if(!label.element.hidden)occupied.push({left:x-52,right:x+52,top:y-30,bottom:y+2});label.element.style.transform=`translate(-50%,-130%) translate(${x}px,${y}px)`;}
     for(const label of [...labels].sort((a,b)=>Number(b.id===activeDistrict)-Number(a.id===activeDistrict)||Number(Boolean(b.topic))-Number(Boolean(a.topic)))){const p=label.position.clone().project(camera),x=(p.x+1)*host.clientWidth/2,y=(1-p.y)*host.clientHeight/2,width=Math.min(160,label.element.textContent.length*5.5+14),box={left:x-width/2,right:x+width/2,top:y-10,bottom:y+10};const hidden=Boolean(label.underground)!==(camera.position.y<0)||(!label.topic&&label.id!==activeDistrict)||occupied.length>=6||p.z>1||box.left<0||box.right>host.clientWidth||box.top<0||box.bottom>host.clientHeight||(x>host.clientWidth-170&&y<160)||occupied.some(o=>box.left<o.right&&box.right>o.left&&box.top<o.bottom&&box.bottom>o.top);label.element.hidden=hidden;label.element.classList.toggle('active',label.id===activeDistrict);if(!hidden)occupied.push(box);label.element.style.transform=`translate(-50%,-50%) translate(${x}px,${y}px)`;}
   });
   function zoom(factor){const position=camera.position.clone().sub(controls.target).multiplyScalar(factor).add(controls.target);travel(controls.target,position);}
-  return {select,selectFloor,setRelationMode:mode=>{relationMode=mode;return drawFileLinks();},setPipesVisible:value=>{showPipes=value;drawPipes();return drawFileLinks();},showDeclarationLinks:links=>drawLinks(links,true).drawn,focusFolder,focusBuilding,focusFoundations:()=>{const building=buildings.get(selected);if(!building)return;const focus=building.group.position.clone().add(new THREE.Vector3(0,-3,0));travel(focus,focus.clone().add(new THREE.Vector3(22,-12,30)));},zoom,move:(forward,right)=>{transition=null;move(forward,right);},reset:()=>{showAll();travel(homeTarget,homePosition);},get selected(){return selected;}};
+  return {select,selectFloor,setRelationMode:mode=>{relationMode=mode;return drawFileLinks();},setPipesVisible:value=>{showPipes=value;drawPipes();return drawFileLinks();},showDeclarationLinks:links=>drawLinks(links,true).drawn,focusFolder,focusBuilding,focusFoundations:()=>{const building=buildings.get(selected);if(!building)return;setLayer('underground');const focus=building.group.position.clone().add(new THREE.Vector3(0,-3,0));travel(focus,focus.clone().add(new THREE.Vector3(22,-12,30)));},switchLayer,zoom,move:(forward,right)=>{transition=null;move(forward,right);},reset:()=>{showAll();setLayer('surface');travel(homeTarget,homePosition);},get layer(){return layer;},get selected(){return selected;}};
 }

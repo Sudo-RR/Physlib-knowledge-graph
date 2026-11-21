@@ -4,7 +4,7 @@ import { createCityScene } from './city-scene.js';
 import { buildFloorIndex } from './city-floors.js';
 import { validateDeclarations } from './declarations.js';
 import { createFloorRoom } from './floor-room.js';
-import { mathlibPipelines } from './city-relations.js';
+import { mathlibPipelines, relationGroups } from './city-relations.js';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -103,9 +103,11 @@ function select(id,{focus=true,record=true}={}) {
   const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));
   const maps=node.library==='Physlib'?physlib.maps.filter(map=>map.references.includes(node.module.path)):[];
   const pipelineCount=mathlibPipelines(city,id).length;
+  const groups=relationGroups(city,id);
   const measure=floorIndex.get(id).lineCount;
   $('#city-inspector').innerHTML=`<span class="label">${esc(node.id.split('.')[0].toUpperCase())} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><p class="note">${measure===null?'Source line count unavailable; height uses available declaration data.':`${measure.toLocaleString()} source lines · height is logarithmic`}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a></div><div class="relation-controls"><label for="relation-filter">Connections in the city</label><select id="relation-filter"><option value="imports">Imports (${imports.length})</option><option value="importers">Imported by (${importers.length})</option><option value="both">Both directions</option><option value="none">Hide file arrows</option></select><p>Blue: this file imports. Amber: imports this file. Up to 12 lines are shown; complete lists are below.</p><label class="pipeline-toggle"><input type="checkbox" id="pipeline-toggle" ${pipelinesVisible?'checked':''}> Show Mathlib pipelines (${pipelineCount} for this file)</label><p>Each cyan pipeline is a direct file import, not a declaration-use claim.</p><button type="button" id="view-foundations" ${pipelineCount?'':'disabled'}>View foundations</button></div>${declarationSection(node)}<h3>Imports · ${imports.length} in city</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in city</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="${sourceUrl(physlib.source,map.path)}" target="_blank" rel="noreferrer">${esc(map.title)} ↗</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this city.</p>`;
   $('#relation-filter').value=relationMode;
+  $('#relation-filter').closest('.relation-controls').insertAdjacentHTML('afterbegin',`<div class="relation-groups" aria-label="Relationship categories"><button type="button" data-rel-group="mathlib" class="group-math" ${groups.mathlib.length?'':'disabled'}><span aria-hidden="true"></span><strong>Mathlib</strong><small>${groups.mathlib.length} pipelines</small></button><button type="button" data-rel-group="uses" class="group-uses" ${groups.uses.length?'':'disabled'}><span aria-hidden="true"></span><strong>Uses in Physlib</strong><small>${groups.uses.length} files</small></button><button type="button" data-rel-group="usedBy" class="group-usedby" ${groups.usedBy.length?'':'disabled'}><span aria-hidden="true"></span><strong>Used by Physlib</strong><small>${groups.usedBy.length} files</small></button></div>`);
   $('#current-selection').innerHTML=`<span>${esc(node.id.split('.')[0])} · Selected file</span><strong>${esc(id)}</strong><small id="relation-mode"></small>`;
   const graph=scene.select(id);$('#relation-mode').textContent=describeRelations(graph);if(focus)scene.focusBuilding(id);renderExplorer();
   const url=new URL(location.href);url.searchParams.set('node',id);
@@ -114,6 +116,7 @@ function select(id,{focus=true,record=true}={}) {
 }
 
 document.addEventListener('click',event=>{
+  const category=event.target.closest('[data-rel-group]');if(category&&scene){const kind=category.dataset.relGroup;if(kind==='mathlib'){if(!pipelinesVisible){pipelinesVisible=true;scene.setPipesVisible(true);$('#toggle-pipelines').setAttribute('aria-pressed','true');$('#pipeline-toggle').checked=true;}scene.focusFoundations();}else{relationMode=kind==='uses'?'imports':'importers';$('#relation-filter').value=relationMode;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}}
   if(event.target.closest('#view-foundations'))scene?.focusFoundations();
   const folder=event.target.closest('summary')?.parentElement;if(folder?.dataset.folder)scene?.focusFolder(folder.dataset.folder);
   const node=event.target.closest('[data-node]');if(node)select(node.dataset.node);
@@ -125,6 +128,8 @@ document.addEventListener('toggle',event=>{const folder=event.target;if(!folder.
 document.addEventListener('change',event=>{if(event.target.id==='relation-filter'&&scene){relationMode=event.target.value;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}});
 document.addEventListener('change',event=>{if(event.target.id==='pipeline-toggle'&&scene){pipelinesVisible=event.target.checked;$('#toggle-pipelines').setAttribute('aria-pressed',String(pipelinesVisible));$('#relation-mode').textContent=describeRelations(scene.setPipesVisible(pipelinesVisible));}});
 $('#toggle-pipelines').addEventListener('click',()=>{if(!scene)return;pipelinesVisible=!pipelinesVisible;$('#toggle-pipelines').setAttribute('aria-pressed',String(pipelinesVisible));const result=scene.setPipesVisible(pipelinesVisible);if($('#pipeline-toggle'))$('#pipeline-toggle').checked=pipelinesVisible;if($('#relation-mode'))$('#relation-mode').textContent=describeRelations(result);});
+$('#city-canvas').addEventListener('city-layer-change',event=>{$('#toggle-plane').textContent=event.detail.layer==='surface'?'Enter Mathlib':'Return to surface';});
+$('#toggle-plane').addEventListener('click',()=>{if(scene)scene.switchLayer(scene.layer==='surface'?'underground':'surface');});
 $('#area-select').addEventListener('change',event=>{const folder=event.target.value;if(!folder||!scene)return;if(selected){clearSelection();const url=new URL(location.href);url.searchParams.delete('node');navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);updateHistoryButtons();}scene.focusFolder(folder);$('#search').value='';const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));renderExplorer();const match=[...document.querySelectorAll('#city-list details[data-folder]')].find(element=>element.dataset.folder===folder);match?.querySelector('summary')?.scrollIntoView({block:'nearest'});});
 $('#search').addEventListener('input',renderExplorer);
 $('#search').addEventListener('keydown',event=>{if(event.key==='Enter'){const first=$('#city-list [data-node]');if(first){event.preventDefault();select(first.dataset.node);}}});
