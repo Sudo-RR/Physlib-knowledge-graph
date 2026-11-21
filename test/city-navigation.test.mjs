@@ -21,3 +21,15 @@ test('connection filters retain import direction, remove duplicates and report t
   assert.equal(visibleRelations(links,'A','both').total,3);
   assert.equal(visibleRelations(links,'A','none').total,0);
 });
+
+test('topic cities follow source folders and have non-overlapping neighbourhoods',()=>{
+  const paths=['Physlib/ClassicalMechanics/Pendulum/A.lean','Physlib/ClassicalMechanics/Orbit/B.lean','Physlib/QuantumMechanics/State/C.lean','PhyslibAlpha/ClassicalMechanics/Pendulum/D.lean'];
+  const city={nodes:paths.map(path=>({id:path.replace(/\.lean$/,'').replaceAll('/','.'),library:'Physlib',module:{path}})),edges:[]};
+  const layout=layoutFullCity(city),again=layoutFullCity(city);
+  assert.deepEqual(layout.topics.map(t=>t.id).sort(),['Physlib/ClassicalMechanics','Physlib/QuantumMechanics','PhyslibAlpha/ClassicalMechanics']);
+  assert.deepEqual([...layout.positions],[...again.positions]);
+  for(let i=0;i<layout.districts.length;i++)for(let j=0;j<i;j++){
+    const a=layout.districts[i],b=layout.districts[j];
+    assert.ok(Math.hypot(a.x-b.x,a.z-b.z)>=a.radius+b.radius);
+  }
+});

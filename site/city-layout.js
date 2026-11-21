@@ -1,27 +1,62 @@
 import { buildDistricts } from './city-model.js';
 
-// Physlib districts follow folders. Shared Mathlib imports sit near the average
-// position of their Physlib importers, with collision-free basement grid cells.
-export function layoutFullCity(city,{spacing=3, shelfWidth=220}={}) {
-  const positions=new Map(),districts=[];
-  const groups=buildDistricts(city.nodes.filter(n=>n.library==='Physlib'));
-  let x=0,z=0,rowDepth=0,maxX=0,root=null,zone=null;
-  const zones=[];
-  for(const group of groups){
-    const groupRoot=group.nodes[0].id.split('.')[0];
-    if(groupRoot!==root){if(root!==null){z+=rowDepth+26;x=0;rowDepth=0;}root=groupRoot;zone={id:root,minZ:z,maxZ:z};zones.push(zone);}
-    const side=Math.ceil(Math.sqrt(group.nodes.length)),size=Math.max(10,side*spacing+4);
-    if(x>0 && x+size>shelfWidth){z+=rowDepth+5;x=0;rowDepth=0;}
-    const district={...group,x:x+size/2,z:z+size/2,size};districts.push(district);
-    group.nodes.forEach((node,i)=>positions.set(node.id,{x:x+2+(i%side)*spacing,z:z+2+Math.floor(i/side)*spacing}));
-    x+=size+5;rowDepth=Math.max(rowDepth,size);maxX=Math.max(maxX,x-5);
-    zone.maxZ=Math.max(zone.maxZ,z+size);
+const GOLDEN_ANGLE=Math.PI*(3-Math.sqrt(5));
+
+// Pack circles on a deterministic spiral. Their radii include a gap for roads.
+function pack(items,gap=4){
+  const placed=[];
+  for(const item of items){
+    let x=0,z=0;
+    for(let step=0;step<100000;step++){
+      const distance=2.4*Math.sqrt(step),angle=step*GOLDEN_ANGLE;
+      x=distance*Math.cos(angle);z=distance*Math.sin(angle);
+      if(placed.every(other=>Math.hypot(x-other.x,z-other.z)>=item.radius+other.radius+gap))break;
+      if(step===99999)throw Error('Unable to place city area');
+    }
+    placed.push({...item,x,z});
   }
-  const width=maxX,depth=z+rowDepth;
-  for(const point of positions.values()){point.x-=width/2;point.z-=depth/2;}
-  for(const district of districts){district.x-=width/2;district.z-=depth/2;}
-  for(const region of zones){region.minZ-=depth/2;region.maxZ-=depth/2;}
-  const importers=new Map(), mathIds=new Set(city.nodes.filter(node=>node.library==='Mathlib').map(node=>node.id));
+  return placed;
+}
+
+// Topic cities are real second-level source folders, not inferred mathematical clusters.
+// Shared Mathlib imports remain near their direct Physlib-family importers below ground.
+export function layoutFullCity(city,{spacing=3}={}) {
+  const positions=new Map(),districts=[],topics=[],zones=[];
+  const groups=buildDistricts(city.nodes.filter(n=>n.library==='Physlib'));
+  const byRoot=new Map();
+  for(const group of groups){
+    const root=group.nodes[0].id.split('.')[0],parts=group.id.split('/');
+    const topic=parts[1]||'General',key=parts[1]?`${root}/${topic}`:root;
+    if(!byRoot.has(root))byRoot.set(root,new Map());
+    const areas=byRoot.get(root);if(!areas.has(key))areas.set(key,{id:key,name:topic,root,groups:[],count:0});
+    areas.get(key).groups.push(group);areas.get(key).count+=group.nodes.length;
+  }
+  const rootOrder=['Physlib','PhyslibAlpha','QuantumInfo'];
+  const roots=[...byRoot.keys()].sort((a,b)=>(rootOrder.indexOf(a)<0?99:rootOrder.indexOf(a))-(rootOrder.indexOf(b)<0?99:rootOrder.indexOf(b))||a.localeCompare(b));
+  let zCursor=0,maxWidth=0;
+  for(const root of roots){
+    const areas=[...byRoot.get(root).values()].sort((a,b)=>b.count-a.count||a.id.localeCompare(b.id));
+    const prepared=areas.map(area=>{
+      const local=pack(area.groups.map(group=>{const side=Math.ceil(Math.sqrt(group.nodes.length)),size=Math.max(10,side*spacing+4);return {group,size,side,radius:size*Math.SQRT2/2};}).sort((a,b)=>b.radius-a.radius||a.group.id.localeCompare(b.group.id)),3);
+      return {...area,local,radius:Math.max(12,...local.map(d=>Math.hypot(d.x,d.z)+d.radius+4))};
+    });
+    const packed=pack(prepared,14),zoneRadius=Math.max(15,...packed.map(t=>Math.hypot(t.x,t.z)+t.radius));
+    const zoneZ=zCursor+zoneRadius;zones.push({id:root,minZ:zCursor,maxZ:zCursor+zoneRadius*2,x:0,z:zoneZ,radius:zoneRadius});
+    maxWidth=Math.max(maxWidth,zoneRadius*2);zCursor+=zoneRadius*2+36;
+    for(const area of packed){
+      const topic={id:area.id,name:area.name,root,count:area.count,x:area.x,z:area.z+zoneZ,radius:area.radius};topics.push(topic);
+      for(const [index,local] of area.local.entries()){
+        const angle=index*GOLDEN_ANGLE,cos=Math.cos(angle),sin=Math.sin(angle),x=topic.x+local.x,z=topic.z+local.z;
+        districts.push({...local.group,x,z,size:local.size,radius:local.radius,angle,topic:topic.id});
+        local.group.nodes.forEach((node,i)=>{const dx=(i%local.side-(local.side-1)/2)*spacing,dz=(Math.floor(i/local.side)-(local.side-1)/2)*spacing;positions.set(node.id,{x:x+dx*cos-dz*sin,z:z+dx*sin+dz*cos});});
+      }
+    }
+  }
+  const width=maxWidth,depth=zones.length?zCursor-36:0,offset=depth/2;
+  for(const point of positions.values())point.z-=offset;
+  for(const item of [...districts,...topics])item.z-=offset;
+  for(const zone of zones){zone.z-=offset;zone.minZ-=offset;zone.maxZ-=offset;}
+  const importers=new Map(),mathIds=new Set(city.nodes.filter(node=>node.library==='Mathlib').map(node=>node.id));
   for(const edge of city.edges)if(positions.has(edge.from)&&mathIds.has(edge.to)){
     if(!importers.has(edge.to))importers.set(edge.to,[]);importers.get(edge.to).push(positions.get(edge.from));
   }
@@ -35,5 +70,5 @@ export function layoutFullCity(city,{spacing=3, shelfWidth=220}={}) {
       if(!occupied.has(key)){occupied.add(key);positions.set(node.id,{x:gx*spacing,z:gz*spacing});found=true;}
     }
   }
-  return {positions,districts,zones,width,depth};
+  return {positions,districts,topics,zones,width,depth};
 }

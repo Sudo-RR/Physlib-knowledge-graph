@@ -20,6 +20,12 @@ function renderExplorer() {
 }
 
 function updateHistoryButtons(){$('#nav-back').disabled=navIndex<=0;$('#nav-forward').disabled=navIndex>=navMax;}
+function populateAreas(){
+  const roots=new Map();
+  for(const node of city.nodes){if(node.library==='Mathlib')continue;const parts=node.module.path.replaceAll('\\','/').split('/');if(parts.length<3)continue;const [root,name]=parts,path=`${root}/${name}`;if(!roots.has(root))roots.set(root,new Map());const areas=roots.get(root);areas.set(path,(areas.get(path)||0)+1);}
+  const human=name=>name.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Z])([A-Z][a-z])/g,'$1 $2');
+  $('#area-select').innerHTML='<option value="">Choose an area</option>'+[...roots].sort(([a],[b])=>a.localeCompare(b)).map(([root,areas])=>`<optgroup label="${esc(root)}">${[...areas].sort(([a],[b])=>a.localeCompare(b)).map(([path,count])=>`<option value="${esc(path)}">${esc(human(path.split('/')[1]))} · ${count} ${count===1?'file':'files'}</option>`).join('')}</optgroup>`).join('');
+}
 function mathlibTarget(target) {
   if(city.nodes.some(node=>node.id===target.module))return `<button data-node="${esc(target.module)}">${esc(target.module)}</button>`;
   const module=mathlib.modules.find(item=>item.id===target.module);
@@ -113,6 +119,7 @@ document.addEventListener('click',event=>{
 });
 document.addEventListener('toggle',event=>{const folder=event.target;if(!folder.matches?.('details[data-folder]'))return;if(folder.open)expanded.add(folder.dataset.folder);else expanded.delete(folder.dataset.folder);},true);
 document.addEventListener('change',event=>{if(event.target.id==='relation-filter'&&scene){relationMode=event.target.value;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}});
+$('#area-select').addEventListener('change',event=>{const folder=event.target.value;if(!folder)return;scene?.focusFolder(folder);$('#search').value='';const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));renderExplorer();const match=[...document.querySelectorAll('#city-list details[data-folder]')].find(element=>element.dataset.folder===folder);match?.querySelector('summary')?.scrollIntoView({block:'nearest'});});
 $('#search').addEventListener('input',renderExplorer);
 $('#search').addEventListener('keydown',event=>{if(event.key==='Enter'){const first=$('#city-list [data-node]');if(first){event.preventDefault();select(first.dataset.node);}}});
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)){event.preventDefault();$('#search').focus();}if(event.key==='Escape'){if(!$('#floor-interior').hidden){$('#floor-interior').hidden=true;floorRoom?.hide();}else if(document.activeElement===$('#search')){$('#search').value='';renderExplorer();}}});
@@ -133,7 +140,7 @@ try {
   try {const response=await fetch('data/city-declarations.json');if(response.ok){const d=await response.json();if(d?.source?.physlibRevision===p.source.revision&&d.source.mathlibRevision===m.source.revision&&d.source.toolchain===p.source.toolchain&&Array.isArray(d.declarations)&&Array.isArray(d.targets)&&Array.isArray(d.edges)&&d.edges.every(e=>d.targets.some(t=>t.id===e.to)&&d.declarations.some(v=>v.id===e.from)))declarationPilot=d;}} catch {}
   try {const response=await fetch('data/declarations.json');if(response.ok){const candidate=await response.json();if(!validateDeclarations(candidate,p).length)declarationSnapshot=candidate;}} catch {}
   floorIndex=buildFloorIndex(city.nodes,declarationSnapshot,declarationPilot);
-  tree=makeFolderTree(city.nodes);$('#count').textContent=city.nodes.length;
+  tree=makeFolderTree(city.nodes);$('#count').textContent=city.nodes.length;populateAreas();
   $('#city-counts').textContent=`${city.nodes.filter(n=>n.library==='Physlib').length} Physlib-family files · ${city.mathlibModules} directly imported Mathlib files · ${city.edges.length} shown imports`;
   $('#snapshot').innerHTML=`Physlib <a href="${p.source.repository}/commit/${p.source.revision}">${esc(p.source.revision.slice(0,10))} ↗</a><br>Mathlib <a href="${m.source.repository}/commit/${m.source.revision}">${esc(m.source.revision.slice(0,10))} ↗</a><br>${esc(p.source.toolchain)}`;
   renderExplorer();scene=createCityScene($('#city-canvas'),city,floorIndex,id=>select(id),inspectFloor);$('#loading').hidden=true;
