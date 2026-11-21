@@ -1,6 +1,6 @@
 # Mathlib module data
 
-The city includes the Mathlib modules directly imported by Physlib. An arrow from a Physlib module to a Mathlib module records an explicit source import; Mathlib-to-Mathlib arrows have the same meaning. Select a Mathlib module to inspect its imports, importers and directly importing Physlib modules, or follow a Physlib module's Mathlib import into the city. Source links point to the revisions used to generate the data. The older separate Mathlib viewer is no longer deployed.
+The city includes the Mathlib modules directly imported by Physlib. Cyan pipelines record explicit Physlib-family-to-Mathlib file imports; Mathlib-to-Mathlib arrows also represent file imports. The Mathlib modules are arranged underground by their own folder paths. Select a Mathlib module to inspect its imports, importers and directly importing Physlib modules, or follow a Physlib module's Mathlib import into the city. Source links point to the revisions used to generate the data. The older separate Mathlib viewer is no longer deployed.
 
 ## Generate locally
 

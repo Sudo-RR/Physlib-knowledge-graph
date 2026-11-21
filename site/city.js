@@ -4,14 +4,15 @@ import { createCityScene } from './city-scene.js';
 import { buildFloorIndex } from './city-floors.js';
 import { validateDeclarations } from './declarations.js';
 import { createFloorRoom } from './floor-room.js';
+import { mathlibPipelines } from './city-relations.js';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sourceUrl = (source, path, line) => `${source.repository}/blob/${source.revision}/${path.split('/').map(encodeURIComponent).join('/')}${line ? `#L${line}` : ''}`;
 let city, physlib, mathlib, scene, tree, selected, declarationPilot, declarationSnapshot, floorIndex, floorRoom;
-let navIndex=0, navMax=0, relationMode='imports';
+let navIndex=0, navMax=0, relationMode='imports',pipelinesVisible=true;
 const expanded = new Set(['Physlib','Physlib/ClassicalMechanics']);
-function describeRelations(result){if(relationMode==='none')return 'Connections hidden';return `${result.drawn} of ${result.total} ${relationMode==='imports'?'imports':relationMode==='importers'?'importers':'relationships'} shown${result.total>result.drawn?' · all listed in inspector':''}`;}
+function describeRelations(result){if(relationMode==='none')return 'File arrows hidden';return `${result.drawn} of ${result.total} ${relationMode==='imports'?'imports':relationMode==='importers'?'importers':'relationships'} shown${result.total>result.drawn?' · all listed in inspector':''}`;}
 
 function renderExplorer() {
   const list=$('#city-list'),scroll=list.scrollTop;
@@ -20,9 +21,10 @@ function renderExplorer() {
 }
 
 function updateHistoryButtons(){$('#nav-back').disabled=navIndex<=0;$('#nav-forward').disabled=navIndex>=navMax;}
+function clearSelection({resetCamera=false}={}){selected=null;scene.select(null);if(resetCamera)scene.reset();$('#current-selection').textContent='Select a file';$('#city-inspector').innerHTML='<div class="empty"><h2>Select a file.</h2><p>Explore its imports and recorded declarations.</p></div>';$('#floor-interior').hidden=true;floorRoom?.hide();renderExplorer();}
 function populateAreas(){
   const roots=new Map();
-  for(const node of city.nodes){if(node.library==='Mathlib')continue;const parts=node.module.path.replaceAll('\\','/').split('/');if(parts.length<3)continue;const [root,name]=parts,path=`${root}/${name}`;if(!roots.has(root))roots.set(root,new Map());const areas=roots.get(root);areas.set(path,(areas.get(path)||0)+1);}
+  for(const node of city.nodes){const parts=node.module.path.replaceAll('\\','/').split('/');if(parts.length<3)continue;const [root,name]=parts,path=`${root}/${name}`;if(!roots.has(root))roots.set(root,new Map());const areas=roots.get(root);areas.set(path,(areas.get(path)||0)+1);}
   const human=name=>name.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Z])([A-Z][a-z])/g,'$1 $2');
   $('#area-select').innerHTML='<option value="">Choose an area</option>'+[...roots].sort(([a],[b])=>a.localeCompare(b)).map(([root,areas])=>`<optgroup label="${esc(root)}">${[...areas].sort(([a],[b])=>a.localeCompare(b)).map(([path,count])=>`<option value="${esc(path)}">${esc(human(path.split('/')[1]))} · ${count} ${count===1?'file':'files'}</option>`).join('')}</optgroup>`).join('');
 }
@@ -100,8 +102,9 @@ function select(id,{focus=true,record=true}={}) {
   const folder=node.module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/');
   const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));
   const maps=node.library==='Physlib'?physlib.maps.filter(map=>map.references.includes(node.module.path)):[];
+  const pipelineCount=mathlibPipelines(city,id).length;
   const measure=floorIndex.get(id).lineCount;
-  $('#city-inspector').innerHTML=`<span class="label">${esc(node.id.split('.')[0].toUpperCase())} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><p class="note">${measure===null?'Source line count unavailable; height uses available declaration data.':`${measure.toLocaleString()} source lines · height is logarithmic`}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a></div><div class="relation-controls"><label for="relation-filter">Connections in the city</label><select id="relation-filter"><option value="imports">Imports (${imports.length})</option><option value="importers">Imported by (${importers.length})</option><option value="both">Both directions</option><option value="none">Hide connections</option></select><p>Blue: this file imports. Amber: imports this file. Up to 12 lines are shown; complete lists are below.</p></div>${declarationSection(node)}<h3>Imports · ${imports.length} in city</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in city</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="${sourceUrl(physlib.source,map.path)}" target="_blank" rel="noreferrer">${esc(map.title)} ↗</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this city.</p>`;
+  $('#city-inspector').innerHTML=`<span class="label">${esc(node.id.split('.')[0].toUpperCase())} · FILE</span><h2>${esc(id)}</h2><p class="city-path">${esc(node.module.path)}</p><p class="note">${measure===null?'Source line count unavailable; height uses available declaration data.':`${measure.toLocaleString()} source lines · height is logarithmic`}</p><div class="city-inspector-links"><a href="${sourceUrl(source,node.module.path)}" target="_blank" rel="noreferrer">Lean source ↗</a></div><div class="relation-controls"><label for="relation-filter">Connections in the city</label><select id="relation-filter"><option value="imports">Imports (${imports.length})</option><option value="importers">Imported by (${importers.length})</option><option value="both">Both directions</option><option value="none">Hide file arrows</option></select><p>Blue: this file imports. Amber: imports this file. Up to 12 lines are shown; complete lists are below.</p><label class="pipeline-toggle"><input type="checkbox" id="pipeline-toggle" ${pipelinesVisible?'checked':''}> Show Mathlib pipelines (${pipelineCount} for this file)</label><p>Each cyan pipeline is a direct file import, not a declaration-use claim.</p><button type="button" id="view-foundations" ${pipelineCount?'':'disabled'}>View foundations</button></div>${declarationSection(node)}<h3>Imports · ${imports.length} in city</h3>${relationList(imports,'to')}<h3>Imported by · ${importers.length} in city</h3>${relationList(importers,'from')}<h3>API maps</h3>${maps.length?`<ul class="inspect-list">${maps.map(map=>`<li><a href="${sourceUrl(physlib.source,map.path)}" target="_blank" rel="noreferrer">${esc(map.title)} ↗</a></li>`).join('')}</ul>`:'<p class="note">No linked API maps in this snapshot.</p>'}<p class="city-note">A file import does not establish declaration usage. Declaration links are partial and may be routed. Other relationships may lie outside this city.</p>`;
   $('#relation-filter').value=relationMode;
   $('#current-selection').innerHTML=`<span>${esc(node.id.split('.')[0])} · Selected file</span><strong>${esc(id)}</strong><small id="relation-mode"></small>`;
   const graph=scene.select(id);$('#relation-mode').textContent=describeRelations(graph);if(focus)scene.focusBuilding(id);renderExplorer();
@@ -111,6 +114,7 @@ function select(id,{focus=true,record=true}={}) {
 }
 
 document.addEventListener('click',event=>{
+  if(event.target.closest('#view-foundations'))scene?.focusFoundations();
   const folder=event.target.closest('summary')?.parentElement;if(folder?.dataset.folder)scene?.focusFolder(folder.dataset.folder);
   const node=event.target.closest('[data-node]');if(node)select(node.dataset.node);
   const floor=event.target.closest('[data-floor]');if(floor)inspectFloor(selected,Number(floor.dataset.floor));
@@ -119,13 +123,15 @@ document.addEventListener('click',event=>{
 });
 document.addEventListener('toggle',event=>{const folder=event.target;if(!folder.matches?.('details[data-folder]'))return;if(folder.open)expanded.add(folder.dataset.folder);else expanded.delete(folder.dataset.folder);},true);
 document.addEventListener('change',event=>{if(event.target.id==='relation-filter'&&scene){relationMode=event.target.value;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}});
-$('#area-select').addEventListener('change',event=>{const folder=event.target.value;if(!folder)return;scene?.focusFolder(folder);$('#search').value='';const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));renderExplorer();const match=[...document.querySelectorAll('#city-list details[data-folder]')].find(element=>element.dataset.folder===folder);match?.querySelector('summary')?.scrollIntoView({block:'nearest'});});
+document.addEventListener('change',event=>{if(event.target.id==='pipeline-toggle'&&scene){pipelinesVisible=event.target.checked;$('#toggle-pipelines').setAttribute('aria-pressed',String(pipelinesVisible));$('#relation-mode').textContent=describeRelations(scene.setPipesVisible(pipelinesVisible));}});
+$('#toggle-pipelines').addEventListener('click',()=>{if(!scene)return;pipelinesVisible=!pipelinesVisible;$('#toggle-pipelines').setAttribute('aria-pressed',String(pipelinesVisible));const result=scene.setPipesVisible(pipelinesVisible);if($('#pipeline-toggle'))$('#pipeline-toggle').checked=pipelinesVisible;if($('#relation-mode'))$('#relation-mode').textContent=describeRelations(result);});
+$('#area-select').addEventListener('change',event=>{const folder=event.target.value;if(!folder||!scene)return;if(selected){clearSelection();const url=new URL(location.href);url.searchParams.delete('node');navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);updateHistoryButtons();}scene.focusFolder(folder);$('#search').value='';const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));renderExplorer();const match=[...document.querySelectorAll('#city-list details[data-folder]')].find(element=>element.dataset.folder===folder);match?.querySelector('summary')?.scrollIntoView({block:'nearest'});});
 $('#search').addEventListener('input',renderExplorer);
 $('#search').addEventListener('keydown',event=>{if(event.key==='Enter'){const first=$('#city-list [data-node]');if(first){event.preventDefault();select(first.dataset.node);}}});
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)){event.preventDefault();$('#search').focus();}if(event.key==='Escape'){if(!$('#floor-interior').hidden){$('#floor-interior').hidden=true;floorRoom?.hide();}else if(document.activeElement===$('#search')){$('#search').value='';renderExplorer();}}});
 $('#nav-back').addEventListener('click',()=>history.back());
 $('#nav-forward').addEventListener('click',()=>history.forward());
-window.addEventListener('popstate',event=>{const id=new URL(location.href).searchParams.get('node');navIndex=Number.isInteger(event.state?.cityIndex)?event.state.cityIndex:0;if(id&&city?.nodes.some(node=>node.id===id))select(id,{record:false});else if(!id&&scene){selected=null;scene.select(null);scene.reset();$('#current-selection').textContent='Select a file';$('#city-inspector').innerHTML='<div class="empty"><h2>Select a file.</h2><p>Explore its imports and recorded declarations.</p></div>';$('#floor-interior').hidden=true;floorRoom?.hide();renderExplorer();}updateHistoryButtons();});
+window.addEventListener('popstate',event=>{const id=new URL(location.href).searchParams.get('node');navIndex=Number.isInteger(event.state?.cityIndex)?event.state.cityIndex:0;if(id&&city?.nodes.some(node=>node.id===id))select(id,{record:false});else if(!id&&scene)clearSelection({resetCamera:true});updateHistoryButtons();});
 document.querySelectorAll('[data-move]').forEach(button=>button.addEventListener('click',()=>{const direction={forward:[8,0],back:[-8,0],left:[0,-8],right:[0,8]}[button.dataset.move];scene?.move(...direction);}));
 $('#reset').addEventListener('click',()=>scene.reset());
 $('#focus-selected').addEventListener('click',()=>{if(selected)scene.focusBuilding(selected);});

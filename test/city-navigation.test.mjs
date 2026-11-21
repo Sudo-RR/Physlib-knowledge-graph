@@ -1,17 +1,26 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { layoutFullCity } from '../site/city-layout.js';
-import { visibleRelations } from '../site/city-relations.js';
+import { visibleRelations, allMathlibPipelines, mathlibPipelines } from '../site/city-relations.js';
 
-test('top-level libraries occupy separated regions while Mathlib is placed below its importers',()=>{
+test('top-level libraries occupy separated regions and Mathlib has an underground region',()=>{
   const node=(id,path,library='Physlib')=>({id,library,module:{path}});
   const city={nodes:[node('Physlib.A','Physlib/A.lean'),node('PhyslibAlpha.A','PhyslibAlpha/A.lean'),node('QuantumInfo.A','QuantumInfo/A.lean'),node('Mathlib.A','Mathlib/A.lean','Mathlib')],edges:[{from:'Physlib.A',to:'Mathlib.A'}]};
   const result=layoutFullCity(city);
-  assert.deepEqual(result.zones.map(z=>z.id),['Physlib','PhyslibAlpha','QuantumInfo']);
+  assert.deepEqual(result.zones.map(z=>z.id),['Physlib','PhyslibAlpha','QuantumInfo','Mathlib']);
   assert.ok(result.zones[0].maxZ<result.zones[1].minZ);
   assert.ok(result.zones[1].maxZ<result.zones[2].minZ);
-  const math=result.positions.get('Mathlib.A'),source=result.positions.get('Physlib.A');
-  assert.ok(Math.abs(math.x-source.x)<=1.5&&Math.abs(math.z-source.z)<=1.5);
+  assert.equal(result.zones.find(zone=>zone.id==='Mathlib').underground,true);
+  assert.ok(result.districts.some(d=>d.id==='Mathlib'&&d.underground));
+  assert.ok(result.positions.has('Mathlib.A'));
+});
+
+test('pipelines contain all direct Mathlib imports and selection isolates the matching endpoints',()=>{
+  const nodes=[{id:'Physlib.A',library:'Physlib'},{id:'Physlib.B',library:'Physlib'},{id:'Mathlib.A',library:'Mathlib'},{id:'Mathlib.B',library:'Mathlib'}];
+  const edges=[{from:'Physlib.A',to:'Mathlib.A'},{from:'Physlib.A',to:'Physlib.B'},{from:'Physlib.B',to:'Mathlib.B'},{from:'Mathlib.A',to:'Mathlib.B'},{from:'Physlib.A',to:'Mathlib.A'}];
+  assert.deepEqual(mathlibPipelines({nodes,edges},'Physlib.A'),[edges[0]]);
+  assert.deepEqual(mathlibPipelines({nodes,edges},'Mathlib.A'),[edges[0]]);
+  assert.deepEqual(allMathlibPipelines({nodes,edges}),[edges[0],edges[2]]);
 });
 
 test('connection filters retain import direction, remove duplicates and report the full count',()=>{
