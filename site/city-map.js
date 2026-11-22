@@ -59,14 +59,14 @@ export function createRadialMap(host,city,onTopic,onFile) {
   const tooltip=document.createElement('div');tooltip.className='radial-tooltip';tooltip.hidden=true;
   const hint=document.createElement('div');hint.className='radial-hint';hint.textContent='Sectors: folders · Tiles: files · Select to explore';
   host.replaceChildren(svg,tooltip,hint);
-  function updateView(){svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.size} ${view.size}`);}
+  function stacked(){return !underground&&!scope;}
+  function updateView(){svg.setAttribute('viewBox',`${view.x} ${view.y} ${view.size} ${view.size*(stacked()?1.36:1)}`);}
+  function resetView(){view=stacked()?{x:-400,y:-544,size:800}:{x:-400,y:-400,size:800};updateView();}
   function zoom(factor){
     const next=Math.max(260,Math.min(1300,view.size*factor)),offset=(view.size-next)/2;
-    view={x:view.x+offset,y:view.y+offset,size:next};updateView();
+    view={x:view.x+offset,y:view.y+offset*(stacked()?1.36:1),size:next};updateView();
   }
-  function draw() {
-    svg.replaceChildren();
-    const groups=radialGroups(city.nodes,underground,scope);
+  function drawWheel(svg,groups,title) {
     let colorIndex=0;
     const backdrop=element('circle',{r:342,fill:'#fff',stroke:'#eceff1','stroke-width':1});svg.append(backdrop);
     for(const group of groups){
@@ -102,9 +102,28 @@ export function createRadialMap(host,city,onTopic,onFile) {
       }
     }
     svg.append(element('circle',{r:46,fill:'#fff',stroke:'#edf0f2','stroke-width':1}));
-    svg.append(element('text',{x:0,y:-4,'text-anchor':'middle',class:'radial-title'},scope?readable(scope.split('/').at(-1)):(underground?'Mathlib':'Physlib')));
+    svg.append(element('text',{x:0,y:-4,'text-anchor':'middle',class:'radial-title'},title));
     svg.append(element('text',{x:0,y:14,'text-anchor':'middle',class:'radial-meta'},`${groups.reduce((sum,g)=>sum+g.topics.reduce((n,t)=>n+t.nodes.length,0),0)} files`));
     svg.append(element('text',{x:0,y:28,'text-anchor':'middle',class:'radial-meta'},'Folder hierarchy'));
+  }
+  function draw(){
+    svg.replaceChildren();
+    if(stacked()){
+      const roots=['Physlib','PhyslibAlpha','QuantumInfo'];
+      roots.forEach((root,index)=>{
+        const groups=radialGroups(city.nodes,false,root);
+        const wheel=element('g',{transform:`translate(-125 ${-350+index*350}) scale(.49)`});
+        drawWheel(wheel,groups,root);svg.append(wheel);
+        const count=groups.reduce((n,g)=>n+g.topics.reduce((sum,t)=>sum+t.nodes.length,0),0);
+        const label=element('g',{role:'button',tabindex:0,class:'stack-label','aria-label':`Explore ${root}, ${count} files`});
+        label.append(element('rect',{x:64,y:-400+index*350,width:325,height:108,fill:'transparent'}));
+        label.append(element('text',{x:75,y:-365+index*350,class:'stack-title',fill:rootColors[root]},root));
+        label.append(element('text',{x:75,y:-335+index*350,class:'stack-meta'},`${count} files · Explore`));
+        label.addEventListener('click',()=>onTopic(root));
+        label.addEventListener('keydown',event=>{if(event.key==='Enter'||event.key===' '){event.preventDefault();onTopic(root);}});
+        svg.append(label);
+      });
+    }else drawWheel(svg,radialGroups(city.nodes,underground,scope),scope?readable(scope.split('/').at(-1)):'Mathlib');
   }
   svg.addEventListener('wheel',event=>{
     event.preventDefault();
@@ -120,6 +139,6 @@ export function createRadialMap(host,city,onTopic,onFile) {
   svg.addEventListener('pointerdown',event=>{drag={x:event.clientX,y:event.clientY,startX:view.x,startY:view.y};wasDragged=false;});
   svg.addEventListener('pointermove',event=>{if(!drag)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(Math.hypot(dx,dy)>3&&!wasDragged){wasDragged=true;svg.setPointerCapture(event.pointerId);}const rect=svg.getBoundingClientRect(),scale=view.size/Math.max(1,Math.min(rect.width,rect.height));view.x=drag.startX-dx*scale;view.y=drag.startY-dy*scale;updateView();});
   svg.addEventListener('pointerup',()=>{drag=null;});svg.addEventListener('pointercancel',()=>{drag=null;});
-  draw();
-  return {setLayer:value=>{underground=value;scope=null;selected=null;view={x:-400,y:-400,size:800};updateView();draw();},setScope:value=>{scope=value;selected=null;view={x:-400,y:-400,size:800};updateView();draw();},setSelected:value=>{selected=value;for(const tile of svg.querySelectorAll('[data-file]'))tile.classList.toggle('selected',tile.getAttribute('data-file')===value);},zoom,reset:()=>{view={x:-400,y:-400,size:800};updateView();},get underground(){return underground;},get scope(){return scope;}};
+  resetView();draw();
+  return {setLayer:value=>{underground=value;scope=null;selected=null;resetView();draw();},setScope:value=>{scope=value;selected=null;resetView();draw();},setSelected:value=>{selected=value;for(const tile of svg.querySelectorAll('[data-file]'))tile.classList.toggle('selected',tile.getAttribute('data-file')===value);},zoom,reset:resetView,get underground(){return underground;},get scope(){return scope;}};
 }

@@ -20,3 +20,12 @@ test('drilling into a folder groups only its direct files and subfolders',()=>{
   ]);
   assert.deepEqual(radialGroups(nodes,true,'Mathlib/Relativity')[0].topics[0].nodes.map(n=>n.id),['Mathlib.Relativity.Basic']);
 });
+test('each stacked library wheel contains only that library, including its root file',()=>{
+  const nodes=[node('Physlib','Physlib.lean'),node('Physlib.A','Physlib/Relativity/A.lean'),node('PhyslibAlpha','PhyslibAlpha.lean'),node('PhyslibAlpha.A','PhyslibAlpha/Relativity/A.lean'),node('QuantumInfo','QuantumInfo.lean'),node('QuantumInfo.A','QuantumInfo/States/A.lean')];
+  for(const root of ['Physlib','PhyslibAlpha','QuantumInfo']){
+    const groups=radialGroups(nodes,false,root);
+    assert.deepEqual(groups.map(g=>g.root),[root]);
+    assert.deepEqual(groups.flatMap(g=>g.topics).flatMap(t=>t.nodes).map(n=>n.id).sort(),[root,`${root}.A`].sort());
+    assert.ok(Math.abs(groups[0].end-groups[0].start-2*Math.PI)<1e-9);
+  }
+});

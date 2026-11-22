@@ -36,6 +36,9 @@
 .radial-title{font:700 17px system-ui,sans-serif;letter-spacing:-.04em;fill:#20364b;pointer-events:none}
 .radial-subtitle{font:600 12px system-ui,sans-serif;fill:#536879;pointer-events:none}
 .radial-meta{font:10px system-ui,sans-serif;fill:#697b89;pointer-events:none}
+.stack-title{font:700 32px system-ui,sans-serif;letter-spacing:-.03em;pointer-events:none}
+.stack-meta{font:18px system-ui,sans-serif;fill:#526474;pointer-events:none}
+.stack-label{cursor:pointer}.stack-label:hover .stack-title,.stack-label:focus-visible .stack-title{text-decoration:underline}.stack-label:focus-visible{outline:none}.stack-label:focus-visible rect{stroke:#002fa7;stroke-width:2}
 .canvas-wrap.map-open .city-layer-key,.canvas-wrap.map-open .city-movement,.canvas-wrap.map-open .city-current{display:none}
 .city-view .canvas-top{min-height:0;padding:12px 20px}
 .city-view .canvas-top h1{font-size:20px;line-height:1.1}
