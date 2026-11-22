@@ -18,7 +18,25 @@ export function buildingStyle(id) {
   ][roofStyle(id)];
 }
 
-export function createCityArt(nodes,positions,floors) {
+// Available for an explicitly supplied construction status, not used for
+// current files: their snapshot does not contain a verified status field.
+export function createConstructionSite(width, height, depth) {
+  if(![width,height,depth].every(value=>Number.isFinite(value)&&value>0))throw Error('Construction dimensions must be positive');
+  const group=new THREE.Group();
+  const frame=new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(width,height,depth)),
+    new THREE.LineBasicMaterial({color:0xffa521})
+  );
+  const deck=new THREE.Mesh(
+    new THREE.BoxGeometry(width+.18,.16,depth+.18),
+    new THREE.MeshStandardMaterial({color:0xffc453,roughness:.8})
+  );
+  frame.position.y=height/2;deck.position.y=height*.48;
+  group.add(frame,deck);
+  return group;
+}
+
+export function createCityArt(nodes,positions,floors,{constructionIds=new Set()}={}) {
   const group=new THREE.Group();
   const stone=new THREE.MeshStandardMaterial({color:0xf5e7c9,roughness:.85});
   const accent=new THREE.MeshStandardMaterial({color:0x455f70,roughness:.7,metalness:.12});
@@ -35,6 +53,11 @@ export function createCityArt(nodes,positions,floors) {
   let entranceCount=0;
   for(const node of nodes){
     const position=positions.get(node.id),height=floors.get(node.id).height,sign=node.library==='Mathlib'?-1:1,style=roofStyle(node.id),footprint=buildingStyle(node.id);
+    if(constructionIds.has(node.id)){
+      const scaffold=createConstructionSite(footprint.width,height,footprint.depth);
+      scaffold.position.set(position.x,0,position.z);scaffold.scale.y=sign;group.add(scaffold);
+      continue;
+    }
     scale.set(footprint.width/1.9,1,footprint.depth/1.9);
     point.set(position.x,sign*(height+.12),position.z);
     rotation.setFromAxisAngle(new THREE.Vector3(1,0,0),sign<0?Math.PI:0);

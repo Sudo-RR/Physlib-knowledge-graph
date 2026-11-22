@@ -11,6 +11,7 @@ installed package licence and `package-lock.json` for the pinned version.
 If external art is added later, record its author, source, licence, any
 redistribution conditions and required attribution here before shipping it.
 
-Construction sites are not displayed: the current graph has no verified
-construction-status field. A scaffolded appearance must not be assigned from
-file size, folder name or guesswork.
+The art kit includes an orange wireframe scaffold for an explicitly supplied
+construction status. Construction sites are not displayed in the current city:
+the graph has no verified construction-status field. A scaffolded appearance
+must not be assigned from file size, folder name or guesswork.

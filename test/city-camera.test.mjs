@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cityBounds, fitDistance, fitBox } from '../site/city-camera.js';
+import { cityBounds, fitDistance, fitBox, createCollisionGrid, cameraClearance } from '../site/city-camera.js';
 
 test('overview bounds include separated and underground areas without gaps',()=>{
   const bounds=cityBounds([{x:-30,z:0,radius:10},{x:80,z:100,radius:20,underground:true}],10);
@@ -27,4 +27,24 @@ test('framing accounts for narrow screens and tall buildings',()=>{
   const narrow=fitDistance(100,20,2,40,.5);
   assert.ok(narrow>wide);
   assert.ok(fitDistance(2,100,2,40,1)>fitDistance(2,10,2,40,1));
+});
+
+test('camera clearance resolves buildings only in the active layer',()=>{
+  const boxes=[{min:{x:-1,y:0,z:-1},max:{x:1,y:10,z:1},layer:'surface'},{min:{x:9,y:-10,z:-1},max:{x:11,y:0,z:1},layer:'underground'}];
+  const grid=createCollisionGrid(boxes);
+  const inside=cameraClearance({x:.8,y:5,z:0},grid,'surface');
+  assert.ok(inside.x>=1.18);
+  assert.deepEqual(cameraClearance({x:.8,y:5,z:0},grid,'underground'),{x:.8,y:5,z:0});
+  assert.deepEqual(cameraClearance({x:0,y:15,z:0},grid,'surface'),{x:0,y:15,z:0});
+  const below=cameraClearance({x:10.8,y:-5,z:0},grid,'underground');
+  assert.ok(below.x>=11.18);
+});
+
+test('camera clearance escapes overlapping building margins',()=>{
+  const box=(x,z)=>({min:{x:x-1,y:0,z:z-1},max:{x:x+1,y:10,z:z+1},layer:'surface'});
+  const grid=createCollisionGrid([box(0,0),box(1.9,0),box(0,1.9),box(1.9,1.9)]);
+  const safe=cameraClearance({x:.95,y:2,z:.95},grid,'surface');
+  for(const item of [box(0,0),box(1.9,0),box(0,1.9),box(1.9,1.9)]) {
+    assert.ok(safe.x<=item.min.x-.18||safe.x>=item.max.x+.18||safe.z<=item.min.z-.18||safe.z>=item.max.z+.18);
+  }
 });

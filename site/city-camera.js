@@ -35,3 +35,36 @@ export function fitBox(box, direction, verticalFovDegrees, aspect, padding = 1.1
   }
   return {centre,distance:Math.max(5,distance*padding)};
 }
+
+// A spatial grid keeps camera clearance checks local even in the full city.
+// Boxes are real rendered file footprints; the index never changes graph data.
+export function createCollisionGrid(boxes, cellSize = 6) {
+  const cells = new Map();
+  for (const box of boxes) {
+    for(let x=Math.floor(box.min.x/cellSize);x<=Math.floor(box.max.x/cellSize);x++)
+      for(let z=Math.floor(box.min.z/cellSize);z<=Math.floor(box.max.z/cellSize);z++) {
+        const key=`${x},${z}`;
+        if(!cells.has(key))cells.set(key,[]);
+        cells.get(key).push(box);
+      }
+  }
+  return {cells,cellSize};
+}
+
+export function cameraClearance(point, grid, layer, margin = .18) {
+  const result={x:point.x,y:point.y,z:point.z},cx=Math.floor(point.x/grid.cellSize),cz=Math.floor(point.z/grid.cellSize),nearby=new Set();
+  for(let x=cx-1;x<=cx+1;x++)for(let z=cz-1;z<=cz+1;z++)
+    for(const box of grid.cells.get(`${x},${z}`)||[])if(box.layer===layer&&point.y>=box.min.y&&point.y<=box.max.y)nearby.add(box);
+  const boxes=[...nearby].map(box=>({minX:box.min.x-margin,maxX:box.max.x+margin,minZ:box.min.z-margin,maxZ:box.max.z+margin}));
+  const blocked=(x,z)=>boxes.some(box=>x>box.minX&&x<box.maxX&&z>box.minZ&&z<box.maxZ);
+  if(!blocked(point.x,point.z))return result;
+  // A candidate can lie at the intersection of two boundaries: this handles
+  // overlapping clearances without bouncing between neighbouring buildings.
+  const xs=[point.x,...boxes.flatMap(box=>[box.minX,box.maxX])],zs=[point.z,...boxes.flatMap(box=>[box.minZ,box.maxZ])];
+  let best=null;
+  for(const x of xs)for(const z of zs){
+    const distance=(x-point.x)**2+(z-point.z)**2;
+    if((!best||distance<best.distance)&&!blocked(x,z))best={x,z,distance};
+  }
+  return best?{x:best.x,y:point.y,z:best.z}:result;
+}
