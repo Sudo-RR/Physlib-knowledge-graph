@@ -43,8 +43,9 @@ total process memory. Repeatedly switch between the same two files and allow
 the scene to settle to look for persistent growth; record the selection and
 quality setting.
 
-On 22 November 2026, one local desktop browser session at the default initial
-view, High quality and the same 2,256-file local snapshot produced these single
+On 22 November 2026, one local Windows desktop browser session (Intel Core
+Ultra 7 155U, Intel Graphics, 32 GB RAM) at the default initial view, High
+quality and the same 2,256-file local snapshot produced these single
 samples. They are diagnostic observations, not a device benchmark or FPS claim.
 The baseline was commit `f938052`; its scene was instrumented with the same
 renderer counters for this comparison.
