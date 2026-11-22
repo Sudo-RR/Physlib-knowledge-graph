@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { districtFor } from './city-model.js';
 import { layoutFullCity } from './city-layout.js';
 import { visibleRelations, allMathlibPipelines, relationGroups } from './city-relations.js';
-import { fitBox, cityBounds, createCollisionGrid } from './city-camera.js';
+import { fitBox, cityBounds, createCollisionGrid, layerDestination } from './city-camera.js';
 import { createNavigationController } from './city-navigation.js';
 import { clearDisposableGroup } from './city-resources.js';
 import { buildingStyle, createCityArt } from './city-art.js';
@@ -142,6 +142,14 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
     controls.maxDistance=Math.max(controls.maxDistance,fit.distance*1.2);
     travel(centre,centre.clone().addScaledVector(direction,fit.distance));
   }
+  function travelLayer(value){
+    setLayer(value);
+    const destination=layerDestination(buildings,pipelineLinks,selected,value,controls.target);
+    const building=buildings.get(destination);
+    const target=building?building.group.position.clone():controls.target.clone();
+    target.y=value?-5:5;
+    lookAt(target,30);
+  }
   function showAll(){for(const b of buildings.values()){b.group.visible=!underground||b.direction<0;if(b.surface)b.surface.visible=!underground;}}
   function focusFolder(folder){showAll();const members=city.nodes.filter(n=>n.module.path.replaceAll('\\','/').startsWith(`${folder}/`));if(!members.length)return;setLayer(folder.startsWith('Mathlib'));const box=new THREE.Box3();for(const n of members)box.expandByObject(buildings.get(n.id).body);const direction=new THREE.Vector3(0,underground?-1:1,1).normalize(),fit=fitBox(box,direction,camera.fov,camera.aspect);const centre=new THREE.Vector3(fit.centre.x,fit.centre.y,fit.centre.z);travel(centre,centre.clone().addScaledVector(direction,fit.distance));}
   function focusBuilding(id){const b=buildings.get(id);if(!b)return;setLayer(b.direction<0);showAll();const height=floors.get(id).height,centre=b.group.position.clone().add(new THREE.Vector3(0,b.direction*height/2,0)),box={min:{x:centre.x-b.footprint.width/2,y:Math.min(0,b.direction*height),z:centre.z-b.footprint.depth/2},max:{x:centre.x+b.footprint.width/2,y:Math.max(0,b.direction*height),z:centre.z+b.footprint.depth/2}},distance=Math.max(18,fitBox(box,{x:1,y:b.direction*.35,z:1},camera.fov,camera.aspect).distance);let best=null;
@@ -201,5 +209,5 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
     for(const [index,label] of hubLabels.entries()){if(label.ring)label.marker.quaternion.copy(camera.quaternion);const p=label.position.clone().project(camera),x=(p.x+1)*host.clientWidth/2,y=(1-p.y)*host.clientHeight/2-index*20;label.element.hidden=!hubs.visible||p.z>1||x<0||x>host.clientWidth||y<0||y>host.clientHeight;if(!label.element.hidden)occupied.push({left:x-52,right:x+52,top:y-30,bottom:y+2});label.element.style.transform=`translate(-50%,-130%) translate(${x}px,${y}px)`;}
     for(const label of [...labels].sort((a,b)=>Number(b.id===activeDistrict)-Number(a.id===activeDistrict)||Number(Boolean(b.topic))-Number(Boolean(a.topic)))){const p=label.position.clone().project(camera),x=(p.x+1)*host.clientWidth/2,y=(1-p.y)*host.clientHeight/2,width=Math.min(160,label.element.textContent.length*5.5+14),box={left:x-width/2,right:x+width/2,top:y-10,bottom:y+10};const hidden=Boolean(label.underground)!==(camera.position.y<0)||(!label.topic&&label.id!==activeDistrict)||occupied.length>=6||p.z>1||box.left<0||box.right>host.clientWidth||box.top<0||box.bottom>host.clientHeight||(x>host.clientWidth-170&&y<160)||occupied.some(o=>box.left<o.right&&box.right>o.left&&box.top<o.bottom&&box.bottom>o.top);label.element.hidden=hidden;label.element.classList.toggle('active',label.id===activeDistrict);if(!hidden)occupied.push(box);label.element.style.transform=`translate(-50%,-50%) translate(${x}px,${y}px)`;}
   });
-  return {select,selectFloor,setRelationMode:mode=>{relationMode=mode;return drawFileLinks();},setPipesVisible:value=>{showPipes=value;drawPipes();return drawFileLinks();},showDeclarationLinks:links=>drawLinks(links,true).drawn,focusFolder,focusBuilding,focusFoundations:()=>{if(selected)focusBuilding(selected);},zoom:navigation.zoom,move:navigation.move,reset:()=>{setLayer(false);showAll();travel(homeTarget,homePosition);},overview,setLayer:value=>{setLayer(value);const target=controls.target.clone();target.y=value?-5:5;lookAt(target,30);},setQuality:level=>{quality=level;renderer.setPixelRatio(Math.min(devicePixelRatio,{low:.75,medium:1,high:1.5}[level]||1));resize();},get selected(){return selected;}};
+  return {select,selectFloor,setRelationMode:mode=>{relationMode=mode;return drawFileLinks();},setPipesVisible:value=>{showPipes=value;drawPipes();return drawFileLinks();},showDeclarationLinks:links=>drawLinks(links,true).drawn,focusFolder,focusBuilding,focusFoundations:()=>{if(selected)focusBuilding(selected);},zoom:navigation.zoom,move:navigation.move,reset:()=>{setLayer(false);showAll();travel(homeTarget,homePosition);},overview,setLayer:travelLayer,setQuality:level=>{quality=level;renderer.setPixelRatio(Math.min(devicePixelRatio,{low:.75,medium:1,high:1.5}[level]||1));resize();},get selected(){return selected;}};
 }

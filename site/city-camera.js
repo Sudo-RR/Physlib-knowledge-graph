@@ -68,3 +68,19 @@ export function cameraClearance(point, grid, layer, margin = .18) {
   }
   return best?{x:best.x,y:point.y,z:best.z}:result;
 }
+
+// Prefer the selected file's recorded cross-library import; otherwise use the
+// geographically closest file in the destination layer.
+export function layerDestination(buildings, pipelines, selected, underground, target) {
+  const direct=underground
+    ? pipelines.find(edge=>edge.from===selected)?.to
+    : pipelines.find(edge=>edge.to===selected)?.from;
+  if(direct&&buildings.has(direct)&&(buildings.get(direct).direction<0)===underground)return direct;
+  let destination=null,distance=Infinity;
+  for(const [id,building] of buildings) {
+    if((building.direction<0)!==underground)continue;
+    const dx=building.group.position.x-target.x,dz=building.group.position.z-target.z,d=dx*dx+dz*dz;
+    if(d<distance){distance=d;destination=id;}
+  }
+  return destination;
+}

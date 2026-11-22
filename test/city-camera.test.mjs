@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { cityBounds, fitDistance, fitBox, createCollisionGrid, cameraClearance } from '../site/city-camera.js';
+import { cityBounds, fitDistance, fitBox, createCollisionGrid, cameraClearance, layerDestination } from '../site/city-camera.js';
 
 test('overview bounds include separated and underground areas without gaps',()=>{
   const bounds=cityBounds([{x:-30,z:0,radius:10},{x:80,z:100,radius:20,underground:true}],10);
@@ -47,4 +47,14 @@ test('camera clearance escapes overlapping building margins',()=>{
   for(const item of [box(0,0),box(1.9,0),box(0,1.9),box(1.9,1.9)]) {
     assert.ok(safe.x<=item.min.x-.18||safe.x>=item.max.x+.18||safe.z<=item.min.z-.18||safe.z>=item.max.z+.18);
   }
+});
+
+test('layer travel prefers an actual dependency and falls back to the nearest building',()=>{
+  const building=(x,z,direction)=>({direction,group:{position:{x,z}}});
+  const buildings=new Map([['P',building(0,0,1)],['M1',building(40,0,-1)],['M2',building(1,0,-1)]]);
+  const pipelines=[{from:'P',to:'M1'}];
+  assert.equal(layerDestination(buildings,pipelines,'P',true,{x:0,z:0}),'M1');
+  assert.equal(layerDestination(buildings,pipelines,'unknown',true,{x:0,z:0}),'M2');
+  assert.equal(layerDestination(buildings,pipelines,'M1',false,{x:40,z:0}),'P');
+  assert.equal(layerDestination(new Map(),[],null,true,{x:0,z:0}),null);
 });
