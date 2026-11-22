@@ -138,6 +138,11 @@ window.addEventListener('popstate',event=>{const id=new URL(location.href).searc
 document.querySelectorAll('[data-move]').forEach(button=>button.addEventListener('click',()=>{const direction={forward:[8,0],back:[-8,0],left:[0,-8],right:[0,8]}[button.dataset.move];scene?.move(...direction);}));
 $('#reset').addEventListener('click',()=>scene.reset());
 $('#focus-selected').addEventListener('click',()=>{if(selected)scene.focusBuilding(selected);});
+$('#city-canvas').addEventListener('city-layer-change',event=>{const below=event.detail.underground;$('#toggle-layer').setAttribute('aria-pressed',String(below));$('#toggle-layer').textContent=below?'Return to surface':'Explore Mathlib below';});
+$('#overview').addEventListener('click',()=>{scene?.overview();$('#toggle-layer').setAttribute('aria-pressed','false');$('#toggle-layer').textContent='Explore Mathlib below';});
+$('#toggle-layer').addEventListener('click',event=>{const below=event.currentTarget.getAttribute('aria-pressed')!=='true';scene?.setLayer(below);event.currentTarget.setAttribute('aria-pressed',String(below));event.currentTarget.textContent=below?'Return to surface':'Explore Mathlib below';});
+$('#quality').addEventListener('change',event=>scene?.setQuality(event.target.value));
+
 $('#zoom-in').addEventListener('click',()=>scene.zoom(.7));
 $('#zoom-out').addEventListener('click',()=>scene.zoom(1.4));
 $('#floor-exit').addEventListener('click',()=>{$('#floor-interior').hidden=true;floorRoom?.hide();});
