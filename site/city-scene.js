@@ -107,7 +107,9 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   const selectedMaterials=new Map();
   function selectedMaterial(node){const base=baseMaterial(node);if(!selectedMaterials.has(base)){const selectedBase=base.clone();selectedBase.color.setRGB(1.2,1.2,1.2);selectedMaterials.set(base,selectedBase);}return selectedMaterials.get(base);}
   function setBuildingFocus(){for(const [id,b] of buildings)if(id!==selected){const material=selected?fadeMaterial(baseMaterial(b.node)):baseMaterial(b.node);b.body.material=material;if(b.surface)b.surface.material=material;}}
-  const bounds=cityBounds(layout.zones), overviewTarget=new THREE.Vector3((bounds.minX+bounds.maxX)/2,0,(bounds.minZ+bounds.maxZ)/2);
+  // Overview needs the actual city extent plus a small border; panning itself
+  // has no artificial circular zones or invisible walls.
+  const bounds=cityBounds(layout.zones,12);
   let underground=false;
   const anchor=layout.positions.get('Physlib.ClassicalMechanics.EulerLagrange')||layout.positions.get(city.nodes.find(n=>n.library==='Physlib')?.id)||{x:0,z:0};
   const homeTarget=new THREE.Vector3(anchor.x,6,anchor.z),homePosition=homeTarget.clone().add(new THREE.Vector3(25,5,32));
