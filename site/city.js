@@ -41,7 +41,19 @@ function renderExplorer() {
 }
 
 function updateHistoryButtons(){$('#nav-back').disabled=navIndex<=0;$('#nav-forward').disabled=navIndex>=navMax;}
-function clearSelection({resetCamera=false}={}){selected=null;scene.select(null);if(resetCamera)scene.reset();$('#current-selection').textContent='Select a file';$('#city-inspector').innerHTML='<div class="empty"><h2>Select a file.</h2><p>Explore its imports and recorded declarations.</p></div>';$('#floor-interior').hidden=true;floorRoom?.hide();renderExplorer();}
+function clearSelection({resetCamera=false}={}){selected=null;scene?.select(null);if(resetCamera)scene?.reset();radialMap?.setSelected(null);$('.canvas-wrap').classList.remove('map-selection');$('#current-selection').textContent='Select a file';$('#city-inspector').innerHTML='<div class="empty"><h2>Select a file.</h2><p>Explore its imports and recorded declarations.</p></div>';$('#floor-interior').hidden=true;floorRoom?.hide();renderExplorer();}
+function visitFolder(folder){
+  if(!folder||!city)return;
+  if($('#city-map').hidden||radialMap.underground!==folder.startsWith('Mathlib'))showMap(folder.startsWith('Mathlib'));
+  if(selected)clearSelection();
+  radialMap.setScope(folder);$('#search').value='';
+  const url=new URL(location.href);url.searchParams.delete('node');url.searchParams.set('view','map');url.searchParams.set('folder',folder);
+  navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);updateHistoryButtons();
+  const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));
+  renderExplorer();
+  const match=[...document.querySelectorAll('#city-list details[data-folder]')].find(element=>element.dataset.folder===folder);
+  match?.querySelector('summary')?.scrollIntoView({block:'nearest'});
+}
 function populateAreas(){
   const roots=new Map();
   for(const node of city.nodes){const parts=node.module.path.replaceAll('\\','/').split('/');if(parts.length<3)continue;const [root,name]=parts,path=`${root}/${name}`;if(!roots.has(root))roots.set(root,new Map());const areas=roots.get(root);areas.set(path,(areas.get(path)||0)+1);}
@@ -76,7 +88,7 @@ function inspectFloor(id,index) {
   const data=floorIndex.get(id),floor=data?.floors[index];if(!floor)return;
   const result=$('#floor-result');if(!result)return;
   $('#declaration-result').innerHTML='';$('#target-result').innerHTML='';
-  const selection=scene.select(id);$('#relation-mode').textContent=describeRelations(selection);
+  const selection=scene?.select(id);if(selection)$('#relation-mode').textContent=describeRelations(selection);
   const pilotPhys=new Set(declarationPilot?.declarations.map(d=>d.id)??[]),pilotMath=new Set(declarationPilot?.targets.map(d=>d.id)??[]);
   const node=city.nodes.find(item=>item.id===id),source=node.library==='Mathlib'?mathlib.source:physlib.source;
   if(floor.kind==='source-range'){
@@ -92,16 +104,16 @@ function inspectFloor(id,index) {
   $('#floor-interior-content').innerHTML=result.innerHTML;
   $('#floor-dependencies').innerHTML=floor.kind==='source-range'?`<h3>File relationships</h3><p>These apply to the file as a whole, not necessarily this floor.</p><h3>Imports</h3>${relationList(cityNeighborhood(city,id).imports,'to')}<h3>Imported by</h3>${relationList(cityNeighborhood(city,id).importers,'from')}`:'<p>Select a linked declaration to inspect its recorded dependencies.</p>';
   $('#floor-interior').hidden=false;
-  try {floorRoom??=createFloorRoom($('#floor-room'));floorRoom.show();} catch {$('#floor-room').classList.add('room-fallback');}
+  if($('#city-map').hidden)try {floorRoom??=createFloorRoom($('#floor-room'));floorRoom.show();} catch {$('#floor-room').classList.add('room-fallback');}
   for(const button of document.querySelectorAll('[data-floor]'))button.classList.toggle('active',Number(button.dataset.floor)===index);
-  scene.selectFloor(id,index);
+  if($('#city-map').hidden)scene?.selectFloor(id,index);
 }
 
 function inspectDeclaration(id) {
   const targets=new Map(declarationPilot.targets.map(d=>[d.id,d]));
   const edges=declarationPilot.edges.filter(edge=>edge.from===id);
   $('#declaration-result').innerHTML=`<h3>${esc(id)}</h3><p class="note">${edges.length} recorded Mathlib relationships in the pilot scope. “Value” includes definition bodies or theorem proofs. Some edges may be routed through omitted declarations.</p>${edges.length?`<ul class="inspect-list">${edges.map(edge=>{const target=targets.get(edge.to);return `<li>${esc(edge.to)} · ${esc(edge.kind)}<br>${mathlibTarget(target)}</li>`;}).join('')}</ul>`:'<p class="note">No Mathlib relationships recorded within the included scope.</p>'}<p class="note">Absence does not establish non-use.</p>`;
-  const shown=scene.showDeclarationLinks(edges.map(edge=>({from:selected,to:targets.get(edge.to).module})));
+  const shown=scene?.showDeclarationLinks(edges.map(edge=>({from:selected,to:targets.get(edge.to).module})))??0;
   $('#relation-mode').textContent=`Declaration links · ${shown} displayed module pairs · partial, may be routed`;
   if(!$('#floor-interior').hidden)$('#floor-dependencies').innerHTML=$('#declaration-result').innerHTML;
 }
@@ -110,14 +122,14 @@ function inspectTarget(id) {
   const declarations=new Map(declarationPilot.declarations.map(d=>[d.id,d]));
   const edges=declarationPilot.edges.filter(edge=>edge.to===id);
   $('#target-result').innerHTML=`<h3>${esc(id)}</h3><p class="note">${edges.length} recorded Physlib relationships in the partial pilot. Some may be routed through omitted declarations.</p><ul class="inspect-list">${edges.map(edge=>{const declaration=declarations.get(edge.from);return `<li>${esc(edge.from)} · ${esc(edge.kind)}<br><button data-node="${esc(declaration.module)}">${esc(declaration.module)}</button></li>`;}).join('')}</ul>`;
-  const shown=scene.showDeclarationLinks(edges.map(edge=>({from:declarations.get(edge.from).module,to:selected})));
+  const shown=scene?.showDeclarationLinks(edges.map(edge=>({from:declarations.get(edge.from).module,to:selected})))??0;
   $('#relation-mode').textContent=`Declaration links · ${shown} displayed module pairs · partial, may be routed`;
   if(!$('#floor-interior').hidden)$('#floor-dependencies').innerHTML=$('#target-result').innerHTML;
 }
 
-function select(id,{focus=true,record=true}={}) {
+function select(id,{focus=true,record=true,stayMap=!$('#city-map').hidden}={}) {
   const hood=cityNeighborhood(city,id);if(!hood)return;
-  if(!showCity())return;
+  if(!stayMap&&!showCity())return;
   const changed=selected!==id;
   selected=id;$('#floor-interior').hidden=true;floorRoom?.hide();const {node,imports,importers}=hood,source=node.library==='Mathlib'?mathlib.source:physlib.source;
   const folder=node.module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/');
@@ -130,8 +142,9 @@ function select(id,{focus=true,record=true}={}) {
   $('#relation-filter').value=relationMode;
   $('#relation-filter').closest('.relation-controls').insertAdjacentHTML('afterbegin',`<div class="relation-groups" aria-label="Relationship categories"><button type="button" data-rel-group="mathlib" class="group-math" ${groups.mathlib.length?'':'disabled'}><span aria-hidden="true"></span><strong>Mathlib</strong><small>${groups.mathlib.length} pipelines</small></button><button type="button" data-rel-group="uses" class="group-uses" ${groups.uses.length?'':'disabled'}><span aria-hidden="true"></span><strong>Uses in Physlib</strong><small>${groups.uses.length} files</small></button><button type="button" data-rel-group="usedBy" class="group-usedby" ${groups.usedBy.length?'':'disabled'}><span aria-hidden="true"></span><strong>Used by Physlib</strong><small>${groups.usedBy.length} files</small></button></div>`);
   $('#current-selection').innerHTML=`<span>${esc(node.id.split('.')[0])} · Selected file</span><strong>${esc(id)}</strong><small id="relation-mode"></small>`;
-  if(focus)scene.focusBuilding(id);const graph=scene.select(id);$('#relation-mode').textContent=describeRelations(graph);renderExplorer();
+  if(stayMap){$('.canvas-wrap').classList.add('map-selection');radialMap.setSelected(id);$('#focus-selected').textContent='View in 3D';$('#relation-mode').textContent='Open 3D to view pipes';}else{if(focus)scene.focusBuilding(id);const graph=scene.select(id);$('#relation-mode').textContent=describeRelations(graph);}renderExplorer();
   const url=new URL(location.href);url.searchParams.set('node',id);
+  if(stayMap)url.searchParams.set('view','map');else{url.searchParams.delete('view');url.searchParams.delete('folder');}
   if(record&&changed){navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);}else history.replaceState({cityIndex:navIndex},'',url);
   updateHistoryButtons();
 }
@@ -139,7 +152,7 @@ function select(id,{focus=true,record=true}={}) {
 document.addEventListener('click',event=>{
   const category=event.target.closest('[data-rel-group]');if(category&&scene){const kind=category.dataset.relGroup;if(kind==='mathlib'){if(!pipelinesVisible){pipelinesVisible=true;scene.setPipesVisible(true);$('#toggle-pipelines').setAttribute('aria-pressed','true');$('#pipeline-toggle').checked=true;}scene.focusFoundations();}else{relationMode=kind==='uses'?'imports':'importers';$('#relation-filter').value=relationMode;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}}
   if(event.target.closest('#view-foundations'))scene?.focusFoundations();
-  const folder=event.target.closest('summary')?.parentElement;if(folder?.dataset.folder&&showCity())scene.focusFolder(folder.dataset.folder);
+  const folder=event.target.closest('summary')?.parentElement;if(folder?.dataset.folder)visitFolder(folder.dataset.folder);
   const node=event.target.closest('[data-node]');if(node)select(node.dataset.node);
   const floor=event.target.closest('[data-floor]');if(floor)inspectFloor(selected,Number(floor.dataset.floor));
   const declaration=event.target.closest('[data-declaration]');if(declaration&&declarationPilot)inspectDeclaration(declaration.dataset.declaration);
@@ -149,16 +162,16 @@ document.addEventListener('toggle',event=>{const folder=event.target;if(!folder.
 document.addEventListener('change',event=>{if(event.target.id==='relation-filter'&&scene){relationMode=event.target.value;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}});
 document.addEventListener('change',event=>{if(event.target.id==='pipeline-toggle'&&scene){pipelinesVisible=event.target.checked;$('#toggle-pipelines').setAttribute('aria-pressed',String(pipelinesVisible));$('#relation-mode').textContent=describeRelations(scene.setPipesVisible(pipelinesVisible));}});
 $('#toggle-pipelines').addEventListener('click',()=>{if(!scene)return;pipelinesVisible=!pipelinesVisible;$('#toggle-pipelines').setAttribute('aria-pressed',String(pipelinesVisible));const result=scene.setPipesVisible(pipelinesVisible);if($('#pipeline-toggle'))$('#pipeline-toggle').checked=pipelinesVisible;if($('#relation-mode'))$('#relation-mode').textContent=describeRelations(result);});
-$('#area-select').addEventListener('change',event=>{const folder=event.target.value;if(!folder||!city||!showCity())return;if(selected){clearSelection();const url=new URL(location.href);url.searchParams.delete('node');navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);updateHistoryButtons();}scene.focusFolder(folder);$('#search').value='';const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));renderExplorer();const match=[...document.querySelectorAll('#city-list details[data-folder]')].find(element=>element.dataset.folder===folder);match?.querySelector('summary')?.scrollIntoView({block:'nearest'});});
+$('#area-select').addEventListener('change',event=>visitFolder(event.target.value));
 $('#search').addEventListener('input',renderExplorer);
 $('#search').addEventListener('keydown',event=>{if(event.key==='Enter'){const first=$('#city-list [data-node]');if(first){event.preventDefault();select(first.dataset.node);}}});
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)){event.preventDefault();$('#search').focus();}if(event.key==='Escape'){if(!$('#floor-interior').hidden){$('#floor-interior').hidden=true;floorRoom?.hide();}else if(document.activeElement===$('#search')){$('#search').value='';renderExplorer();}}});
 $('#nav-back').addEventListener('click',()=>history.back());
 $('#nav-forward').addEventListener('click',()=>history.forward());
-window.addEventListener('popstate',event=>{const id=new URL(location.href).searchParams.get('node');navIndex=Number.isInteger(event.state?.cityIndex)?event.state.cityIndex:0;if(id&&city?.nodes.some(node=>node.id===id))select(id,{record:false});else if(!id&&scene)clearSelection({resetCamera:true});updateHistoryButtons();});
+window.addEventListener('popstate',event=>{const params=new URL(location.href).searchParams,id=params.get('node'),folder=params.get('folder'),map=params.get('view')==='map'||!id;navIndex=Number.isInteger(event.state?.cityIndex)?event.state.cityIndex:0;if(map){showMap((folder||id||'').startsWith('Mathlib'));if(folder)radialMap.setScope(folder);}if(id&&city?.nodes.some(node=>node.id===id))select(id,{record:false,stayMap:map});else clearSelection({resetCamera:!map});updateHistoryButtons();});
 document.querySelectorAll('[data-move]').forEach(button=>button.addEventListener('click',()=>{const direction={forward:[8,0],back:[-8,0],left:[0,-8],right:[0,8]}[button.dataset.move];scene?.move(...direction);}));
 $('#reset').addEventListener('click',()=>showMap(false));
-$('#focus-selected').addEventListener('click',()=>{if(selected&&showCity())scene.focusBuilding(selected);});
+$('#focus-selected').addEventListener('click',()=>{if(selected&&showCity()){select(selected,{focus:true,record:false,stayMap:false});}});
 $('#city-canvas').addEventListener('city-layer-change',event=>{const below=event.detail.underground;$('#toggle-layer').setAttribute('aria-pressed',String(below));$('#toggle-layer').textContent=below?'Return to surface':'Explore Mathlib below';});
 $('#overview').addEventListener('click',()=>showMap($('#toggle-layer').getAttribute('aria-pressed')==='true'));
 $('#toggle-layer').addEventListener('click',event=>{const below=event.currentTarget.getAttribute('aria-pressed')!=='true';if(!$('#city-map').hidden)showMap(below);else scene?.setLayer(below);event.currentTarget.setAttribute('aria-pressed',String(below));event.currentTarget.textContent=below?'Return to surface':'Explore Mathlib below';});
@@ -178,9 +191,10 @@ try {
   tree=makeFolderTree(city.nodes);$('#count').textContent=city.nodes.length;populateAreas();
   $('#city-counts').textContent=`${city.nodes.filter(n=>n.library==='Physlib').length} Physlib-family files · ${city.mathlibModules} directly imported Mathlib files · ${city.edges.length} shown imports`;
   $('#snapshot').innerHTML=`Physlib <a href="${p.source.repository}/commit/${p.source.revision}">${esc(p.source.revision.slice(0,10))} ↗</a><br>Mathlib <a href="${m.source.repository}/commit/${m.source.revision}">${esc(m.source.revision.slice(0,10))} ↗</a><br>${esc(p.source.toolchain)}`;
-  renderExplorer();radialMap=createRadialMap($('#city-map'),city,folder=>{if(showCity())scene.focusFolder(folder);},id=>select(id));$('#loading').hidden=true;
-  const requested=new URL(location.href).searchParams.get('node');
-  if(requested&&city.nodes.some(node=>node.id===requested))select(requested,{focus:true,record:false});
+  renderExplorer();radialMap=createRadialMap($('#city-map'),city,visitFolder,id=>select(id,{stayMap:true}));$('#loading').hidden=true;
+  const params=new URL(location.href).searchParams,requested=params.get('node'),folder=params.get('folder'),mapView=params.get('view')==='map';
+  if(mapView){showMap((folder||requested||'').startsWith('Mathlib'));if(folder)radialMap.setScope(folder);}
+  if(requested&&city.nodes.some(node=>node.id===requested))select(requested,{focus:true,record:false,stayMap:mapView});
   else if(requested){const map=requested.startsWith('map:')?p.maps.find(item=>item.path===requested.slice(4)):null;const module=m.modules.find(item=>item.id===requested);const link=map?sourceUrl(p.source,map.path):module?sourceUrl(m.source,module.path):null;$('#city-inspector').innerHTML=`<div class="empty"><h2>Not in this city</h2><p>${esc(requested)} is not a displayed file. Search the explorer for another file.${link?` <a href="${link}" target="_blank" rel="noreferrer">Open its source ↗</a>`:''}</p></div>`;}
-  if(!requested||!city.nodes.some(node=>node.id===requested))showMap(false);
+  if(!mapView&&(!requested||!city.nodes.some(node=>node.id===requested)))showMap(false);
 } catch(error) {$('#loading').innerHTML=`<div class="error">Could not load city: ${esc(error.message)}</div>`;}

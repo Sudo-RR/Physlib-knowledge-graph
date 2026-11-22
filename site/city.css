@@ -50,3 +50,10 @@
 .city-view .app:has(.canvas-wrap.map-open) #focus-selected,
 .city-view .app:has(.canvas-wrap.map-open) label[for="quality"],
 .city-view .app:has(.canvas-wrap.map-open) #quality{display:none}
+.city-view .app:has(.canvas-wrap.map-open.map-selection){grid-template-columns:270px minmax(0,1fr) 310px}
+.city-view .app:has(.canvas-wrap.map-open.map-selection) .inspector{display:flex}
+.city-view .app:has(.canvas-wrap.map-open.map-selection) #focus-selected{display:inline-block;font-size:11px}
+.city-view .app:has(.canvas-wrap.map-open.map-selection) #focus-selected:after{content:none}
+.city-view .app:has(.canvas-wrap.map-open) .relation-controls{display:none}
+.radial-file.selected{fill:#26384b;stroke:#fff;stroke-width:2}
+@media(max-width:1100px){.city-view .app:has(.canvas-wrap.map-open.map-selection){grid-template-columns:220px minmax(0,1fr) 260px}}

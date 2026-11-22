@@ -7,15 +7,19 @@ const rootColors={Physlib:'#446bab',PhyslibAlpha:'#d18e4f',QuantumInfo:'#538f78'
 const readable=text=>text.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/([A-Z])([A-Z][a-z])/g,'$1 $2');
 
 // Sectors represent existing source folders, not inferred physics classifications.
-export function radialGroups(nodes,underground=false) {
+export function radialGroups(nodes,underground=false,scope=null) {
   const roots=new Map();
   for(const node of nodes){
     if((node.library==='Mathlib')!==underground)continue;
     const parts=node.module.path.replaceAll('\\','/').split('/'),root=parts[0].replace(/\.lean$/,'');
-    const folder=parts.length>2?`${root}/${parts[1]}`:root;
+    const path=parts.join('/');
+    if(scope && path!==`${scope}.lean` && !path.startsWith(`${scope}/`))continue;
+    const depth=scope?scope.split('/').length:1;
+    const hasSubfolder=parts.length>depth+1;
+    const folder=hasSubfolder?parts.slice(0,depth+1).join('/'):(scope||root);
     if(!roots.has(root))roots.set(root,new Map());
     const topics=roots.get(root);
-    if(!topics.has(folder))topics.set(folder,{id:folder,name:parts.length>2?parts[1]:'General',root,nodes:[]});
+    if(!topics.has(folder))topics.set(folder,{id:folder,name:hasSubfolder?parts[depth]:'General',root,nodes:[]});
     topics.get(folder).nodes.push(node);
   }
   const order=['Physlib','PhyslibAlpha','QuantumInfo','Mathlib'];
@@ -50,7 +54,7 @@ function element(name,attrs={},text) {
 }
 
 export function createRadialMap(host,city,onTopic,onFile) {
-  let underground=false,view={x:-400,y:-400,size:800},drag=null,wasDragged=false;
+  let underground=false,scope=null,selected=null,view={x:-400,y:-400,size:800},drag=null,wasDragged=false;
   const svg=element('svg',{viewBox:'-400 -400 800 800',role:'group','aria-label':'Radial map of source folders. Select a sector to visit its buildings.'});
   const tooltip=document.createElement('div');tooltip.className='radial-tooltip';tooltip.hidden=true;
   const hint=document.createElement('div');hint.className='radial-hint';hint.textContent='Sectors: folders · Tiles: files · Select to explore';
@@ -62,7 +66,7 @@ export function createRadialMap(host,city,onTopic,onFile) {
   }
   function draw() {
     svg.replaceChildren();
-    const groups=radialGroups(city.nodes,underground);
+    const groups=radialGroups(city.nodes,underground,scope);
     let colorIndex=0;
     const backdrop=element('circle',{r:342,fill:'#fff',stroke:'#eceff1','stroke-width':1});svg.append(backdrop);
     for(const group of groups){
@@ -83,7 +87,7 @@ export function createRadialMap(host,city,onTopic,onFile) {
         topic.nodes.forEach((node,index)=>{
           const row=Math.floor(index/columns),col=index%columns,remaining=Math.min(columns,topic.nodes.length-row*columns);
           const start=topic.start+span*col/remaining,end=topic.start+span*(col+1)/remaining,inner=220+row*116/Math.max(1,rows),outer=220+(row+1)*116/Math.max(1,rows);
-          const tile=element('path',{d:sectorPath(inner,outer,start,end),fill:color,stroke:'#fff','stroke-width':1,class:'radial-file','data-file':node.id,'aria-hidden':'true'});
+          const tile=element('path',{d:sectorPath(inner,outer,start,end),fill:color,stroke:'#fff','stroke-width':1,class:`radial-file${selected===node.id?' selected':''}`,'data-file':node.id,'aria-hidden':'true'});
           tile.append(element('title',{},node.id));sector.append(tile);
         });
         sector.addEventListener('click',event=>{
@@ -98,7 +102,7 @@ export function createRadialMap(host,city,onTopic,onFile) {
       }
     }
     svg.append(element('circle',{r:46,fill:'#fff',stroke:'#edf0f2','stroke-width':1}));
-    svg.append(element('text',{x:0,y:-4,'text-anchor':'middle',class:'radial-title'},underground?'Mathlib':'Physlib'));
+    svg.append(element('text',{x:0,y:-4,'text-anchor':'middle',class:'radial-title'},scope?readable(scope.split('/').at(-1)):(underground?'Mathlib':'Physlib')));
     svg.append(element('text',{x:0,y:14,'text-anchor':'middle',class:'radial-meta'},`${groups.reduce((sum,g)=>sum+g.topics.reduce((n,t)=>n+t.nodes.length,0),0)} files`));
     svg.append(element('text',{x:0,y:28,'text-anchor':'middle',class:'radial-meta'},'Folder hierarchy'));
   }
@@ -117,5 +121,5 @@ export function createRadialMap(host,city,onTopic,onFile) {
   svg.addEventListener('pointermove',event=>{if(!drag)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(Math.hypot(dx,dy)>3&&!wasDragged){wasDragged=true;svg.setPointerCapture(event.pointerId);}const rect=svg.getBoundingClientRect(),scale=view.size/Math.max(1,Math.min(rect.width,rect.height));view.x=drag.startX-dx*scale;view.y=drag.startY-dy*scale;updateView();});
   svg.addEventListener('pointerup',()=>{drag=null;});svg.addEventListener('pointercancel',()=>{drag=null;});
   draw();
-  return {setLayer:value=>{underground=value;view={x:-400,y:-400,size:800};updateView();draw();},zoom,reset:()=>{view={x:-400,y:-400,size:800};updateView();},get underground(){return underground;}};
+  return {setLayer:value=>{underground=value;scope=null;selected=null;view={x:-400,y:-400,size:800};updateView();draw();},setScope:value=>{scope=value;selected=null;view={x:-400,y:-400,size:800};updateView();draw();},setSelected:value=>{selected=value;for(const tile of svg.querySelectorAll('[data-file]'))tile.classList.toggle('selected',tile.getAttribute('data-file')===value);},zoom,reset:()=>{view={x:-400,y:-400,size:800};updateView();},get underground(){return underground;},get scope(){return scope;}};
 }

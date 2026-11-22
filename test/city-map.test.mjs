@@ -11,3 +11,12 @@ test('radial map separates source roots and represents every file exactly once',
   assert.ok(Math.abs(surface.at(-1).end-surface[0].start-2*Math.PI)<1e-9);
   assert.match(sectorPath(2,3,0,Math.PI),/^M .* A /);
 });
+test('drilling into a folder groups only its direct files and subfolders',()=>{
+  const nodes=[node('Physlib.Relativity.Basic','Physlib/Relativity/Basic.lean'),node('Physlib.Relativity.Special.Basic','Physlib/Relativity/Special/Basic.lean'),node('PhyslibAlpha.Relativity.Basic','PhyslibAlpha/Relativity/Basic.lean'),node('Mathlib.Relativity.Basic','Mathlib/Relativity/Basic.lean','Mathlib')];
+  const groups=radialGroups(nodes,false,'Physlib/Relativity');
+  assert.deepEqual(groups.flatMap(g=>g.topics).map(t=>[t.id,t.nodes.map(n=>n.id)]),[
+    ['Physlib/Relativity',['Physlib.Relativity.Basic']],
+    ['Physlib/Relativity/Special',['Physlib.Relativity.Special.Basic']]
+  ]);
+  assert.deepEqual(radialGroups(nodes,true,'Mathlib/Relativity')[0].topics[0].nodes.map(n=>n.id),['Mathlib.Relativity.Basic']);
+});
