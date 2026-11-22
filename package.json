@@ -7,6 +7,7 @@
     "build:mathlib": "node scripts/extract-mathlib.mjs",
     "validate:data": "node scripts/validate.mjs",
     "compare:imports": "node scripts/compare-imports.mjs",
+    "benchmark:city": "node scripts/benchmark-city.mjs",
     "build:city": "esbuild site/city.js --bundle --format=esm --outfile=site/assets/city-bundle.js",
     "package:site": "node scripts/package-site.mjs",
     "test": "node --test",

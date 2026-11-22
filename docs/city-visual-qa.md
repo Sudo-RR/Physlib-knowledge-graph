@@ -43,6 +43,21 @@ total process memory. Repeatedly switch between the same two files and allow
 the scene to settle to look for persistent growth; record the selection and
 quality setting.
 
+For a repeatable non-rendering measurement using the current local snapshots:
+
+```sh
+npm run benchmark:city
+```
+
+The command reports snapshot revisions and size, file and edge counts, read and
+parse time, warmed median graph/layout/floor times, and Node's process peak
+resident memory. It does not measure browser rendering, GPU memory or browser
+time to interactive. On the same computer with Node v26.13.0 and three measured
+iterations, the 2,256-file snapshot took approximately 95 ms to read and parse;
+the median model, layout and floor steps were 82, 187 and 15 ms respectively,
+and Node's reported peak resident memory was 154 MB. Treat these as one local
+sample, not a target or a benchmark for other devices.
+
 On 22 November 2026, one local Windows desktop browser session (Intel Core
 Ultra 7 155U, Intel Graphics, 32 GB RAM) at the default initial view, High
 quality and the same 2,256-file local snapshot produced these single
