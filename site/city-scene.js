@@ -23,11 +23,11 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   const layout=layoutFullCity(city), scene=new THREE.Scene();
   const sky=document.createElement('canvas');sky.width=2;sky.height=256;const skyContext=sky.getContext('2d'),gradient=skyContext.createLinearGradient(0,0,0,256);gradient.addColorStop(0,'#345c80');gradient.addColorStop(.55,'#93b8cb');gradient.addColorStop(1,'#f3dac2');skyContext.fillStyle=gradient;skyContext.fillRect(0,0,2,256);scene.background=new THREE.CanvasTexture(sky);scene.background.colorSpace=THREE.SRGBColorSpace;
   const camera=new THREE.PerspectiveCamera(40,1,.1,Math.max(3000,layout.width*8,layout.depth*8)),renderer=new THREE.WebGLRenderer({antialias:true});
-  renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;host.append(renderer.domElement);
-  renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Interactive 3D city. Drag to move, right-drag to turn, scroll to zoom, and use W A S D to move.');
+  renderer.setPixelRatio(Math.min(devicePixelRatio,1));renderer.outputColorSpace=THREE.SRGBColorSpace;host.append(renderer.domElement);
+  renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Interactive city. Drag or use two fingers on a trackpad to pan; pinch or use the zoom buttons to zoom. Right-drag to rotate slightly. Use W A S D to move.');
   const overlay=document.createElement('div');overlay.className='city-labels';overlay.setAttribute('aria-hidden','true');host.append(overlay);
   const tooltip=document.createElement('div');tooltip.className='city-hover';tooltip.hidden=true;overlay.append(tooltip);
-  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.minPolarAngle=.35;controls.maxPolarAngle=1.48;controls.minDistance=5;controls.maxDistance=Math.max(250,layout.width*3,layout.depth*3);controls.screenSpacePanning=false;controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.ROTATE};controls.touches={ONE:THREE.TOUCH.PAN,TWO:THREE.TOUCH.DOLLY_ROTATE};
+  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.zoomSpeed=.65;controls.minPolarAngle=.2;controls.maxPolarAngle=.95;controls.minDistance=5;controls.maxDistance=Math.max(250,layout.width*3,layout.depth*3);controls.screenSpacePanning=false;controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.ROTATE};controls.touches={ONE:THREE.TOUCH.PAN,TWO:THREE.TOUCH.DOLLY_ROTATE};
   scene.add(new THREE.HemisphereLight(0xe8f3ff,0x566372,2.1));
   const sun=new THREE.DirectionalLight(0xfff5e6,2.7);sun.position.set(-80,160,90);scene.add(sun);
   const materials={
@@ -98,7 +98,7 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   for(const [links,math] of [[pipelineLinks,true],[physLinks,false]])for(const link of links){const curve=math?pipelineCurve(link):physicsCurve(link);if(!curve)continue;const points=curve.getPoints(4);for(let i=1;i<points.length;i++)pipeSegments.push({a:points[i-1],b:points[i],color:math?0x00ded2:i<=2?0xe43ba9:0xffa71a});}
   const network=new THREE.InstancedMesh(new THREE.CylinderGeometry(1,1,1,6),new THREE.MeshBasicMaterial({transparent:true,opacity:.035,depthTest:false,depthWrite:false}),pipeSegments.length),part=new THREE.Object3D(),upAxis=new THREE.Vector3(0,1,0);
   pipeSegments.forEach((segment,index)=>{const direction=segment.b.clone().sub(segment.a),length=direction.length();part.position.copy(segment.a).add(segment.b).multiplyScalar(.5);part.quaternion.setFromUnitVectors(upAxis,direction.normalize());part.scale.set(.085,length,.085);part.updateMatrix();network.setMatrixAt(index,part.matrix);network.setColorAt(index,new THREE.Color(segment.color));});network.frustumCulled=false;network.renderOrder=80;scene.add(network,edges,pipes,hubs);
-  let selected=null,relationMode='imports',showPipes=true,quality='high';const roadTraffic=[],pipeTraffic=[];
+  let selected=null,relationMode='imports',showPipes=true,quality='medium';const roadTraffic=[],pipeTraffic=[];
   const diagnostics=new URLSearchParams(location.search).has('metrics')?document.createElement('output'):null;
   if(diagnostics){diagnostics.className='city-metrics';diagnostics.setAttribute('aria-label','Rendering metrics');host.append(diagnostics);}
   let metricFrames=0,metricStarted=performance.now(),sceneReady=performance.now()-sceneStarted;
@@ -112,14 +112,14 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   const bounds=cityBounds(layout.zones,12);
   let underground=false;
   const anchor=layout.positions.get('Physlib.ClassicalMechanics.EulerLagrange')||layout.positions.get(city.nodes.find(n=>n.library==='Physlib')?.id)||{x:0,z:0};
-  const homeTarget=new THREE.Vector3(anchor.x,6,anchor.z),homePosition=homeTarget.clone().add(new THREE.Vector3(25,5,32));
+  const homeTarget=new THREE.Vector3(anchor.x,2,anchor.z),homePosition=homeTarget.clone().add(new THREE.Vector3(5,50,18));
   const navigation=createNavigationController({camera,controls,element:renderer.domElement,collisionGrid,isUnderground:()=>underground});
   const travel=navigation.travel;
   function setLayer(value){
     underground=value;
     host.dispatchEvent(new CustomEvent('city-layer-change',{detail:{underground:value}}));
-    controls.minPolarAngle=value?1.68:.35;
-    controls.maxPolarAngle=value?2.75:1.48;
+    controls.minPolarAngle=value?2.19:.2;
+    controls.maxPolarAngle=value?2.94:.95;
     ground.visible=!value;
     for(const object of aboveScenery)object.visible=!value;
     for(const object of belowScenery)object.visible=value;
@@ -131,7 +131,7 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   function lookAt(focus,distance){
     distance=Math.max(14,Math.min(controls.maxDistance,distance));
     const sign=underground?-1:1;
-    travel(focus,focus.clone().add(new THREE.Vector3(distance*.55,sign*distance*.42,distance*.7)));
+    travel(focus,focus.clone().add(new THREE.Vector3(distance*.55,sign*distance*.8,distance*.7)));
   }
   function overview(){
     setLayer(false);
@@ -152,9 +152,9 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   }
   function showAll(){for(const b of buildings.values()){b.group.visible=!underground||b.direction<0;if(b.surface)b.surface.visible=!underground;}}
   function focusFolder(folder){showAll();const members=city.nodes.filter(n=>n.module.path.replaceAll('\\','/').startsWith(`${folder}/`));if(!members.length)return;setLayer(folder.startsWith('Mathlib'));const box=new THREE.Box3();for(const n of members)box.expandByObject(buildings.get(n.id).body);const direction=new THREE.Vector3(0,underground?-1:1,1).normalize(),fit=fitBox(box,direction,camera.fov,camera.aspect);const centre=new THREE.Vector3(fit.centre.x,fit.centre.y,fit.centre.z);travel(centre,centre.clone().addScaledVector(direction,fit.distance));}
-  function focusBuilding(id){const b=buildings.get(id);if(!b)return;setLayer(b.direction<0);showAll();const height=floors.get(id).height,centre=b.group.position.clone().add(new THREE.Vector3(0,b.direction*height/2,0)),box={min:{x:centre.x-b.footprint.width/2,y:Math.min(0,b.direction*height),z:centre.z-b.footprint.depth/2},max:{x:centre.x+b.footprint.width/2,y:Math.max(0,b.direction*height),z:centre.z+b.footprint.depth/2}},distance=Math.max(18,fitBox(box,{x:1,y:b.direction*.35,z:1},camera.fov,camera.aspect).distance);let best=null;
+  function focusBuilding(id){const b=buildings.get(id);if(!b)return;setLayer(b.direction<0);showAll();const height=floors.get(id).height,centre=b.group.position.clone().add(new THREE.Vector3(0,b.direction*height/2,0)),box={min:{x:centre.x-b.footprint.width/2,y:Math.min(0,b.direction*height),z:centre.z-b.footprint.depth/2},max:{x:centre.x+b.footprint.width/2,y:Math.max(0,b.direction*height),z:centre.z+b.footprint.depth/2}},distance=Math.max(18,fitBox(box,{x:1,y:b.direction*1.2,z:1},camera.fov,camera.aspect).distance);let best=null;
     // Choose a street-facing angle with as few intervening buildings as possible.
-    for(let i=0;i<16;i++){const angle=i*Math.PI/8,dx=Math.cos(angle)*distance,dz=Math.sin(angle)*distance,cameraY=centre.y+b.direction*distance*.35;let score=0;for(const [otherId,other] of buildings){if(otherId===id||other.direction!==b.direction)continue;const ox=other.group.position.x-centre.x,oz=other.group.position.z-centre.z,t=(ox*dx+oz*dz)/(distance*distance);if(t<=.04||t>=1.05)continue;const lateral=Math.hypot(ox-t*dx,oz-t*dz),rayY=centre.y+t*(cameraY-centre.y),level=b.direction*rayY;if(lateral<1.8&&level>=0&&level<floors.get(otherId).height)score+=1+(t>.75?4:0);}if(!best||score<best.score)best={score,position:centre.clone().add(new THREE.Vector3(dx,b.direction*distance*.35,dz))};}
+    for(let i=0;i<16;i++){const angle=i*Math.PI/8,dx=Math.cos(angle)*distance,dz=Math.sin(angle)*distance,cameraY=centre.y+b.direction*distance*.85;let score=0;for(const [otherId,other] of buildings){if(otherId===id||other.direction!==b.direction)continue;const ox=other.group.position.x-centre.x,oz=other.group.position.z-centre.z,t=(ox*dx+oz*dz)/(distance*distance);if(t<=.04||t>=1.05)continue;const lateral=Math.hypot(ox-t*dx,oz-t*dz),rayY=centre.y+t*(cameraY-centre.y),level=b.direction*rayY;if(lateral<1.8&&level>=0&&level<floors.get(otherId).height)score+=1+(t>.75?4:0);}if(!best||score<best.score)best={score,position:centre.clone().add(new THREE.Vector3(dx,b.direction*distance*.85,dz))};}
     travel(centre,best.position);
   }
   function clearFloors(building){for(const child of [...building.group.children])if(child!==building.body&&child!==building.surface&&!child.userData.decorative){building.group.remove(child);child.geometry.dispose();}building.body.visible=true;}

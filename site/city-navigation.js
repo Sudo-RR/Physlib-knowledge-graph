@@ -1,12 +1,26 @@
 import * as THREE from 'three';
 import { cameraClearance } from './city-camera.js';
 
+// Precision trackpads typically emit small pixel deltas; pinch gestures carry
+// Ctrl and mouse wheels commonly emit line or larger pixel deltas.
+export function isTrackpadPan(event) {
+  return event.deltaMode===0&&!event.ctrlKey&&!event.metaKey&&
+    (Math.abs(event.deltaX)>.5||(Math.abs(event.deltaY)>0&&Math.abs(event.deltaY)<50));
+}
+
 // All camera motion and collision correction is owned by this controller.
 export function createNavigationController({camera,controls,element,collisionGrid,isUnderground,now=()=>performance.now()}) {
   let flight=null;
   const cancel=()=>{flight=null;};
   controls.addEventListener('start',cancel);
-  element.addEventListener('wheel',cancel,{passive:true});
+  element.addEventListener('wheel',event=>{
+    cancel();
+    if(isTrackpadPan(event)){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      controls.pan(event.deltaX,event.deltaY);
+    }
+  },{passive:false,capture:true});
   element.addEventListener('keydown',event=>{if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key))cancel();});
   controls.listenToKeyEvents(element);
 
