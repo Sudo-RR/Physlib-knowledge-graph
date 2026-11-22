@@ -63,7 +63,10 @@ load. Repeat on a mid-range desktop and a lower-spec device before evaluating
 the proposed 60/30 FPS targets. There is no measured page-load, time-to-
 interactive or GPU-memory baseline yet. Five back/forward cycles between two
 files settled around 200 renderer geometries and 30 textures; this short check
-does not prove absence of leaks over a longer session.
+does not prove absence of leaks over a longer session. An automated test also
+performs 100 simulated relationship refreshes and checks disposal of 600
+geometries and 600 materials. This tests cleanup logic,
+not browser-wide memory or a prolonged real-world session.
 
 For interaction checks, test mouse drag, right-drag, wheel, keyboard and a real
 trackpad; select a dependency and use Back, switch layers, reload a deep link,
