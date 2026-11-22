@@ -107,6 +107,12 @@ export function createRadialMap(host,city,onTopic,onFile) {
     if(isTrackpadPan(event)){const rect=svg.getBoundingClientRect(),scale=view.size/Math.max(1,Math.min(rect.width,rect.height));view.x+=event.deltaX*scale;view.y+=event.deltaY*scale;updateView();}
     else zoom(Math.exp(event.deltaY*.0015));
   },{passive:false});
+  svg.addEventListener('keydown',event=>{
+    const moves={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};
+    if(moves[event.key]){event.preventDefault();view.x+=moves[event.key][0]*view.size*.08;view.y+=moves[event.key][1]*view.size*.08;updateView();}
+    else if(event.key==='+'||event.key==='='){event.preventDefault();zoom(.8);}
+    else if(event.key==='-'){event.preventDefault();zoom(1.25);}
+  });
   svg.addEventListener('pointerdown',event=>{drag={x:event.clientX,y:event.clientY,startX:view.x,startY:view.y};wasDragged=false;});
   svg.addEventListener('pointermove',event=>{if(!drag)return;const dx=event.clientX-drag.x,dy=event.clientY-drag.y;if(Math.hypot(dx,dy)>3&&!wasDragged){wasDragged=true;svg.setPointerCapture(event.pointerId);}const rect=svg.getBoundingClientRect(),scale=view.size/Math.max(1,Math.min(rect.width,rect.height));view.x=drag.startX-dx*scale;view.y=drag.startY-dy*scale;updateView();});
   svg.addEventListener('pointerup',()=>{drag=null;});svg.addEventListener('pointercancel',()=>{drag=null;});
