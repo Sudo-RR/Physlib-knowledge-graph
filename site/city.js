@@ -1,6 +1,7 @@
 import { buildFullCity, cityNeighborhood } from './city-model.js';
 import { makeFolderTree, renderFolderTree } from './city-explorer.js';
 import { createCityScene } from './city-scene.js';
+import { createRadialMap } from './city-map.js';
 import { buildFloorIndex } from './city-floors.js';
 import { validateDeclarations } from './declarations.js';
 import { createFloorRoom } from './floor-room.js';
@@ -9,9 +10,22 @@ import { mathlibPipelines, relationGroups } from './city-relations.js';
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sourceUrl = (source, path, line) => `${source.repository}/blob/${source.revision}/${path.split('/').map(encodeURIComponent).join('/')}${line ? `#L${line}` : ''}`;
-let city, physlib, mathlib, scene, tree, selected, declarationPilot, declarationSnapshot, floorIndex, floorRoom;
+let city, physlib, mathlib, scene, radialMap, tree, selected, declarationPilot, declarationSnapshot, floorIndex, floorRoom;
 let navIndex=0, navMax=0, relationMode='imports',pipelinesVisible=true;
 const expanded = new Set(['Physlib','Physlib/ClassicalMechanics']);
+function showMap(underground=false){
+  if(!scene||!radialMap)return;
+  $('#floor-interior').hidden=true;floorRoom?.hide();scene.pause();
+  $('#city-canvas').inert=true;$('#city-canvas').setAttribute('aria-hidden','true');
+  radialMap.setLayer(underground);$('#city-map').hidden=false;$('.canvas-wrap').classList.add('map-open');
+  $('#toggle-layer').setAttribute('aria-pressed',String(underground));
+  $('#toggle-layer').textContent=underground?'Return to surface':'Explore Mathlib below';
+}
+function showCity(){
+  if($('#city-map').hidden)return;
+  $('#city-map').hidden=true;$('.canvas-wrap').classList.remove('map-open');
+  $('#city-canvas').inert=false;$('#city-canvas').removeAttribute('aria-hidden');scene?.resume();
+}
 function describeRelations(result){if(relationMode==='none')return 'File arrows hidden';return `${result.drawn} of ${result.total} ${relationMode==='imports'?'imports':relationMode==='importers'?'importers':'relationships'} shown${result.total>result.drawn?' · all listed in inspector':''}`;}
 
 function renderExplorer() {
@@ -97,6 +111,7 @@ function inspectTarget(id) {
 
 function select(id,{focus=true,record=true}={}) {
   const hood=cityNeighborhood(city,id);if(!hood)return;
+  showCity();
   const changed=selected!==id;
   selected=id;$('#floor-interior').hidden=true;floorRoom?.hide();const {node,imports,importers}=hood,source=node.library==='Mathlib'?mathlib.source:physlib.source;
   const folder=node.module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/');
@@ -118,7 +133,7 @@ function select(id,{focus=true,record=true}={}) {
 document.addEventListener('click',event=>{
   const category=event.target.closest('[data-rel-group]');if(category&&scene){const kind=category.dataset.relGroup;if(kind==='mathlib'){if(!pipelinesVisible){pipelinesVisible=true;scene.setPipesVisible(true);$('#toggle-pipelines').setAttribute('aria-pressed','true');$('#pipeline-toggle').checked=true;}scene.focusFoundations();}else{relationMode=kind==='uses'?'imports':'importers';$('#relation-filter').value=relationMode;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}}
   if(event.target.closest('#view-foundations'))scene?.focusFoundations();
-  const folder=event.target.closest('summary')?.parentElement;if(folder?.dataset.folder)scene?.focusFolder(folder.dataset.folder);
+  const folder=event.target.closest('summary')?.parentElement;if(folder?.dataset.folder){showCity();scene?.focusFolder(folder.dataset.folder);}
   const node=event.target.closest('[data-node]');if(node)select(node.dataset.node);
   const floor=event.target.closest('[data-floor]');if(floor)inspectFloor(selected,Number(floor.dataset.floor));
   const declaration=event.target.closest('[data-declaration]');if(declaration&&declarationPilot)inspectDeclaration(declaration.dataset.declaration);
@@ -128,7 +143,7 @@ document.addEventListener('toggle',event=>{const folder=event.target;if(!folder.
 document.addEventListener('change',event=>{if(event.target.id==='relation-filter'&&scene){relationMode=event.target.value;$('#relation-mode').textContent=describeRelations(scene.setRelationMode(relationMode));}});
 document.addEventListener('change',event=>{if(event.target.id==='pipeline-toggle'&&scene){pipelinesVisible=event.target.checked;$('#toggle-pipelines').setAttribute('aria-pressed',String(pipelinesVisible));$('#relation-mode').textContent=describeRelations(scene.setPipesVisible(pipelinesVisible));}});
 $('#toggle-pipelines').addEventListener('click',()=>{if(!scene)return;pipelinesVisible=!pipelinesVisible;$('#toggle-pipelines').setAttribute('aria-pressed',String(pipelinesVisible));const result=scene.setPipesVisible(pipelinesVisible);if($('#pipeline-toggle'))$('#pipeline-toggle').checked=pipelinesVisible;if($('#relation-mode'))$('#relation-mode').textContent=describeRelations(result);});
-$('#area-select').addEventListener('change',event=>{const folder=event.target.value;if(!folder||!scene)return;if(selected){clearSelection();const url=new URL(location.href);url.searchParams.delete('node');navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);updateHistoryButtons();}scene.focusFolder(folder);$('#search').value='';const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));renderExplorer();const match=[...document.querySelectorAll('#city-list details[data-folder]')].find(element=>element.dataset.folder===folder);match?.querySelector('summary')?.scrollIntoView({block:'nearest'});});
+$('#area-select').addEventListener('change',event=>{const folder=event.target.value;if(!folder||!scene)return;showCity();if(selected){clearSelection();const url=new URL(location.href);url.searchParams.delete('node');navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);updateHistoryButtons();}scene.focusFolder(folder);$('#search').value='';const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));renderExplorer();const match=[...document.querySelectorAll('#city-list details[data-folder]')].find(element=>element.dataset.folder===folder);match?.querySelector('summary')?.scrollIntoView({block:'nearest'});});
 $('#search').addEventListener('input',renderExplorer);
 $('#search').addEventListener('keydown',event=>{if(event.key==='Enter'){const first=$('#city-list [data-node]');if(first){event.preventDefault();select(first.dataset.node);}}});
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)){event.preventDefault();$('#search').focus();}if(event.key==='Escape'){if(!$('#floor-interior').hidden){$('#floor-interior').hidden=true;floorRoom?.hide();}else if(document.activeElement===$('#search')){$('#search').value='';renderExplorer();}}});
@@ -136,29 +151,30 @@ $('#nav-back').addEventListener('click',()=>history.back());
 $('#nav-forward').addEventListener('click',()=>history.forward());
 window.addEventListener('popstate',event=>{const id=new URL(location.href).searchParams.get('node');navIndex=Number.isInteger(event.state?.cityIndex)?event.state.cityIndex:0;if(id&&city?.nodes.some(node=>node.id===id))select(id,{record:false});else if(!id&&scene)clearSelection({resetCamera:true});updateHistoryButtons();});
 document.querySelectorAll('[data-move]').forEach(button=>button.addEventListener('click',()=>{const direction={forward:[8,0],back:[-8,0],left:[0,-8],right:[0,8]}[button.dataset.move];scene?.move(...direction);}));
-$('#reset').addEventListener('click',()=>scene.reset());
-$('#focus-selected').addEventListener('click',()=>{if(selected)scene.focusBuilding(selected);});
+$('#reset').addEventListener('click',()=>showMap(false));
+$('#focus-selected').addEventListener('click',()=>{if(selected){showCity();scene.focusBuilding(selected);}});
 $('#city-canvas').addEventListener('city-layer-change',event=>{const below=event.detail.underground;$('#toggle-layer').setAttribute('aria-pressed',String(below));$('#toggle-layer').textContent=below?'Return to surface':'Explore Mathlib below';});
-$('#overview').addEventListener('click',()=>{scene?.overview();$('#toggle-layer').setAttribute('aria-pressed','false');$('#toggle-layer').textContent='Explore Mathlib below';});
-$('#toggle-layer').addEventListener('click',event=>{const below=event.currentTarget.getAttribute('aria-pressed')!=='true';scene?.setLayer(below);event.currentTarget.setAttribute('aria-pressed',String(below));event.currentTarget.textContent=below?'Return to surface':'Explore Mathlib below';});
+$('#overview').addEventListener('click',()=>showMap($('#toggle-layer').getAttribute('aria-pressed')==='true'));
+$('#toggle-layer').addEventListener('click',event=>{const below=event.currentTarget.getAttribute('aria-pressed')!=='true';if(!$('#city-map').hidden)showMap(below);else scene?.setLayer(below);event.currentTarget.setAttribute('aria-pressed',String(below));event.currentTarget.textContent=below?'Return to surface':'Explore Mathlib below';});
 $('#quality').addEventListener('change',event=>scene?.setQuality(event.target.value));
 
-$('#zoom-in').addEventListener('click',()=>scene.zoom(.7));
-$('#zoom-out').addEventListener('click',()=>scene.zoom(1.4));
+$('#zoom-in').addEventListener('click',()=>$('#city-map').hidden?scene.zoom(.7):radialMap.zoom(.7));
+$('#zoom-out').addEventListener('click',()=>$('#city-map').hidden?scene.zoom(1.4):radialMap.zoom(1.4));
 $('#floor-exit').addEventListener('click',()=>{$('#floor-interior').hidden=true;floorRoom?.hide();});
 
 try {
-  const responses=await Promise.all(['graph','mathlib','mathlib-bridge'].map(name=>fetch(`data/${name}.json`)));
+  const responses=await Promise.all(['graph','mathlib','mathlib-bridge'].map(name=>fetch(`data/${name}.json`,{cache:'no-cache'})));
   if(responses.some(response=>!response.ok))throw Error('Missing graph data. Run npm run build:data and npm run build:mathlib.');
   const [p,m,bridge]=await Promise.all(responses.map(response=>response.json()));physlib=p;mathlib=m;city=buildFullCity(p,m,bridge);
-  try {const response=await fetch('data/city-declarations.json');if(response.ok){const d=await response.json();if(d?.source?.physlibRevision===p.source.revision&&d.source.mathlibRevision===m.source.revision&&d.source.toolchain===p.source.toolchain&&Array.isArray(d.declarations)&&Array.isArray(d.targets)&&Array.isArray(d.edges)&&d.edges.every(e=>d.targets.some(t=>t.id===e.to)&&d.declarations.some(v=>v.id===e.from)))declarationPilot=d;}} catch {}
-  try {const response=await fetch('data/declarations.json');if(response.ok){const candidate=await response.json();if(!validateDeclarations(candidate,p).length)declarationSnapshot=candidate;}} catch {}
+  try {const response=await fetch('data/city-declarations.json',{cache:'no-cache'});if(response.ok){const d=await response.json();if(d?.source?.physlibRevision===p.source.revision&&d.source.mathlibRevision===m.source.revision&&d.source.toolchain===p.source.toolchain&&Array.isArray(d.declarations)&&Array.isArray(d.targets)&&Array.isArray(d.edges)&&d.edges.every(e=>d.targets.some(t=>t.id===e.to)&&d.declarations.some(v=>v.id===e.from)))declarationPilot=d;}} catch {}
+  try {const response=await fetch('data/declarations.json',{cache:'no-cache'});if(response.ok){const candidate=await response.json();if(!validateDeclarations(candidate,p).length)declarationSnapshot=candidate;}} catch {}
   floorIndex=buildFloorIndex(city.nodes,declarationSnapshot,declarationPilot);
   tree=makeFolderTree(city.nodes);$('#count').textContent=city.nodes.length;populateAreas();
   $('#city-counts').textContent=`${city.nodes.filter(n=>n.library==='Physlib').length} Physlib-family files · ${city.mathlibModules} directly imported Mathlib files · ${city.edges.length} shown imports`;
   $('#snapshot').innerHTML=`Physlib <a href="${p.source.repository}/commit/${p.source.revision}">${esc(p.source.revision.slice(0,10))} ↗</a><br>Mathlib <a href="${m.source.repository}/commit/${m.source.revision}">${esc(m.source.revision.slice(0,10))} ↗</a><br>${esc(p.source.toolchain)}`;
-  renderExplorer();scene=createCityScene($('#city-canvas'),city,floorIndex,id=>select(id),inspectFloor);$('#loading').hidden=true;
+  renderExplorer();scene=createCityScene($('#city-canvas'),city,floorIndex,id=>select(id),inspectFloor);radialMap=createRadialMap($('#city-map'),city,folder=>{showCity();scene.focusFolder(folder);},id=>select(id));$('#loading').hidden=true;
   const requested=new URL(location.href).searchParams.get('node');
   if(requested&&city.nodes.some(node=>node.id===requested))select(requested,{focus:true,record:false});
   else if(requested){const map=requested.startsWith('map:')?p.maps.find(item=>item.path===requested.slice(4)):null;const module=m.modules.find(item=>item.id===requested);const link=map?sourceUrl(p.source,map.path):module?sourceUrl(m.source,module.path):null;$('#city-inspector').innerHTML=`<div class="empty"><h2>Not in this city</h2><p>${esc(requested)} is not a displayed file. Search the explorer for another file.${link?` <a href="${link}" target="_blank" rel="noreferrer">Open its source ↗</a>`:''}</p></div>`;}
+  if(!requested||!city.nodes.some(node=>node.id===requested))showMap(false);
 } catch(error) {$('#loading').innerHTML=`<div class="error">Could not load city: ${esc(error.message)}</div>`;}

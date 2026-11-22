@@ -23,3 +23,29 @@
 .city-view .city-layer-key summary{cursor:pointer;color:#002fa7;font-weight:700}
 .city-view .city-layer-key[open]{display:grid}
 .city-metrics{position:absolute;left:8px;top:8px;z-index:3;max-width:80%;padding:5px 8px;background:#17283ee8;color:#fff;font:11px/1.4 monospace;pointer-events:none}
+.city-map{position:absolute;inset:0;z-index:1;overflow:hidden;background:#fff}
+.city-map svg{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+.city-map svg:active{cursor:grabbing}
+.radial-sector{cursor:pointer;outline:none}
+.radial-sector>path{transition:filter .15s ease}
+.radial-sector:hover>path,.radial-sector:focus-visible>path{filter:brightness(1.12);stroke:#26384b;stroke-width:3}
+.radial-sector:focus-visible{outline:none}
+.radial-file:hover{fill:#26384b;fill-opacity:1;stroke:white;stroke-width:1.5}
+.radial-topic{font:600 7px system-ui,sans-serif;fill:white;pointer-events:none}
+.radial-root{font:700 9px system-ui,sans-serif;fill:white;pointer-events:none}
+.radial-title{font:700 17px system-ui,sans-serif;letter-spacing:-.04em;fill:#20364b;pointer-events:none}
+.radial-subtitle{font:600 12px system-ui,sans-serif;fill:#536879;pointer-events:none}
+.radial-meta{font:10px system-ui,sans-serif;fill:#697b89;pointer-events:none}
+.canvas-wrap.map-open .city-layer-key,.canvas-wrap.map-open .city-movement,.canvas-wrap.map-open .city-current{display:none}
+.city-view .canvas-top{min-height:0;padding:12px 20px}
+.city-view .canvas-top h1{font-size:20px;line-height:1.1}
+.city-view .canvas-top p{margin-top:5px}
+.radial-tooltip{position:absolute;z-index:2;max-width:250px;padding:7px 9px;background:#20364b;color:white;font-size:11px;line-height:1.4;overflow-wrap:anywhere;pointer-events:none}
+.radial-hint{position:absolute;left:50%;bottom:10px;transform:translateX(-50%);padding:5px 9px;background:#fffffff0;border:1px solid #e5e7eb;color:#526474;font-size:10px;white-space:nowrap;pointer-events:none}
+.city-view .app:has(.canvas-wrap.map-open){grid-template-columns:270px minmax(0,1fr)}
+.city-view .app:has(.canvas-wrap.map-open) .canvas-top,
+.city-view .app:has(.canvas-wrap.map-open) .inspector,
+.city-view .app:has(.canvas-wrap.map-open) #toggle-pipelines,
+.city-view .app:has(.canvas-wrap.map-open) #focus-selected,
+.city-view .app:has(.canvas-wrap.map-open) label[for="quality"],
+.city-view .app:has(.canvas-wrap.map-open) #quality{display:none}

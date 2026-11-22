@@ -1,6 +1,7 @@
-import { cp, mkdir, rm, stat } from 'node:fs/promises';
+import { cp, mkdir, rm, stat, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 
 // Stage only the city, its compatibility redirects, and the required snapshots.
 // The output directory is fixed inside this repository's ignored build directory.
@@ -10,9 +11,25 @@ if(path.dirname(root)!==path.resolve(workspace,'dist'))throw Error('Invalid stag
 await rm(root,{recursive:true,force:true});
 await mkdir(path.join(root,'assets'),{recursive:true});
 await mkdir(path.join(root,'data'),{recursive:true});
-for(const file of ['index.html','city.html','mathlib.html','legacy-redirect.js','city.css','style.css','assets/city-bundle.js','data/graph.json','data/mathlib.json','data/mathlib-bridge.json']) {
+for(const file of ['city.html','mathlib.html','legacy-redirect.js','data/graph.json','data/mathlib.json','data/mathlib-bridge.json']) {
   await cp(path.join(workspace,'site',file),path.join(root,file));
 }
+// Content-address the bundle so a newly deployed interface is not masked by a
+// browser or CDN cache holding the previous version of the stable filename.
+const bundle=await readFile(path.join(workspace,'site','assets','city-bundle.js'));
+const bundleName=`city-bundle.${createHash('sha256').update(bundle).digest('hex').slice(0,12)}.js`;
+await writeFile(path.join(root,'assets',bundleName),bundle);
+let html=await readFile(path.join(workspace,'site','index.html'),'utf8');
+if(!html.includes('assets/city-bundle.js'))throw Error('City bundle reference missing from index.html');
+html=html.replace('assets/city-bundle.js',`assets/${bundleName}`);
+for(const file of ['style.css','city.css']){
+  const data=await readFile(path.join(workspace,'site',file));
+  const name=file.replace('.css',`.${createHash('sha256').update(data).digest('hex').slice(0,12)}.css`);
+  if(!html.includes(`href="${file}"`))throw Error(`Stylesheet reference missing: ${file}`);
+  html=html.replace(`href="${file}"`,`href="${name}"`);
+  await writeFile(path.join(root,name),data);
+}
+await writeFile(path.join(root,'index.html'),html);
 // Optional declaration snapshots are included only when deliberately generated.
 for(const file of ['declarations.json','city-declarations.json']) {
   try {await stat(path.join(workspace,'site','data',file));await cp(path.join(workspace,'site','data',file),path.join(root,'data',file));} catch(error) {if(error.code!=='ENOENT')throw error;}
