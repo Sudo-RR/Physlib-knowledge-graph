@@ -17,3 +17,9 @@
 .city-toolbar #toggle-plane{padding:0 8px;font-size:10px;white-space:nowrap}.relation-groups{display:grid;gap:5px;margin-bottom:10px}.relation-groups button{display:grid;grid-template-columns:16px 1fr auto;align-items:center;gap:7px;text-align:left;padding:8px;border:1px solid #d4dae0;background:#fff;font-size:10px}.relation-groups button:hover{border-color:#61798a}.relation-groups small{color:#687783;font-size:9px}.relation-groups button span{width:10px;height:10px;display:block}.group-math span{border:2px solid #007f86;border-radius:50%}.group-uses span{background:#268cf0;transform:rotate(45deg);width:8px!important;height:8px!important;margin-left:1px}.group-usedby span{background:#df8a1b;border-radius:1px}.city-topic-label{background:rgba(255,255,255,.97);border-width:1px 1px 1px 4px;color:#182b39;font-weight:700}
 .city-hub-label{position:absolute;left:0;top:0;padding:4px 7px;background:rgba(255,255,255,.96);border:1px solid;border-left-width:3px;color:#182b39;font-size:10px;font-weight:700;white-space:nowrap}.relation-groups button:disabled{opacity:.48;cursor:default}
 .group-uses span{background:#e43ba9}.group-math span{border-color:#00aaa4}.group-usedby span{background:#ffa71a}
+.city-view .city-toolbar{height:auto;min-height:45px;flex-wrap:wrap;gap:6px;padding:6px 12px}
+.city-view .city-toolbar .controls{flex-wrap:wrap;row-gap:4px}
+.city-view .city-layer-key{pointer-events:auto;max-height:60%;overflow:auto}
+.city-view .city-layer-key summary{cursor:pointer;color:#002fa7;font-weight:700}
+.city-view .city-layer-key[open]{display:grid}
+.city-metrics{position:absolute;left:8px;top:8px;z-index:3;max-width:80%;padding:5px 8px;background:#17283ee8;color:#fff;font:11px/1.4 monospace;pointer-events:none}

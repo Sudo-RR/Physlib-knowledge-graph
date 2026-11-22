@@ -12,6 +12,7 @@ See [reference projects and roadmap](docs/reference-projects.md) for related Lea
 The [graph data contract](docs/graph-data-contract.md) defines the current snapshot and its limits.
 An [experimental clustering analysis](docs/module-clustering.md) groups files by shared imports and records the evidence.
 The [declaration browser proposal](docs/declaration-browser-proposal.md) documents an experimental lean-vouch adapter and its optional data interface. Declaration extraction is not yet part of automatic publication.
+The [city visual QA notes](docs/city-visual-qa.md) describe the rendering metrics and screenshot comparison workflow; [asset provenance](THIRD_PARTY_ASSETS.md) records how the procedural art is made.
 See the [Euler–Lagrange pilot](docs/lean-vouch-pilot.md) for a real Physlib example and the limits of the extracted dependencies.
 The [Mathlib data](docs/mathlib-graph.md) connects Physlib's explicit imports to the exact Mathlib revision pinned by Physlib.
 

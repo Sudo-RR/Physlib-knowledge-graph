@@ -109,7 +109,7 @@ function select(id,{focus=true,record=true}={}) {
   $('#relation-filter').value=relationMode;
   $('#relation-filter').closest('.relation-controls').insertAdjacentHTML('afterbegin',`<div class="relation-groups" aria-label="Relationship categories"><button type="button" data-rel-group="mathlib" class="group-math" ${groups.mathlib.length?'':'disabled'}><span aria-hidden="true"></span><strong>Mathlib</strong><small>${groups.mathlib.length} pipelines</small></button><button type="button" data-rel-group="uses" class="group-uses" ${groups.uses.length?'':'disabled'}><span aria-hidden="true"></span><strong>Uses in Physlib</strong><small>${groups.uses.length} files</small></button><button type="button" data-rel-group="usedBy" class="group-usedby" ${groups.usedBy.length?'':'disabled'}><span aria-hidden="true"></span><strong>Used by Physlib</strong><small>${groups.usedBy.length} files</small></button></div>`);
   $('#current-selection').innerHTML=`<span>${esc(node.id.split('.')[0])} · Selected file</span><strong>${esc(id)}</strong><small id="relation-mode"></small>`;
-  const graph=scene.select(id);$('#relation-mode').textContent=describeRelations(graph);if(focus)scene.focusBuilding(id);renderExplorer();
+  if(focus)scene.focusBuilding(id);const graph=scene.select(id);$('#relation-mode').textContent=describeRelations(graph);renderExplorer();
   const url=new URL(location.href);url.searchParams.set('node',id);
   if(record&&changed){navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);}else history.replaceState({cityIndex:navIndex},'',url);
   updateHistoryButtons();
