@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { roofStyle, createCityArt } from '../site/city-art.js';
+import { roofStyle, buildingStyle, createCityArt } from '../site/city-art.js';
 
 test('roof variants are stable and do not change node data',()=>{
   const nodes=['Physlib.A','Physlib.B','Physlib.C','Physlib.D'].map(id=>({id,library:'Physlib'}));
@@ -12,4 +12,5 @@ test('roof variants are stable and do not change node data',()=>{
   assert.equal(art.children[4].count,nodes.length);
   assert.equal(JSON.stringify(nodes),original);
   assert.equal(roofStyle(nodes[0].id),roofStyle(nodes[0].id));
+  assert.equal(new Set(nodes.map(node=>buildingStyle(node.id).name)).size,4);
 });

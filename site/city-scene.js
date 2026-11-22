@@ -4,7 +4,7 @@ import { districtFor } from './city-model.js';
 import { layoutFullCity } from './city-layout.js';
 import { visibleRelations, allMathlibPipelines, relationGroups } from './city-relations.js';
 import { fitBox, cityBounds } from './city-camera.js';
-import { createCityArt } from './city-art.js';
+import { buildingStyle, createCityArt } from './city-art.js';
 
 function facade(base,windowColor) {
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=256;
@@ -78,10 +78,10 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   const bodyGeometry=new THREE.BoxGeometry(1,1,1), surfaceGeometry=new THREE.SphereGeometry(.9,10,8);
   for(const [index,node] of city.nodes.entries()){
     const point=layout.positions.get(node.id),data=floors.get(node.id),direction=node.library==='Mathlib'?-1:1;
-    const group=new THREE.Group(),body=new THREE.Mesh(bodyGeometry,baseMaterial(node));body.scale.set(1.9,data.height,1.9);
+    const footprint=buildingStyle(node.id),group=new THREE.Group(),body=new THREE.Mesh(bodyGeometry,baseMaterial(node));body.scale.set(footprint.width,data.height,footprint.depth);
     group.position.set(point.x,0,point.z);body.position.y=direction*data.height/2;body.userData={id:node.id};group.add(body);
     const surface=node.library==='Mathlib'?new THREE.Mesh(surfaceGeometry,baseMaterial(node)):null;if(surface){surface.position.y=.75;surface.userData={id:node.id};group.add(surface);}scene.add(group);
-    buildings.set(node.id,{group,body,surface,node,direction});positions.set(node.id,new THREE.Vector3(point.x,direction*data.height,point.z));
+    buildings.set(node.id,{group,body,surface,node,direction,footprint});positions.set(node.id,new THREE.Vector3(point.x,direction*data.height,point.z));
   }
   const pipelineLinks=allMathlibPipelines(city);
   function pipelineCurve(link){const source=buildings.get(link.from),target=buildings.get(link.to);if(!source||!target)return null;
@@ -138,7 +138,7 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   }
   function showAll(){for(const b of buildings.values()){b.group.visible=!underground||b.direction<0;if(b.surface)b.surface.visible=!underground;}}
   function focusFolder(folder){showAll();const members=city.nodes.filter(n=>n.module.path.replaceAll('\\','/').startsWith(`${folder}/`));if(!members.length)return;setLayer(folder.startsWith('Mathlib'));const box=new THREE.Box3();for(const n of members)box.expandByObject(buildings.get(n.id).body);const direction=new THREE.Vector3(0,underground?-1:1,1).normalize(),fit=fitBox(box,direction,camera.fov,camera.aspect);const centre=new THREE.Vector3(fit.centre.x,fit.centre.y,fit.centre.z);travel(centre,centre.clone().addScaledVector(direction,fit.distance));}
-  function focusBuilding(id){const b=buildings.get(id);if(!b)return;setLayer(b.direction<0);showAll();const height=floors.get(id).height,centre=b.group.position.clone().add(new THREE.Vector3(0,b.direction*height/2,0)),box={min:{x:centre.x-1,y:Math.min(0,b.direction*height),z:centre.z-1},max:{x:centre.x+1,y:Math.max(0,b.direction*height),z:centre.z+1}},distance=Math.max(18,fitBox(box,{x:1,y:b.direction*.35,z:1},camera.fov,camera.aspect).distance);let best=null;
+  function focusBuilding(id){const b=buildings.get(id);if(!b)return;setLayer(b.direction<0);showAll();const height=floors.get(id).height,centre=b.group.position.clone().add(new THREE.Vector3(0,b.direction*height/2,0)),box={min:{x:centre.x-b.footprint.width/2,y:Math.min(0,b.direction*height),z:centre.z-b.footprint.depth/2},max:{x:centre.x+b.footprint.width/2,y:Math.max(0,b.direction*height),z:centre.z+b.footprint.depth/2}},distance=Math.max(18,fitBox(box,{x:1,y:b.direction*.35,z:1},camera.fov,camera.aspect).distance);let best=null;
     // Choose a street-facing angle with as few intervening buildings as possible.
     for(let i=0;i<16;i++){const angle=i*Math.PI/8,dx=Math.cos(angle)*distance,dz=Math.sin(angle)*distance,cameraY=centre.y+b.direction*distance*.35;let score=0;for(const [otherId,other] of buildings){if(otherId===id||other.direction!==b.direction)continue;const ox=other.group.position.x-centre.x,oz=other.group.position.z-centre.z,t=(ox*dx+oz*dz)/(distance*distance);if(t<=.04||t>=1.05)continue;const lateral=Math.hypot(ox-t*dx,oz-t*dz),rayY=centre.y+t*(cameraY-centre.y),level=b.direction*rayY;if(lateral<1.8&&level>=0&&level<floors.get(otherId).height)score+=1+(t>.75?4:0);}if(!best||score<best.score)best={score,position:centre.clone().add(new THREE.Vector3(dx,b.direction*distance*.35,dz))};}
     travel(centre,best.position);
@@ -152,9 +152,9 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   }
   function select(id){
     if(selected&&buildings.has(selected)){const previous=buildings.get(selected);clearFloors(previous);previous.body.material=baseMaterial(previous.node);previous.body.renderOrder=0;if(previous.surface){previous.surface.material=baseMaterial(previous.node);previous.surface.renderOrder=0;}}
-    selected=id;setBuildingFocus();drawPipes();drawHubs(id);const b=buildings.get(id);selectionOutline.visible=Boolean(b);if(!b)return drawLinks([],false);const selectedHeight=floors.get(id).height;selectionOutline.position.copy(b.group.position).add(new THREE.Vector3(0,b.direction*selectedHeight/2,0));selectionOutline.scale.set(2.15,selectedHeight+.3,2.15);b.body.material=selectedMaterial(b.node);b.body.renderOrder=50;if(b.surface){b.surface.material=selectedMaterial(b.node);b.surface.renderOrder=50;}
+    selected=id;setBuildingFocus();drawPipes();drawHubs(id);const b=buildings.get(id);selectionOutline.visible=Boolean(b);if(!b)return drawLinks([],false);const selectedHeight=floors.get(id).height;selectionOutline.position.copy(b.group.position).add(new THREE.Vector3(0,b.direction*selectedHeight/2,0));selectionOutline.scale.set(b.footprint.width+.2,selectedHeight+.3,b.footprint.depth+.2);b.body.material=selectedMaterial(b.node);b.body.renderOrder=50;if(b.surface){b.surface.material=selectedMaterial(b.node);b.surface.renderOrder=50;}
     const data=floors.get(id);if(data.floors.length){b.body.visible=false;const h=data.height/data.floors.length;
-      for(const floor of data.floors){const mesh=new THREE.Mesh(new THREE.BoxGeometry(1.9,Math.max(.1,h-.08),1.9),selectedMaterial(b.node));mesh.renderOrder=50;mesh.position.y=b.direction*(floor.index+.5)*h;mesh.userData={id,floor:floor.index};b.group.add(mesh);}}
+      for(const floor of data.floors){const mesh=new THREE.Mesh(new THREE.BoxGeometry(b.footprint.width,Math.max(.1,h-.08),b.footprint.depth),selectedMaterial(b.node));mesh.renderOrder=50;mesh.position.y=b.direction*(floor.index+.5)*h;mesh.userData={id,floor:floor.index};b.group.add(mesh);}}
     return drawFileLinks();
   }
   function selectFloor(id,index){const b=buildings.get(id);if(!b||id!==selected)return;for(const mesh of b.group.children)if(mesh!==b.body&&mesh!==b.surface&&!mesh.userData.decorative)mesh.material=mesh.userData.floor===index?materials.floor:selectedMaterial(b.node);}

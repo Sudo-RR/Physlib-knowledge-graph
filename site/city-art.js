@@ -8,6 +8,16 @@ export function roofStyle(id) {
   return (hash>>>0)%4;
 }
 
+// Footprints vary independently of height. None denotes a declaration kind.
+export function buildingStyle(id) {
+  return [
+    {name:'tower',width:1.5,depth:1.5},
+    {name:'mid-rise',width:1.85,depth:1.7},
+    {name:'institute',width:2.2,depth:2.0},
+    {name:'pavilion',width:1.8,depth:2.1}
+  ][roofStyle(id)];
+}
+
 export function createCityArt(nodes,positions,floors) {
   const group=new THREE.Group();
   const stone=new THREE.MeshStandardMaterial({color:0xf5e7c9,roughness:.85});
@@ -24,12 +34,13 @@ export function createCityArt(nodes,positions,floors) {
   const point=new THREE.Vector3();
   let entranceCount=0;
   for(const node of nodes){
-    const position=positions.get(node.id),height=floors.get(node.id).height,sign=node.library==='Mathlib'?-1:1,style=roofStyle(node.id);
+    const position=positions.get(node.id),height=floors.get(node.id).height,sign=node.library==='Mathlib'?-1:1,style=roofStyle(node.id),footprint=buildingStyle(node.id);
+    scale.set(footprint.width/1.9,1,footprint.depth/1.9);
     point.set(position.x,sign*(height+.12),position.z);
     rotation.setFromAxisAngle(new THREE.Vector3(1,0,0),sign<0?Math.PI:0);
     matrix.compose(point,rotation,scale);roofs[style].setMatrixAt(counts[style]++,matrix);
     // Entrances are ornamental and intentionally omitted underground.
-    if(sign>0){point.set(position.x,.6,position.z+1);rotation.identity();matrix.compose(point,rotation,scale);entrances.setMatrixAt(entranceCount++,matrix);}
+    if(sign>0){point.set(position.x,.6,position.z+footprint.depth/2+.05);rotation.identity();scale.set(1,1,1);matrix.compose(point,rotation,scale);entrances.setMatrixAt(entranceCount++,matrix);}
   }
   roofs.forEach((mesh,index)=>{mesh.count=counts[index];mesh.computeBoundingSphere();group.add(mesh);});
   entrances.count=entranceCount;entrances.computeBoundingSphere();group.add(entrances);
