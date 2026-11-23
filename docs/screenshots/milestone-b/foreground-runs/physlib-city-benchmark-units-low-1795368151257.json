@@ -1,0 +1,29 @@
+{
+  "frames": 153,
+  "durationMs": 12054,
+  "fps": 12.7,
+  "p50Ms": 79.3,
+  "p95Ms": 92.2,
+  "p99Ms": 99.4,
+  "maxMs": 134.9,
+  "calls": [
+    65,
+    65
+  ],
+  "geometries": 30,
+  "textures": 8,
+  "foregroundFrames": 153,
+  "allFramesForeground": true,
+  "mode": "units",
+  "quality": "low",
+  "canvasWidth": 717,
+  "canvasHeight": 378,
+  "viewportWidth": 1536,
+  "viewportHeight": 791,
+  "pixelRatio": 0.75,
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+  "gpu": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "firstVisibleMs": 2246,
+  "completedMs": 2246,
+  "finalFrameTriangles": 287864
+}

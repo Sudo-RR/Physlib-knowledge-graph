@@ -1,0 +1,24 @@
+
+> validate:assets
+> node scripts/validate-assets.mjs
+
+{
+  "fixture": {
+    "bytes": 42808,
+    "sha256": "e5c40d7c77c2d82a6daf3b137cbaa2c42d01e5aa438ff1fcbb9806de1b56ebb3",
+    "triangles": 398,
+    "embeddedImages": 1
+  },
+  "district": {
+    "bytes": 28688,
+    "sha256": "0e9500ea8076cd606149e6ea7c665b120399a1abdae666a654ea49ad85332545",
+    "parts": [
+      "building-window-wide",
+      "window-white-wide",
+      "building-door",
+      "roof-flat-border-straight",
+      "roof-flat-detail-a"
+    ],
+    "triangles": 174
+  }
+}

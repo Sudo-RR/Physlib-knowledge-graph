@@ -9,7 +9,7 @@ export function isTrackpadPan(event) {
 }
 
 // All camera motion and collision correction is owned by this controller.
-export function createNavigationController({camera,controls,element,collisionGrid,isUnderground,now=()=>performance.now()}) {
+export function createNavigationController({camera,controls,element,collisionGrid,isUnderground,worldBounds=null,now=()=>performance.now()}) {
   let flight=null;
   const cancel=()=>{flight=null;};
   controls.addEventListener('start',cancel);
@@ -45,7 +45,7 @@ export function createNavigationController({camera,controls,element,collisionGri
   function update() {
     const underground=isUnderground();
     if(flight){
-      const t=Math.min(1,(now()-flight.start)/550),ease=1-(1-t)**3;
+      const t=typeof matchMedia==='function'&&matchMedia('(prefers-reduced-motion: reduce)').matches?1:Math.min(1,(now()-flight.start)/550),ease=1-(1-t)**3;
       camera.position.lerpVectors(flight.from,flight.to,ease);
       controls.target.lerpVectors(flight.fromTarget,flight.toTarget,ease);
       camera.lookAt(controls.target);
@@ -59,6 +59,7 @@ export function createNavigationController({camera,controls,element,collisionGri
     if(safe.x!==camera.position.x||safe.z!==camera.position.z){
       camera.position.x=safe.x;camera.position.z=safe.z;camera.lookAt(controls.target);
     }
+    if(worldBounds&&!underground&&!flight){for(const [axis,lo,hi] of [['x','minX','maxX'],['z','minZ','maxZ']]){const target=Math.max(worldBounds[lo]-200,Math.min(worldBounds[hi]+200,controls.target[axis])),delta=(target-controls.target[axis])*.025;controls.target[axis]+=delta;camera.position[axis]+=delta;}}
   }
   return {cancel,travel,move,zoom,update,get flying(){return flight!==null;}};
 }

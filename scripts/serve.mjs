@@ -1,8 +1,22 @@
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 const root = path.resolve('site');
 createServer(async (req, res) => {
+  // Opt-in local QA evidence sink. Never packaged into the static Pages site.
+  if(req.method==='POST'&&req.url==='/__city-benchmark'){
+    if(!['127.0.0.1','::1'].includes(req.socket.remoteAddress)||
+      !['http://127.0.0.1:4173','http://localhost:4173'].includes(req.headers.origin)||
+      !req.headers['content-type']?.startsWith('application/json')){res.writeHead(403).end();return;}
+    try{
+      let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>32768)throw Error('Report too large');}
+      const data=JSON.parse(body);if(!Number.isFinite(data.fps)||!Array.isArray(data.calls)||typeof data.allFramesForeground!=='boolean')throw Error('Invalid benchmark');
+      const directory=path.resolve('dist/city-benchmarks');await mkdir(directory,{recursive:true});
+      await writeFile(path.join(directory,`${Date.now()}-${randomUUID()}.json`),JSON.stringify(data,null,2));
+      res.writeHead(201).end('Saved');
+    }catch{res.writeHead(400).end('Invalid report');}return;
+  }
   const pathname = decodeURIComponent(new URL(req.url, 'http://localhost').pathname);
   const file = path.resolve(root, `.${pathname === '/' ? '/index.html' : pathname}`);
   if (!file.startsWith(root + path.sep)) { res.writeHead(403).end(); return; }

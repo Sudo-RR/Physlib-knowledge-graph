@@ -11,6 +11,7 @@ if(path.dirname(root)!==path.resolve(workspace,'dist'))throw Error('Invalid stag
 await rm(root,{recursive:true,force:true});
 await mkdir(path.join(root,'assets'),{recursive:true});
 await mkdir(path.join(root,'data'),{recursive:true});
+for(const directory of ['models','licenses'])await cp(path.join(workspace,'site','assets',directory),path.join(root,'assets',directory),{recursive:true});
 for(const file of ['city.html','mathlib.html','legacy-redirect.js','data/graph.json','data/mathlib.json','data/mathlib-bridge.json']) {
   await cp(path.join(workspace,'site',file),path.join(root,file));
 }

@@ -1,4 +1,5 @@
 import { buildDistricts } from './city-model.js';
+import {createBoroughManifest} from './city-borough-layout.js';
 
 const GOLDEN_ANGLE=Math.PI*(3-Math.sqrt(5));
 
@@ -20,7 +21,7 @@ function pack(items,gap=4){
 
 // Topic cities are real second-level source folders, not inferred mathematical clusters.
 // Mathlib uses the same folder packing in a shared, underground region.
-export function layoutFullCity(city,{spacing=3}={}) {
+export function layoutLegacyCity(city,{spacing=3}={}) {
   const positions=new Map(),districts=[],topics=[],zones=[];
   const groups=buildDistricts(city.nodes);
   const byRoot=new Map();
@@ -59,4 +60,14 @@ export function layoutFullCity(city,{spacing=3}={}) {
   for(const item of [...districts,...topics])item.z-=offset;
   for(const zone of zones){zone.z-=offset;zone.minZ-=offset;zone.maxZ-=offset;}
   return {positions,districts,topics,zones,width,depth};
+}
+
+export function layoutFullCity(city,options={}){
+ const legacy=layoutLegacyCity(city,options);if(options.legacy)return legacy;
+ const manifest=createBoroughManifest(city,options),positions=new Map(legacy.positions);
+ for(const [id,m] of Object.entries(manifest.modules))positions.set(id,{x:m.position.x,z:m.position.z});
+ const topics=manifest.parcels.filter(p=>p.depth===1).map(p=>({id:p.id,name:p.label,root:p.boroughId,count:p.count,x:(p.bounds.minX+p.bounds.maxX)/2,z:(p.bounds.minZ+p.bounds.maxZ)/2,radius:Math.hypot(p.bounds.maxX-p.bounds.minX,p.bounds.maxZ-p.bounds.minZ)/2,underground:false,bounds:p.bounds}));
+ const districts=manifest.parcels.map(p=>({id:p.id,nodes:p.moduleIds.map(id=>city.nodes.find(n=>n.id===id)),topic:p.districtId,x:(p.bounds.minX+p.bounds.maxX)/2,z:(p.bounds.minZ+p.bounds.maxZ)/2,size:Math.max(p.bounds.maxX-p.bounds.minX,p.bounds.maxZ-p.bounds.minZ),radius:Math.hypot(p.bounds.maxX-p.bounds.minX,p.bounds.maxZ-p.bounds.minZ)/2,angle:0,underground:false,bounds:p.bounds}));
+ const zones=manifest.boroughs.map(b=>({id:b.id,x:(b.bounds.minX+b.bounds.maxX)/2,z:(b.bounds.minZ+b.bounds.maxZ)/2,minZ:b.bounds.minZ,maxZ:b.bounds.maxZ,radius:Math.hypot(b.bounds.maxX-b.bounds.minX,b.bounds.maxZ-b.bounds.minZ)/2,bounds:b.bounds,underground:false}));
+ return {positions,manifest,topics:[...topics,...legacy.topics.filter(t=>t.underground)],districts:[...districts,...legacy.districts.filter(d=>d.underground)],zones:[...zones,...legacy.zones.filter(z=>z.underground)],width:manifest.bounds.maxX,depth:manifest.bounds.maxZ};
 }

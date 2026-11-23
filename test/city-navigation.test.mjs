@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { layoutFullCity } from '../site/city-layout.js';
+import { layoutLegacyCity as layoutFullCity } from '../site/city-layout.js';
 import { visibleRelations, allMathlibPipelines, mathlibPipelines, relationGroups, constrainSurfaceTarget } from '../site/city-relations.js';
 
 test('top-level libraries occupy separated regions and Mathlib has an underground region',()=>{

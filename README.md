@@ -1,66 +1,18 @@
 # Physlib Knowledge Graph
 
+Milestone A's optional imported-building smoke test is available at
+`?assetFixture=kenney-tower&node=Physlib.Units.ISQDimensionBase&metrics=1`.
+The current default is the Milestone C geographic surface. See [the implementation and QA report](docs/city-milestone-a.md)
+and [asset provenance](THIRD_PARTY_ASSETS.md).
+
+Milestone B's opt-in Units district is available at
+`?district=units&node=Physlib.Units.ISQDimensionBase&metrics=1`.
+Use `district=procedural` for the matched procedural control. The preview
+preserves all source placements; selecting an outside file restores surrounding
+context. [Milestone B report and comparisons](docs/city-milestone-b.md).
+
 An experimental descriptive browser for [Physlib](https://github.com/leanprover-community/physlib): find modules, explore direct imports and importers, and follow links from API maps to the files they reference. The generated snapshot records the exact source commit and timestamp.
 
-Open the [live city](https://sudo-rr.github.io/Physlib-knowledge-graph/). It includes `Physlib`, `PhyslibAlpha` and `QuantumInfo`, and the Mathlib modules they directly import. Search or browse the folder tree to focus a file and select a floor to inspect the available information. Drag or use two fingers on a trackpad to pan; pinch or use the zoom buttons to zoom. A mouse wheel can zoom, and right-drag rotates the view within a limited range. W/A/S/D and the directional controls also move the camera. Use **Overview** to return to the radial map and **Explore Mathlib below** to enter the underground layer. Selecting a Mathlib file also opens that layer. Hover over a building to identify it. The back and forward controls retrace file selections; **Return to start** restores the initial view. Press `/` to search and Enter to open the first match. The 3D city requires a WebGL-capable browser.
+Open the [live city](https://sudo-rr.github.io/Physlib-knowledge-graph/). It includes `Physlib`, `PhyslibAlpha` and `QuantumInfo`, and the Mathlib modules they directly import. Search or browse the folder tree to focus a file and select a floor to inspect the available information. Drag or use two fingers on a trackpad to pan; pinch or use the zoom buttons to zoom. A mouse wheel can zoom, and right-drag rotates the view within a limited range. W/A/S/D and the directional controls also move the camera. Use **Overview** to return to the surface geography and **Explore Mathlib below** to enter the underground layer. Selecting a Mathlib file also opens that layer. Hover over a building to identify it. The back and forward controls retrace file selections; **Return to start** restores the initial view. Press `/` to search and Enter to open the first match. The 3D city requires a WebGL-capable browser.
 
-The landing overview is a radial folder map inspired by [PaperView](https://paperview.org/roadmap/index.html). Its sectors group actual source folders and its outer tiles represent files; the lines inside show the folder hierarchy, not dependencies. Select a sector to visit its 3D buildings or a tile to inspect its file. **Explore Mathlib below** switches the map to the directly imported Mathlib files. The 3D renderer pauses while the overview is open.
-
-Physlib, PhyslibAlpha and QuantumInfo have separate labelled regions. Within them, source folders such as Classical Mechanics and Quantum Mechanics form distinct cities; use **Visit a city** to travel to one. Their colours and decorative roads help navigation, while placement follows folder paths rather than mathematical similarity. When a file is selected, use **Connections in the city** to show its imports, its importers, both, or neither. At most 12 connections are drawn at once, and the inspector lists all recorded imports and importers present in the city.
-
-Mathlib's directly imported modules form their own folder-based areas. Cyan pipes show explicit Physlib-family-to-Mathlib imports; pink and orange indicate the importing and imported ends of Physlib-family file imports. The full network is drawn faintly, and selecting a building highlights its routes. The inspector groups connections into Mathlib, Physlib files used by the selection, and Physlib files using it. These are categories of file edges, not additional Lean nodes. Use **Pipelines** to show or hide the network. Pipes do not establish declaration-level usage.
-
-See [reference projects and roadmap](docs/reference-projects.md) for related Lean tools and proposed extensions.
-The [graph data contract](docs/graph-data-contract.md) defines the current snapshot and its limits.
-An [experimental clustering analysis](docs/module-clustering.md) groups files by shared imports and records the evidence.
-The [declaration browser proposal](docs/declaration-browser-proposal.md) documents an experimental lean-vouch adapter and its optional data interface. Declaration extraction is not yet part of automatic publication.
-The [city visual QA notes](docs/city-visual-qa.md) describe the rendering metrics and screenshot comparison workflow; [asset provenance](THIRD_PARTY_ASSETS.md) records how the procedural art is made.
-See the [Euler–Lagrange pilot](docs/lean-vouch-pilot.md) for a real Physlib example and the limits of the extracted dependencies.
-The [Mathlib data](docs/mathlib-graph.md) connects Physlib's explicit imports to the exact Mathlib revision pinned by Physlib.
-
-## Run locally
-
-Requires Git and Node.js 20 or newer. The 3D city additionally uses the npm dependencies and build step below.
-
-```sh
-npm ci
-git clone --depth 1 https://github.com/leanprover-community/physlib.git .physlib-source
-npm test
-npm run build:data
-npm run validate:data
-npm run build:city
-npm run serve
-```
-
-Open <http://127.0.0.1:4173>. To use a different clean Physlib checkout or output path, run `node scripts/extract.mjs /path/to/physlib site/data/graph.json`. The checkout must be clean so that the recorded commit accurately identifies the source.
-
-The city needs a clean Mathlib checkout at the revision pinned by Physlib. If it is not already present, create it and generate the extra snapshots:
-
-```sh
-node -e "require('node:fs').mkdirSync('.physlib-source/.lake/packages',{recursive:true})"
-git clone https://github.com/leanprover-community/mathlib4.git .physlib-source/.lake/packages/mathlib
-git -C .physlib-source/.lake/packages/mathlib checkout $(node scripts/mathlib-pin.mjs .physlib-source)
-npm run build:mathlib
-```
-
-The `$(...)` command substitution works in POSIX shells and PowerShell. See the [Mathlib instructions](docs/mathlib-graph.md) for details. All three snapshots are required to open the city.
-
-Buildings represent files. Height and depth represent source lines on a logarithmic scale, including blank lines and comments; they do not measure declarations, quality or importance. Floors show recorded declarations where a compatible optional snapshot exists, and labelled source-line ranges otherwise. The draggable floor interior is decorative. Declaration snapshots are not currently generated by the deployment workflow, so the published city normally uses source-range floors. The [city notes](docs/city-pilot.md) explain the layout, extraction pilots and coverage limits.
-
-## What the data means
-
-The extractor scans Lean source for explicit import commands, ignoring nested comments. An edge A → B means A explicitly imports B, not that A actually uses a declaration from B. External imports and unresolved local imports are reported separately; standard implicit imports are not included. Module and API-map data cover `Physlib`, `PhyslibAlpha`, and `QuantumInfo`, including root modules. Map links are extracted from the `Lean References` section of `API-map.md`; references are file-level, not verified declaration-level links. Missing referenced files are reported in the JSON snapshot. This is a lightweight source scan, not Lean's parser: unusual syntax may be missed. Its direct import names matched Lean's parser across one complete Physlib checkout; see the [comparison and its limitations](docs/import-comparison.md).
-
-The city groups Physlib and Mathlib files by directory. It shows the Mathlib import network as pipelines and at most 12 selected file relationships as arrows, with full recorded lists in the inspector. Directory groups are not algorithmic communities. The viewer does not assess duplicate implementations. Follow API-map source links for physics context and review status.
-
-The interface takes inspiration from the navigable dependency diagrams in [lean-vouch](https://github.com/jjeffrey/lean-vouch) and the graph explorer in [GitNexus](https://github.com/abhigyanpatwari/GitNexus). The optional lean-vouch adapter is experimental and must be run separately; its elaborated declaration dependencies are distinct from the source-scanned file imports. GitNexus is not integrated.
-
-The city is inspired by [Strata](https://github.com/themonk911/strata) and independently implemented; no Strata source code is included. The previous standalone graph views are no longer published. Old city and Mathlib view links redirect to the city; a Mathlib file outside the displayed import set links to its exact-revision source when known.
-
-## Automatic updates and deployment
-
-The included GitHub Actions workflow checks out Physlib `master` at the start of each build and the Mathlib revision pinned by that checkout, runs tests, regenerates and validates the snapshots, and deploys the city-only artifact to GitHub Pages on pushes, hourly, manually, or on a `physlib-updated` repository dispatch. Enable Pages with **Settings → Pages → Build and deployment → GitHub Actions** in this repository. Runs are serialized and check both source branches immediately before deployment; if either has advanced, the run fails rather than knowingly publishing stale data. A branch can still advance during deployment, and scheduling can be delayed, so this is not an instantaneous freshness guarantee. The previous successful site remains available if a run fails; its timestamp and revision are displayed, and failure details are in this repository's Actions tab. The workflow builds the latest checkout even when a dispatch arrives; it does not trust a supplied SHA. A manual run on a non-default branch builds an artifact but does not deploy it.
-
-For a faster refresh, Physlib maintainers could configure a workflow on merges to `master` that sends a `repository_dispatch` event of type `physlib-updated` to this repository, using an appropriately scoped credential stored as a GitHub Actions secret. This requires coordination and an authorized sender; no upstream workflow or credential is configured here. The hourly schedule remains a fallback.
-
-The standalone page can later be linked from physlib.io or integrated into its hosting after coordination with its maintainers. No live Physlib website configuration is changed here.
+The landing overview shows three repository-derived boroughs separated by two rivers. Actual source directories form spacious wedge-inspired districts, with recursive parcels, connected civic streets and reserved infrastructure corridors. The geographic map uses the same placement manifest. The former radial layout is available at `?layout=legacy`.

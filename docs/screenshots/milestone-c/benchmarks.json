@@ -1,0 +1,209 @@
+{
+  "series": "C4-final-3",
+  "protocol": "Three 12-second foreground runs per published row; incomplete scopes listed separately. Medians of run statistics, ranges include all samples. Software rendering only.",
+  "rows": [
+    {
+      "key": "3/surface/medium",
+      "runs": 3,
+      "files": [
+        "1795451511615-6d96e882-6b1f-4ea7-9a2f-51553a379b9b.json",
+        "1795451525539-8187f855-a60b-4d6b-9a6f-55557bbfd7fd.json",
+        "1795451539450-cf0e9653-df27-49d4-92f6-2d2ac35747e5.json"
+      ],
+      "fps": 42.1,
+      "fpsRange": [
+        41.7,
+        42.2
+      ],
+      "p50Ms": 23.4,
+      "p95Ms": 28,
+      "p99Ms": 36.1,
+      "worstMs": 46.9,
+      "calls": [
+        57,
+        70
+      ],
+      "triangles": [
+        53130,
+        56788
+      ],
+      "chunks": [
+        328,
+        420
+      ],
+      "totalChunks": 420,
+      "finalChunkLod": {
+        "city": 1471,
+        "district": 0,
+        "building": 0
+      },
+      "endLod": {
+        "city": 1496,
+        "district": 0,
+        "building": 0
+      },
+      "lodCountKind": "Active, including transitions",
+      "selectedModelCount": 0,
+      "geometries": 58,
+      "textures": 7,
+      "canvas": [
+        956,
+        476
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "pixelRatio": 1,
+      "cameraPath": {
+        "target": [
+          2444.897622496115,
+          16.42211250731018,
+          1357.831736554856
+        ],
+        "radius": 3389.3529401904375,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    {
+      "key": "3/surface/low",
+      "runs": 3,
+      "files": [
+        "1795451582237-f7c960d3-9952-46b2-bbb8-5430c7cdb700.json",
+        "1795451595879-e2e2d10b-2a5c-482a-97ad-435e8681f96b.json",
+        "1795451610179-41d70184-03cb-48cd-9d7b-65157075b2bb.json"
+      ],
+      "fps": 53.9,
+      "fpsRange": [
+        53.3,
+        54.7
+      ],
+      "p50Ms": 18.4,
+      "p95Ms": 21.8,
+      "p99Ms": 24.8,
+      "worstMs": 38.3,
+      "calls": [
+        57,
+        70
+      ],
+      "triangles": [
+        53084,
+        56788
+      ],
+      "chunks": [
+        327,
+        420
+      ],
+      "totalChunks": 420,
+      "finalChunkLod": {
+        "city": 1471,
+        "district": 0,
+        "building": 0
+      },
+      "endLod": {
+        "city": 1496,
+        "district": 0,
+        "building": 0
+      },
+      "lodCountKind": "Active, including transitions",
+      "selectedModelCount": 0,
+      "geometries": 58,
+      "textures": 7,
+      "canvas": [
+        717,
+        357
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "pixelRatio": 0.75,
+      "cameraPath": {
+        "target": [
+          2444.897622496115,
+          16.42211250731018,
+          1357.831736554856
+        ],
+        "radius": 3389.3529401904375,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    {
+      "key": "3/surface/high",
+      "runs": 3,
+      "files": [
+        "1795452106085-e286bff1-682f-4725-81eb-0c56ccca9b4a.json",
+        "1795452120677-b75e7a17-a5d0-49b8-876f-1e65ab3ce66e.json",
+        "1795452135179-b524d227-2e68-4286-965c-33414663dd03.json"
+      ],
+      "fps": 28.8,
+      "fpsRange": [
+        26.9,
+        30.7
+      ],
+      "p50Ms": 33,
+      "p95Ms": 49.6,
+      "p99Ms": 56.4,
+      "worstMs": 78.5,
+      "calls": [
+        57,
+        70
+      ],
+      "triangles": [
+        53120,
+        56788
+      ],
+      "chunks": [
+        330,
+        420
+      ],
+      "totalChunks": 420,
+      "finalChunkLod": {
+        "city": 1471,
+        "district": 0,
+        "building": 0
+      },
+      "endLod": {
+        "city": 1496,
+        "district": 0,
+        "building": 0
+      },
+      "lodCountKind": "Active, including transitions",
+      "selectedModelCount": 0,
+      "geometries": 58,
+      "textures": 7,
+      "canvas": [
+        1195,
+        595
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "pixelRatio": 1.25,
+      "cameraPath": {
+        "target": [
+          2444.897622496115,
+          16.42211250731018,
+          1357.831736554856
+        ],
+        "radius": 3389.3529401904375,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    }
+  ],
+  "incomplete": [
+    {
+      "key": "3/Physlib/medium",
+      "validRuns": 0,
+      "excludedInterrupted": 1
+    }
+  ],
+  "diagnostics": []
+}

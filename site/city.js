@@ -6,15 +6,25 @@ import { buildFloorIndex } from './city-floors.js';
 import { validateDeclarations } from './declarations.js';
 import { createFloorRoom } from './floor-room.js';
 import { mathlibPipelines, relationGroups } from './city-relations.js';
+import {createGeographyMap} from './city-geography-map.js';
 
 const $ = selector => document.querySelector(selector);
 const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const sourceUrl = (source, path, line) => `${source.repository}/blob/${source.revision}/${path.split('/').map(encodeURIComponent).join('/')}${line ? `#L${line}` : ''}`;
 let city, physlib, mathlib, scene, radialMap, tree, selected, declarationPilot, declarationSnapshot, floorIndex, floorRoom;
+let geographyMiniMap;
 let navIndex=0, navMax=0, relationMode='imports',pipelinesVisible=true;
 const expanded = new Set(['Physlib','Physlib/ClassicalMechanics']);
+const urban=new URL(location.href).searchParams.get('layout')!=='legacy';
+function breadcrumbs(path=''){
+ let nav=$('#geography-breadcrumbs');if(!nav){nav=document.createElement('nav');nav.id='geography-breadcrumbs';nav.setAttribute('aria-label','Source geography');$('.title-block').append(nav);}
+ nav.replaceChildren();const home=document.createElement('button');home.textContent='Surface overview';home.onclick=()=>{if(showCity())scene.overview();breadcrumbs();};nav.append(home);
+ const parts=path.split('/').filter(Boolean);for(let i=0;i<parts.length;i++){const button=document.createElement('button');button.textContent=parts[i]==='@root'?'Root Modules':parts[i];const folder=parts.slice(0,i+1).join('/');button.onclick=()=>visitFolder(folder);nav.append(button);}
+}
 function ensureScene(){
-  if(!scene)scene=createCityScene($('#city-canvas'),city,floorIndex,id=>select(id),inspectFloor);
+  if(!scene){scene=createCityScene($('#city-canvas'),city,floorIndex,id=>select(id),inspectFloor);if(urban){
+    const mini=document.createElement('details');mini.className='geography-minimap';mini.open=false;const summary=document.createElement('summary');summary.textContent='City map · select a district';const map=document.createElement('div');mini.append(summary,map);$('#city-canvas').append(mini);geographyMiniMap=createGeographyMap(map,scene.manifest,visitFolder,id=>select(id));
+  }}
   return scene;
 }
 function showMap(underground=false){
@@ -44,6 +54,7 @@ function updateHistoryButtons(){$('#nav-back').disabled=navIndex<=0;$('#nav-forw
 function clearSelection({resetCamera=false}={}){selected=null;scene?.select(null);if(resetCamera)scene?.reset();radialMap?.setSelected(null);$('.canvas-wrap').classList.remove('map-selection');$('#current-selection').textContent='Select a file';$('#city-inspector').innerHTML='<div class="empty"><h2>Select a file.</h2><p>Explore its imports and recorded declarations.</p></div>';$('#floor-interior').hidden=true;floorRoom?.hide();renderExplorer();}
 function visitFolder(folder){
   if(!folder||!city)return;
+  if(urban){if(showCity()){scene.focusFolder(folder);breadcrumbs(folder);}const url=new URL(location.href);url.searchParams.delete('view');url.searchParams.set('folder',folder);navIndex++;navMax=navIndex;history.pushState({cityIndex:navIndex},'',url);updateHistoryButtons();return;}
   if($('#city-map').hidden||radialMap.underground!==folder.startsWith('Mathlib'))showMap(folder.startsWith('Mathlib'));
   if(selected)clearSelection();
   radialMap.setScope(folder);$('#search').value='';
@@ -133,6 +144,7 @@ function select(id,{focus=true,record=true,stayMap=!$('#city-map').hidden}={}) {
   const changed=selected!==id;
   selected=id;$('#floor-interior').hidden=true;floorRoom?.hide();const {node,imports,importers}=hood,source=node.library==='Mathlib'?mathlib.source:physlib.source;
   const folder=node.module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/');
+  if(urban){breadcrumbs(folder||node.id);geographyMiniMap?.setSelected(id);geographyMiniMap?.setScope(folder);}
   const parts=folder.split('/');parts.forEach((_,i)=>expanded.add(parts.slice(0,i+1).join('/')));
   const maps=node.library==='Physlib'?physlib.maps.filter(map=>map.references.includes(node.module.path)):[];
   const pipelineCount=mathlibPipelines(city,id).length;
@@ -168,12 +180,12 @@ $('#search').addEventListener('keydown',event=>{if(event.key==='Enter'){const fi
 document.addEventListener('keydown',event=>{if(event.key==='/'&&!event.ctrlKey&&!event.metaKey&&!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName)){event.preventDefault();$('#search').focus();}if(event.key==='Escape'){if(!$('#floor-interior').hidden){$('#floor-interior').hidden=true;floorRoom?.hide();}else if(document.activeElement===$('#search')){$('#search').value='';renderExplorer();}}});
 $('#nav-back').addEventListener('click',()=>history.back());
 $('#nav-forward').addEventListener('click',()=>history.forward());
-window.addEventListener('popstate',event=>{const params=new URL(location.href).searchParams,id=params.get('node'),folder=params.get('folder'),map=params.get('view')==='map'||!id;navIndex=Number.isInteger(event.state?.cityIndex)?event.state.cityIndex:0;if(map){showMap((folder||id||'').startsWith('Mathlib'));if(folder)radialMap.setScope(folder);}if(id&&city?.nodes.some(node=>node.id===id))select(id,{record:false,stayMap:map});else clearSelection({resetCamera:!map});updateHistoryButtons();});
+window.addEventListener('popstate',event=>{const params=new URL(location.href).searchParams,id=params.get('node'),folder=params.get('folder'),map=params.get('view')==='map'||(!urban&&!id);navIndex=Number.isInteger(event.state?.cityIndex)?event.state.cityIndex:0;if(map){showMap((folder||id||'').startsWith('Mathlib'));if(folder)radialMap.setScope(folder);}if(id&&city?.nodes.some(node=>node.id===id))select(id,{record:false,stayMap:map});else if(!urban)clearSelection({resetCamera:!map});if(urban&&showCity()){if(folder){scene.focusFolder(folder);breadcrumbs(folder);}else if(!id){scene.overview();breadcrumbs();}}updateHistoryButtons();});
 document.querySelectorAll('[data-move]').forEach(button=>button.addEventListener('click',()=>{const direction={forward:[8,0],back:[-8,0],left:[0,-8],right:[0,8]}[button.dataset.move];scene?.move(...direction);}));
-$('#reset').addEventListener('click',()=>showMap(false));
+$('#reset').addEventListener('click',()=>{if(urban){if(showCity())scene.overview();breadcrumbs();}else showMap(false);});
 $('#focus-selected').addEventListener('click',()=>{if(selected&&showCity()){select(selected,{focus:true,record:false,stayMap:false});}});
 $('#city-canvas').addEventListener('city-layer-change',event=>{const below=event.detail.underground;$('#toggle-layer').setAttribute('aria-pressed',String(below));$('#toggle-layer').textContent=below?'Return to surface':'Explore Mathlib below';});
-$('#overview').addEventListener('click',()=>showMap($('#toggle-layer').getAttribute('aria-pressed')==='true'));
+$('#overview').addEventListener('click',()=>{if(urban){if(showCity())scene.overview();breadcrumbs();}else showMap($('#toggle-layer').getAttribute('aria-pressed')==='true');});
 $('#toggle-layer').addEventListener('click',event=>{const below=event.currentTarget.getAttribute('aria-pressed')!=='true';if(!$('#city-map').hidden)showMap(below);else scene?.setLayer(below);event.currentTarget.setAttribute('aria-pressed',String(below));event.currentTarget.textContent=below?'Return to surface':'Explore Mathlib below';});
 $('#quality').addEventListener('change',event=>scene?.setQuality(event.target.value));
 
@@ -191,10 +203,15 @@ try {
   tree=makeFolderTree(city.nodes);$('#count').textContent=city.nodes.length;populateAreas();
   $('#city-counts').textContent=`${city.nodes.filter(n=>n.library==='Physlib').length} Physlib-family files · ${city.mathlibModules} directly imported Mathlib files · ${city.edges.length} shown imports`;
   $('#snapshot').innerHTML=`Physlib <a href="${p.source.repository}/commit/${p.source.revision}">${esc(p.source.revision.slice(0,10))} ↗</a><br>Mathlib <a href="${m.source.repository}/commit/${m.source.revision}">${esc(m.source.revision.slice(0,10))} ↗</a><br>${esc(p.source.toolchain)}`;
-  renderExplorer();radialMap=createRadialMap($('#city-map'),city,visitFolder,id=>select(id,{stayMap:true}));$('#loading').hidden=true;
+  renderExplorer();radialMap=urban&&!((new URL(location.href).searchParams.get('folder')||new URL(location.href).searchParams.get('node')||'').startsWith('Mathlib'))?createGeographyMap($('#city-map'),ensureScene().manifest,visitFolder,id=>select(id,{stayMap:true})):createRadialMap($('#city-map'),city,visitFolder,id=>select(id,{stayMap:true}));$('#loading').hidden=true;
   const params=new URL(location.href).searchParams,requested=params.get('node'),folder=params.get('folder'),mapView=params.get('view')==='map';
   if(mapView){showMap((folder||requested||'').startsWith('Mathlib'));if(folder)radialMap.setScope(folder);}
   if(requested&&city.nodes.some(node=>node.id===requested))select(requested,{focus:true,record:false,stayMap:mapView});
   else if(requested){const map=requested.startsWith('map:')?p.maps.find(item=>item.path===requested.slice(4)):null;const module=m.modules.find(item=>item.id===requested);const link=map?sourceUrl(p.source,map.path):module?sourceUrl(m.source,module.path):null;$('#city-inspector').innerHTML=`<div class="empty"><h2>Not in this city</h2><p>${esc(requested)} is not a displayed file. Search the explorer for another file.${link?` <a href="${link}" target="_blank" rel="noreferrer">Open its source ↗</a>`:''}</p></div>`;}
-  if(!mapView&&(!requested||!city.nodes.some(node=>node.id===requested)))showMap(false);
+  if(!mapView&&(!requested||!city.nodes.some(node=>node.id===requested))){if(urban){if(showCity())scene.overview();breadcrumbs();if(folder)visitFolder(folder);}else showMap(false);}
+  if(['units','procedural'].includes(params.get('district'))&&!mapView){
+    if(!requested)select('Physlib.Units.ISQDimensionBase',{focus:false,record:false,stayMap:false});
+    if(showCity())scene.focusShowcaseView(params.get('districtView')||'overview');
+  }
+  if(urban&&folder&&!mapView&&showCity()){scene.focusFolder(folder);breadcrumbs(folder);}
 } catch(error) {$('#loading').innerHTML=`<div class="error">Could not load city: ${esc(error.message)}</div>`;}

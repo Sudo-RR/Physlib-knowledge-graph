@@ -1,0 +1,91 @@
+{
+  "frames": 507,
+  "durationMs": 12010,
+  "fps": 42.2,
+  "p50Ms": 23.5,
+  "p95Ms": 27.6,
+  "p99Ms": 29.7,
+  "maxMs": 36.6,
+  "calls": [
+    57,
+    70
+  ],
+  "geometries": 58,
+  "textures": 7,
+  "foregroundFrames": 507,
+  "allFramesForeground": true,
+  "benchmarkSeries": "C4-final-3",
+  "selectedModule": null,
+  "cameraPath": {
+    "target": [
+      2444.897622496115,
+      16.42211250731018,
+      1357.831736554856
+    ],
+    "radius": 3389.3529401904375,
+    "steps": 20,
+    "stepMs": 600
+  },
+  "benchmarkScope": "surface",
+  "inspectionLod": null,
+  "modularActiveLod": {
+    "city": 25,
+    "district": 0,
+    "building": 0
+  },
+  "selectedModelCount": 0,
+  "layoutVersion": 3,
+  "activeChunks": 401,
+  "totalChunks": 420,
+  "chunkLod": {
+    "city": 1471,
+    "district": 0,
+    "building": 0
+  },
+  "profile": "normal",
+  "lod": {
+    "city": 25,
+    "district": 0,
+    "building": 0
+  },
+  "lodTransitions": 0,
+  "phaseTimings": {
+    "updateMs": {
+      "median": 0.8,
+      "p95": 2.1
+    },
+    "renderSubmitMs": {
+      "median": 4.3,
+      "p95": 5.9
+    },
+    "overlayMs": {
+      "median": 0.4,
+      "p95": 0.8
+    },
+    "finishWaitMs": {
+      "median": 0,
+      "p95": 0
+    }
+  },
+  "gpuTimerAvailable": false,
+  "activeChunkRange": [
+    332,
+    420
+  ],
+  "triangleRange": [
+    53166,
+    56788
+  ],
+  "mode": null,
+  "quality": "medium",
+  "canvasWidth": 956,
+  "canvasHeight": 476,
+  "viewportWidth": 1536,
+  "viewportHeight": 791,
+  "pixelRatio": 1,
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+  "gpu": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "firstVisibleMs": 1678,
+  "completedMs": 1678,
+  "finalFrameTriangles": 55764
+}

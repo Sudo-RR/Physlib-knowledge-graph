@@ -1,0 +1,59 @@
+{
+  "frames": 334,
+  "durationMs": 12030,
+  "fps": 27.8,
+  "p50Ms": 35,
+  "p95Ms": 50,
+  "p99Ms": 56.5,
+  "maxMs": 81.3,
+  "calls": [
+    68,
+    92
+  ],
+  "geometries": 48,
+  "textures": 9,
+  "foregroundFrames": 334,
+  "allFramesForeground": true,
+  "profile": "normal",
+  "lod": {
+    "city": 3,
+    "district": 21,
+    "building": 1
+  },
+  "lodTransitions": 24,
+  "phaseTimings": {
+    "updateMs": {
+      "median": 0.3,
+      "p95": 1.7
+    },
+    "renderSubmitMs": {
+      "median": 3.1,
+      "p95": 5.3
+    },
+    "overlayMs": {
+      "median": 5.1,
+      "p95": 16.5
+    },
+    "finishWaitMs": {
+      "median": 0,
+      "p95": 0
+    }
+  },
+  "gpuTimerAvailable": false,
+  "triangleRange": [
+    21888,
+    35774
+  ],
+  "mode": "units",
+  "quality": "medium",
+  "canvasWidth": 956,
+  "canvasHeight": 505,
+  "viewportWidth": 1536,
+  "viewportHeight": 791,
+  "pixelRatio": 1,
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/157.0.0.0 Safari/537.36",
+  "gpu": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+  "firstVisibleMs": 1872,
+  "completedMs": 1872,
+  "finalFrameTriangles": 22208
+}

@@ -60,3 +60,15 @@
 .city-view .app:has(.canvas-wrap.map-open) .relation-controls{display:none}
 .radial-file.selected{fill:#26384b;stroke:#fff;stroke-width:2}
 @media(max-width:1100px){.city-view .app:has(.canvas-wrap.map-open.map-selection){grid-template-columns:220px minmax(0,1fr) 260px}}
+.city-asset-status{position:absolute;bottom:7px;left:8px;right:8px;z-index:5;padding:6px 9px;background:#fff;color:#182b39;font:11px/1.4 monospace;pointer-events:none}
+.city-district-controls{position:absolute;top:43px;left:9px;display:flex;gap:4px;z-index:6;flex-wrap:wrap;max-width:calc(100% - 20px)}
+.city-district-controls button{background:#153b43;color:#e8e6d7;border:1px solid #8db5ad;padding:6px 8px;font:10px monospace;cursor:pointer}
+.city-district-controls .city-benchmark-download{background:#153b43;color:#e8e6d7;border:1px solid #8db5ad;padding:6px 8px;font:10px monospace;text-decoration:underline}
+.city-district-controls button:focus-visible{outline:2px solid #b87e4d;outline-offset:2px}
+.city-skywalk-info{position:absolute;right:10px;bottom:65px;max-width:260px;padding:8px 10px;background:#153b43ed;color:#e8e6d7;border-left:3px solid #b87e4d;font:10px/1.6 monospace;pointer-events:none}
+.city-skywalk-info strong{color:#9fd4cf}
+.city-benchmark-result{position:absolute;left:9px;right:9px;top:82px;background:#153b43;color:#e8e6d7;font:10px/1.5 monospace;z-index:6;pointer-events:none}
+.city-benchmark-details{position:absolute;left:9px;top:104px;z-index:8;max-width:calc(100% - 18px);max-height:65%;overflow:auto;background:#153b43;color:#e8e6d7;padding:5px;font:10px/1.5 monospace}
+.city-benchmark-details pre{white-space:pre-wrap;max-width:620px}
+
+#geography-breadcrumbs{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}#geography-breadcrumbs button{font-size:10px;background:#fff;border:1px solid #b6c4bd;color:#153b43;padding:4px 7px}.geography-minimap{position:absolute;right:10px;top:92px;width:184px;background:#fffffff0;border:1px solid #83988f;z-index:3;padding:5px;font-size:9px}.geography-minimap svg{width:100%;height:106px;display:block}.geography-minimap [role=button]{cursor:pointer}.geography-minimap [role=button]:hover{stroke:#002fa7;stroke-width:3}@media(max-width:760px){.geography-minimap{width:120px;top:110px}.geography-minimap svg{height:70px}}
