@@ -48,7 +48,7 @@ function tower(parent,b,x,z,c){
   for(const sx of [-.3,.3])block(g,sx*w,h*.43,w*.43,.4,h*.56,.45,accent);
  }
  // Canonical selection geometry stays invisible; decorative meshes never create semantic nodes.
- const pick=block(g,0,h/2,0,w*1.35,h,w*1.35,new THREE.MeshBasicMaterial({visible:false}));
+ const pick=block(g,0,h/2,0,w*1.35,h,w*1.35,new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,colorWrite:false}));
  pick.userData={kind:'building',id:b.id,complex:b.complexId};
  return {group:g,pick,position:new THREE.Vector3(x,h*.75,z),data:b};
 }
@@ -57,7 +57,7 @@ function station(parent,x,z,id){
  block(g,0,2,0,17,4,13,steel);block(g,0,7,0,12,8,10,material('#3bd3c6',true));
  for(const xx of [-4,0,4])block(g,xx,13,0,2,10,2,cream,new THREE.CylinderGeometry(.5,.5,1,9));
  const ring=new THREE.Mesh(new THREE.TorusGeometry(7,.6,7,22),new THREE.MeshBasicMaterial({color:cyan}));ring.position.y=17;ring.rotation.x=Math.PI/2;g.add(ring);
- const pick=block(g,0,10,0,19,21,17,new THREE.MeshBasicMaterial({visible:false}));pick.userData={kind:'station',complex:id};
+ const pick=block(g,0,10,0,19,21,17,new THREE.MeshBasicMaterial({transparent:true,opacity:0,depthWrite:false,colorWrite:false}));pick.userData={kind:'station',complex:id};
  return {group:g,pick,position:new THREE.Vector3(x,9,z)};
 }
 function createView(host,model,selectCallback){
