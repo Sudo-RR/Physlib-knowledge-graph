@@ -39,3 +39,9 @@ test('import-only source modules remain represented even with zero declarations'
  const m=buildCityV2(graph,declarations);
  assert(m.complexes.every(c=>c.buildings.some(b=>b.role==='provisional')));
 });
+
+test('world contains all areas and preserves cross-borough imports',()=>{
+ const other={id:'Physlib.QuantumMechanics.Basic',path:'Physlib/QuantumMechanics/Basic.lean',lineCount:10,imports:[{module:graph.modules[0].id,line:1}]};
+ const g={...graph,modules:[...graph.modules,other]};const m=buildCityV2(g,null,{area:'all'});
+ assert.equal(m.complexes.flatMap(c=>c.moduleIds).length,g.modules.length);assert(m.complexes.some(c=>c.area==='QuantumMechanics'));assert(m.edges.some(e=>e.imports.some(i=>i.from===other.id)));
+});
