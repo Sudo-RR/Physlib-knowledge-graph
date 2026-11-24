@@ -8,3 +8,6 @@ The partition check reconciles area and samples interior grid points, validates 
 
 ## Review revision: atomic-age skyline
 User requested north-up as default and buildings visible immediately. The preview now opens in a north-up orthographic 3D view (tilted from vertical to reveal height), with flat plan and oblique orbit controls. The decorative massing is an explicitly labelled art study on authored frontage axes, not actual mathematical placement or approved G2 streets. No source links, dependencies or role classification are inferred from the sample towers. The production City is unchanged. The final source-linked placement remains G2/G3. 
+
+## Landing page decision — 24 November 2026
+User explicitly requested G1 as default. Package index.html from G1; retain source-linked city-v2.html and city-c4.html with prominent navigation. Preserve old source explorer deep links. G1 remains an illustrative skyline study; G2–G5 acceptance and actual browser evidence are outstanding.

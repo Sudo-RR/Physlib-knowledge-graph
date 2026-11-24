@@ -31,7 +31,7 @@ for(const file of ['style.css','city.css']){
   await writeFile(path.join(root,name),data);
 }
 await writeFile(path.join(root,'city-c4.html'),html.replaceAll('href="index.html"','href="city-c4.html"'));
- // City v2 is the approved default; retain its explicit URL as an alias.
+ // Retain the source-backed City v2 as a separate explorer.
  const v2Bundle=await readFile(path.join(workspace,'site','assets','city-v2-bundle.js'));
  const v2Hash=createHash('sha256').update(v2Bundle).digest('hex').slice(0,12);
  const v2Name=`city-v2-bundle.${v2Hash}.js`;
@@ -40,15 +40,17 @@ await writeFile(path.join(root,'city-c4.html'),html.replaceAll('href="index.html
  if(!v2Html.includes('assets/city-v2-bundle.js'))throw Error('City v2 bundle reference missing');
  v2Html=v2Html.replace('assets/city-v2-bundle.js',`assets/${v2Name}`);
  await writeFile(path.join(root,'city-v2.html'),v2Html);
- await writeFile(path.join(root,'index.html'),v2Html);
 
-// Standalone G1 review page, leaving the production renderer unchanged.
+// User-approved G1 landing page; retain its explicit URL as an alias.
 const g1Bundle=await readFile(path.join(workspace,'site','assets','geneva-g1-bundle.js'));
 const g1Name='geneva-g1-bundle.'+createHash('sha256').update(g1Bundle).digest('hex').slice(0,12)+'.js';
 await writeFile(path.join(root,'assets',g1Name),g1Bundle);
 const g1Html=await readFile(path.join(workspace,'site','geneva-g1.html'),'utf8');
 if(!g1Html.includes('assets/geneva-g1-bundle.js'))throw Error('G1 bundle reference missing');
-await writeFile(path.join(root,'geneva-g1.html'),g1Html.replace('assets/geneva-g1-bundle.js','assets/'+g1Name));
+const landingHtml=g1Html.replace('assets/geneva-g1-bundle.js','assets/'+g1Name);
+await writeFile(path.join(root,'geneva-g1.html'),landingHtml);
+await writeFile(path.join(root,'index.html'),landingHtml);
+if(!landingHtml.includes('href="city-v2.html"')||!v2Html.includes('href="city-c4.html"'))throw Error('Missing source explorer or legacy fallback navigation');
 
 // Optional declaration snapshots are included only when deliberately generated.
 for(const file of ['declarations.json','city-declarations.json']) {

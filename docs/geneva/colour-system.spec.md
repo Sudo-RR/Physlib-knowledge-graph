@@ -27,3 +27,5 @@ User-selected reference: [Imetomi/retro-futuristic-ui-design](https://github.com
 | glass | #687f76 | Muted glazing |
 
 Production v2 and G1 use dark CRT panels and controls, amber headings and links, neutral body text, silver hardware and olive-green terrain. Legacy C.4 retains its light hardware-housing presentation and original rollback scene; its interface adopts orange accents and dark masthead. Redirect pages also use the dark scheme. Subject colours and three pipe channels remain unchanged so mathematical meaning is not replaced by branding. G1 art-only towers use neutral facade variations; real subject colours are assigned later in G3. Daylight/golden-hour sky retains warm colours; not an amber monochrome city. No imported UI code, fonts, images, or external runtime dependency. Palette values are drawn from the reference and adapted for accessibility; no scanlines, blinking, fake boot delay or distortion over data. Validate actual screenshots and control contrast in G5.
+
+Landing page update: Geneva G1 is now the default entry; the existing source-linked v2 and C.4 remain separately accessible.

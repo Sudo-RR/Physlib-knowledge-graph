@@ -3,6 +3,8 @@ on:
   pull_request:
     paths:
       - 'site/city-v2*'
+      - 'site/geneva-g1*'
+      - 'test/geneva-g1*'
       - 'test/city-v2*'
       - 'package.json'
       - 'scripts/package-site.mjs'
@@ -34,9 +36,12 @@ jobs:
           test -f dist/site/index.html
           test -f dist/site/city-v2.html
           test -f dist/site/city-c4.html
-          cmp dist/site/index.html dist/site/city-v2.html
+          test -f dist/site/geneva-g1.html
+          cmp dist/site/index.html dist/site/geneva-g1.html
           grep -q 'city-bundle\.' dist/site/city-c4.html
           grep -q 'href="city-c4.html"' dist/site/index.html
-          grep -q 'city-v2-bundle\.' dist/site/index.html
+          grep -q 'geneva-g1-bundle\.' dist/site/index.html
+          grep -q 'href="city-v2.html"' dist/site/index.html
+          ls dist/site/assets/geneva-g1-bundle.*.js >/dev/null
           grep -q 'city-v2-bundle\.' dist/site/city-v2.html
           ls dist/site/assets/city-v2-bundle.*.js >/dev/null

@@ -74,7 +74,7 @@ World/district views aggregate recorded edges and suppress clutter. Selection ex
 - A classified building must record its constituent declaration IDs and provenance; no declaration should silently vanish because it is unknown. A declaration belongs to one primary architectural building (allow cross-references).
 - Unknown metadata displays a construction site, with source-module fallback and a clear coverage indicator. Existing files remain navigable.
 - Power stations and aggregator edges are marked as *visual aggregates*, never passed off as source declarations.
-- City v2 is the current production default; C.4 is retained as a legacy fallback. The Geneva redesign must pass its own preview and release gates before promotion.
+- The user-approved Geneva G1 architectural study is the public landing page. Source-linked City v2 remains at city-v2.html and C.4 at city-c4.html. The source-linked Geneva redesign must still pass its preview and release gates.
 
 ## Initial pilot and acceptance
 
