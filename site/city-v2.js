@@ -12,7 +12,7 @@ const cyan='#3ce4d5',pink='#ef5d9f',amber='#ffc16f',geom=new THREE.BoxGeometry(1
 const clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
 const hash=s=>{let v=2166136261;for(let i=0;i<s.length;i++)v=Math.imul(v^s.charCodeAt(i),16777619);return (v>>>0)/4294967295;};
 const material=(c,emissive=false)=>new THREE.MeshStandardMaterial({color:c,roughness:.63,metalness:.12,emissive:emissive?c:'#000000',emissiveIntensity:emissive?.22:0});
-const frame=material('#e7dccb'),glass=material('#2d667b'),steel=material('#5f8092'),cream=material('#fff1d0'),scaffold=material('#f0b56c');
+const frame=material('#d0d0d0'),glass=material('#506e6b'),steel=material('#909090'),cream=material('#f2e4cb'),scaffold=material('#ff9a4b');
 const materials=colors.map(c=>material(c));
 function block(parent,x,y,z,w,h,d,m,geometry=geom){const o=new THREE.Mesh(geometry,m);o.position.set(x,y,z);o.scale.set(w,h,d);parent.add(o);return o;}
 function path(parent,points,color,width=.4){if(points.length<2)return;const curve=new THREE.CatmullRomCurve3(points);const t=new THREE.Mesh(new THREE.TubeGeometry(curve,25,width,6,false),new THREE.MeshBasicMaterial({color}));parent.add(t);return t;}
@@ -66,9 +66,9 @@ function station(parent,x,z,id){
  return {group:g,pick,position:new THREE.Vector3(x,9,z)};
 }
 function createView(host,model,selectCallback){
- const scene=new THREE.Scene(),baseFacades=makeFacadeMaterials(THREE),facades=colors.map(tint=>baseFacades.map(base=>{const m=base.clone();m.color.lerp(new THREE.Color(tint),.52);return m;}));const sky=document.createElement('canvas');sky.width=2;sky.height=512;const ctx=sky.getContext('2d'),gradient=ctx.createLinearGradient(0,0,0,512);gradient.addColorStop(0,'#88abd5');gradient.addColorStop(.5,'#efbfa7');gradient.addColorStop(1,'#ffe6cc');ctx.fillStyle=gradient;ctx.fillRect(0,0,2,512);scene.background=new THREE.CanvasTexture(sky);scene.background.colorSpace=THREE.SRGBColorSpace;const worldFog=new THREE.FogExp2('#eadccc',.00023);scene.fog=worldFog;
- scene.add(new THREE.HemisphereLight('#ffeacb','#587487',2.15));
- const sun=new THREE.DirectionalLight('#ffc18d',3.2);sun.position.set(-180,240,100);scene.add(sun);
+ const scene=new THREE.Scene(),baseFacades=makeFacadeMaterials(THREE),facades=colors.map(tint=>baseFacades.map(base=>{const m=base.clone();m.color.lerp(new THREE.Color(tint),.52);return m;}));const sky=document.createElement('canvas');sky.width=2;sky.height=512;const ctx=sky.getContext('2d'),gradient=ctx.createLinearGradient(0,0,0,512);gradient.addColorStop(0,'#a6a8a0');gradient.addColorStop(.5,'#d6a078');gradient.addColorStop(1,'#f1d3a4');ctx.fillStyle=gradient;ctx.fillRect(0,0,2,512);scene.background=new THREE.CanvasTexture(sky);scene.background.colorSpace=THREE.SRGBColorSpace;const worldFog=new THREE.FogExp2('#d8c6aa',.00023);scene.fog=worldFog;
+ scene.add(new THREE.HemisphereLight('#ffe5c1','#5f6c58',2.15));
+ const sun=new THREE.DirectionalLight('#ffb879',3.2);sun.position.set(-180,240,100);scene.add(sun);
  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;host.append(renderer.domElement);
  const camera=new THREE.PerspectiveCamera(46,1,.5,50000);const mapCamera=new THREE.OrthographicCamera(-1,1,1,-1,.1,50000);
  const root=new THREE.Group(),connections=new THREE.Group();scene.add(root,connections);
@@ -77,12 +77,12 @@ function createView(host,model,selectCallback){
  const places=new Map([...geography.places].map(([id,p])=>[id,local(p)]));
  const boroughs=geography.boroughs.map(local),sectors=geography.sectors.map(local);
  const maxX=geography.maxX,maxZ=geography.maxZ;
- const bounds=Math.max(maxX,maxZ),field=new THREE.Mesh(new THREE.PlaneGeometry(bounds*7,bounds*7),material('#b2b699'));field.rotation.x=-Math.PI/2;field.position.y=-.3;scene.add(field);
+ const bounds=Math.max(maxX,maxZ),field=new THREE.Mesh(new THREE.PlaneGeometry(bounds*7,bounds*7),material('#969e80'));field.rotation.x=-Math.PI/2;field.position.y=-.3;scene.add(field);
  const sites=new Map(),structures=new Map(),powers=new Map(),labels=[];
- const roadway=material('#858581'),boroughLabels=[],boroughOutlines=[],sectorLabels=[];
+ const roadway=material('#77766d'),boroughLabels=[],boroughOutlines=[],sectorLabels=[];
  const civic=new THREE.Group();root.add(civic);
- const roadStripe=material('#e5ded0'),treeGeometry=new THREE.IcosahedronGeometry(1,0),treeMaterial=material('#667f61'),trunks=material('#9c8468');
- const paving=material('#d3c9b7'),park=material('#899b76'),stone=material('#c8c1b1'),water=material('#438c9d'),shore=material('#9eab99');
+ const roadStripe=material('#ded6bd'),treeGeometry=new THREE.IcosahedronGeometry(1,0),treeMaterial=material('#4a5a3a'),trunks=material('#8a765e');
+ const paving=material('#c9c4b3'),park=material('#657b4e'),stone=material('#d0d0d0'),water=material('#4e7c80'),shore=material('#aaa89b');
  const civicBatches=new Map(),dummy=new THREE.Object3D();
  function civicBox(x,y,z,w,h,d,m,angle=0){const key=m.uuid;if(!civicBatches.has(key))civicBatches.set(key,{m,items:[]});dummy.position.set(x,y,z);dummy.rotation.set(0,angle,0);dummy.scale.set(w,h,d);dummy.updateMatrix();civicBatches.get(key).items.push(dummy.matrix.clone());}
  function road(a,b,width=9,y=.48,m=roadway){const length=Math.hypot(b.x-a.x,b.z-a.z);if(length<.01)return;civicBox((a.x+b.x)/2,y,(a.z+b.z)/2,width,.22,length+width*.25,m,Math.atan2(b.x-a.x,b.z-a.z));}
@@ -117,7 +117,7 @@ function createView(host,model,selectCallback){
  }
  function mapLabel(text,sub,x,z,size,y){
   const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=192;
-  const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.fillStyle='#183b4f';ctx.font='bold 72px Arial';ctx.fillText(text,512,86);ctx.font='36px Arial';ctx.fillText(sub,512,140);
+  const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.fillStyle='#262c21';ctx.font='bold 72px Arial';ctx.fillText(text,512,86);ctx.font='36px Arial';ctx.fillText(sub,512,140);
   const label=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));label.position.set(x,y,z);label.scale.set(size,size*.1875,1);root.add(label);sectorLabels.push(label);
  }
  for(const sector of sectors)if(sector.count)mapLabel(sector.name,sector.subtitle,sector.x,sector.z,Math.min(460,maxX*.15),130);
@@ -128,7 +128,7 @@ function createView(host,model,selectCallback){
   const tint=subjectColor(b.area),w=b.w/2,d=b.d/2;
   const corners=[[-w+3,-d+3],[w-3,-d+3],[w-3,d-3],[-w+3,d-3],[-w+3,-d+3]];
   const outline=new THREE.Line(new THREE.BufferGeometry().setFromPoints(corners.map(([x,z])=>new THREE.Vector3(b.x+x,1.1,b.z+z))),new THREE.LineBasicMaterial({color:tint,transparent:true,opacity:.85,depthTest:false}));outline.visible=false;root.add(outline);boroughOutlines.push(outline);
-  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=128;const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.font='bold 54px Arial';ctx.fillStyle='#233f56';ctx.fillText(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),512,77);ctx.fillStyle=tint;ctx.fillRect(260,92,504,9);
+  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=128;const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.font='bold 54px Arial';ctx.fillStyle='#263223';ctx.fillText(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),512,77);ctx.fillStyle=tint;ctx.fillRect(260,92,504,9);
   const label=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));label.position.set(b.x,105,b.z);label.scale.set(Math.min(340,b.w*.8),Math.min(42,b.w*.1),1);root.add(label);boroughLabels.push(label);
  }
  model.complexes.forEach((complex,i)=>{
@@ -154,7 +154,7 @@ function createView(host,model,selectCallback){
    }
   }
   const canvas=document.createElement('canvas');canvas.width=512;canvas.height=80;
-  const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.font='bold 25px Arial';ctx.fillStyle='#233f56';ctx.fillText(complex.id.split('/').at(-1).replace('@root','Root'),256,48);
+  const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.font='bold 25px Arial';ctx.fillStyle='#263223';ctx.fillText(complex.id.split('/').at(-1).replace('@root','Root'),256,48);
   const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));sprite.position.set(xx,3,zz+53);sprite.scale.set(59,9,1);root.add(sprite);labels.push(sprite);
  });
  for(const {m,items} of civicBatches.values()){const batch=new THREE.InstancedMesh(geom,m,items.length);items.forEach((matrix,i)=>batch.setMatrixAt(i,matrix));batch.instanceMatrix.needsUpdate=true;civic.add(batch);}

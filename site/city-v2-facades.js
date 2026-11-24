@@ -1,14 +1,15 @@
 // Vendored from https://github.com/trinhtanphat/aeroview-coast-3d/blob/85124ca1666ad890810db0d3f39c8aecbd5616f4/src/coastal-visuals.js
 // MIT; Copyright (c) 2026 trinhtanphat. See assets/licenses/aeroview-mit.txt.
+// Palette adapted to the PhysLib cassette-futurist art direction (see docs/geneva/colour-system.spec.md).
 // Procedural facade textures for the simulated city.
 // Entirely original pixels generated in the browser: no satellite imagery or Google assets.
 export function makeFacadeMaterials(THREE){
  const palettes=[
-  {frame:'#d4d8d6',glass:'#80aab4',shade:'#365b70',reflect:'#f0f5f1'},
-  {frame:'#d7cbb9',glass:'#a4c5d0',shade:'#42617b',reflect:'#fbf1e3'},
-  {frame:'#b3c9ce',glass:'#4380a2',shade:'#153d62',reflect:'#c8eef4'},
-  {frame:'#e4ded0',glass:'#7fafbb',shade:'#406f89',reflect:'#f6f6df'},
-  {frame:'#d5d5c8',glass:'#789c9c',shade:'#375d67',reflect:'#cce8df'}
+  {frame:'#d0d0d0',glass:'#8c9d8b',shade:'#405b55',reflect:'#e8dcc6'},
+  {frame:'#b8b8b8',glass:'#a2ae9b',shade:'#52674e',reflect:'#ffcf9d'},
+  {frame:'#a0a0a0',glass:'#64827a',shade:'#354525',reflect:'#d2ddd1'},
+  {frame:'#e8e8e8',glass:'#91a092',shade:'#536f66',reflect:'#f3d7b1'},
+  {frame:'#d0d0d0',glass:'#8c9b74',shade:'#4a5a3a',reflect:'#dce3c6'}
  ];
  let seed=44213;
  const random=()=>((seed=(Math.imul(1664525,seed)+1013904223)>>>0)/4294967296);
@@ -51,7 +52,7 @@ export function makeFacadeMaterials(THREE){
   tex.wrapS=THREE.RepeatWrapping;
   tex.wrapT=THREE.RepeatWrapping;
   return new THREE.MeshStandardMaterial({
-    color:'#eaf1f1',map:tex,roughness:style===2?.20:.45,
+    color:'#e8e8e8',map:tex,roughness:style===2?.20:.45,
     metalness:style===2?.55:.24,
     envMapIntensity:.55
   });
