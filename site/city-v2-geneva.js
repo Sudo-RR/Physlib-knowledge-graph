@@ -18,7 +18,7 @@ export function genevaLayout(complexes){
  const rhone=x=>-width*.07*Math.sin(x/width*2.8)+24*Math.sin(x/width*8.4)-.035*x;
  const mainRows=Math.max(1,groups[1].rows);
  const gap=RHONE+ARVE+2*QUAY+2*SETBACK+(mainRows-1)*PITCH+50;
- const arve=x=>rhone(x)+gap*Math.max(0,Math.min(1,(x-confluence)/(confluence*-1-core))) *(1+.065*Math.sin(x/width*5)) + Math.max(0,x-core)*.22;
+ const arve=x=>rhone(x)+gap*Math.max(0,Math.min(1,(x-confluence)/(confluence*-1-core))) *(1+.065*Math.sin(x/width*5)/Math.max(1,mainRows)) + Math.max(0,x-core)*.22;
  // A lake-like widening at the eastern edge, beyond the developed core.
  const rhoneWidth=x=>RHONE+Math.max(0,x-core-30)*.28;
  const arveWidth=x=>ARVE+5*Math.sin(x/width*4);
@@ -65,7 +65,7 @@ export function genevaLayout(complexes){
   const x=width*fraction;bridges.push({river:'Arve',x,z1:arve(x)-arveWidth(x)-QUAY,z2:arve(x)+arveWidth(x)+QUAY,width:13});
  }
  const points=[...places.values()];
- const minX=Math.min(-width/2,...points.map(p=>p.x-80)),maxX=Math.max(width/2,...points.map(p=>p.x+80));
+ const minX=Math.min(confluence-100,...points.map(p=>p.x-80)),maxX=Math.max(width/2+220,...points.map(p=>p.x+80));
  const minZ=Math.min(-200,...points.map(p=>p.z-80)),maxZ=Math.max(gap+200,...points.map(p=>p.z+80));
  const center={x:(minX+maxX)/2,z:(minZ+maxZ)/2};
  return {places,boroughs,sectors,streets,bridges,width,core,confluence,rhone,arve,rhoneWidth,arveWidth,center,maxX:maxX-minX,maxZ:maxZ-minZ,minX,minZ,extentX:maxX,extentZ:maxZ};

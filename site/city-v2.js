@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {makeFacadeMaterials} from './city-v2-facades.js';
+import {genevaLayout} from './city-v2-geneva.js';
 import {buildCityV2,roleNames,roles,neighborhood,stationData} from './city-v2-model.js';
 
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -71,31 +72,58 @@ function createView(host,model,selectCallback){
  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;host.append(renderer.domElement);
  const camera=new THREE.PerspectiveCamera(46,1,.5,50000);const mapCamera=new THREE.OrthographicCamera(-1,1,1,-1,.1,50000);
  const root=new THREE.Group(),connections=new THREE.Group();scene.add(root,connections);
- const total=model.complexes.length,pitch=132;
- const groups=new Map();for(const c of model.complexes){if(!groups.has(c.area))groups.set(c.area,[]);groups.get(c.area).push(c);}
- const places=new Map(),boroughs=[];let cursorX=0,cursorZ=0,rowDepth=0;
- const worldWidth=Math.max(360,Math.sqrt(total)*pitch*1.55);
- for(const [area,cs] of [...groups].sort((a,b)=>b[1].length-a[1].length||a[0].localeCompare(b[0]))){
-  const cols=Math.ceil(Math.sqrt(cs.length*1.3)),rows=Math.ceil(cs.length/cols),w=cols*pitch+24,d=rows*pitch+24;
-  if(cursorX+w>worldWidth&&cursorX>0){cursorX=0;cursorZ+=rowDepth+16;rowDepth=0;}
-  boroughs.push({area,x:cursorX+w/2,z:cursorZ+d/2,w,d});
-  cs.forEach((c,i)=>places.set(c.id,{x:cursorX+12+(i%cols+.5)*pitch,z:cursorZ+12+(Math.floor(i/cols)+.5)*pitch}));
-  cursorX+=w+16;rowDepth=Math.max(rowDepth,d);
- }
- const maxX=Math.max(160,...boroughs.map(b=>b.x+b.w/2)),maxZ=Math.max(160,...boroughs.map(b=>b.z+b.d/2));
- for(const p of places.values()){p.x-=maxX/2;p.z-=maxZ/2;}for(const b of boroughs){b.x-=maxX/2;b.z-=maxZ/2;}
+ const geography=genevaLayout(model.complexes),origin=geography.center;
+ const local=p=>({...p,x:p.x-origin.x,z:p.z-origin.z});
+ const places=new Map([...geography.places].map(([id,p])=>[id,local(p)]));
+ const boroughs=geography.boroughs.map(local),sectors=geography.sectors.map(local);
+ const maxX=geography.maxX,maxZ=geography.maxZ;
  const bounds=Math.max(maxX,maxZ),field=new THREE.Mesh(new THREE.PlaneGeometry(bounds*7,bounds*7),material('#b2b699'));field.rotation.x=-Math.PI/2;field.position.y=-.3;scene.add(field);
  const sites=new Map(),structures=new Map(),powers=new Map(),labels=[];
- const roadway=material('#858581'),boroughLabels=[],boroughOutlines=[];
- // Civic roads are decorative, not graph dependencies. Connect the city with a
- // deterministic minimum spanning tree over complex centres; route along plot edges.
- const civic=new THREE.Group();root.add(civic);const centers=[...places.values()];
- function road(x1,z1,x2,z2,width=9){const length=Math.hypot(x2-x1,z2-z1);if(length<.01)return;const o=block(civic,(x1+x2)/2,.48,(z1+z2)/2,width,.22,length,roadway);o.rotation.y=Math.atan2(x2-x1,z2-z1);}
- if(centers.length){const visited=new Set([0]),best=centers.map((p,i)=>({from:0,d:i?Math.abs(p.x-centers[0].x)+Math.abs(p.z-centers[0].z):0}));while(visited.size<centers.length){let next=-1;for(let i=0;i<centers.length;i++)if(!visited.has(i)&&(next<0||best[i].d<best[next].d))next=i;const a=centers[best[next].from],b=centers[next];const ax=a.x-43,az=a.z-41,bx=b.x-43,bz=b.z-41;road(ax,az,bx,az);road(bx,az,bx,bz);visited.add(next);for(let i=0;i<centers.length;i++)if(!visited.has(i)){const d=Math.abs(centers[i].x-b.x)+Math.abs(centers[i].z-b.z);if(d<best[i].d)best[i]={from:next,d};}}}
-const roadStripe=material('#fff0d7');const treeGeometry=new THREE.IcosahedronGeometry(1,0),treeMaterial=material('#667f61');const trunks=material('#9c8468');
- // Neutral continuous urban ground; subject borders are a map-only layer.
- const paving=material('#d3c9b7'),park=material('#899b76');
- const urbanGround=new THREE.Mesh(new THREE.PlaneGeometry(maxX+32,maxZ+32),paving);urbanGround.rotation.x=-Math.PI/2;urbanGround.position.y=-.18;root.add(urbanGround);
+ const roadway=material('#858581'),boroughLabels=[],boroughOutlines=[],sectorLabels=[];
+ const civic=new THREE.Group();root.add(civic);
+ const roadStripe=material('#e5ded0'),treeGeometry=new THREE.IcosahedronGeometry(1,0),treeMaterial=material('#667f61'),trunks=material('#9c8468');
+ const paving=material('#d3c9b7'),park=material('#899b76'),stone=material('#c8c1b1'),water=material('#438c9d'),shore=material('#9eab99');
+ const civicBatches=new Map(),dummy=new THREE.Object3D();
+ function civicBox(x,y,z,w,h,d,m,angle=0){const key=m.uuid;if(!civicBatches.has(key))civicBatches.set(key,{m,items:[]});dummy.position.set(x,y,z);dummy.rotation.set(0,angle,0);dummy.scale.set(w,h,d);dummy.updateMatrix();civicBatches.get(key).items.push(dummy.matrix.clone());}
+ function road(a,b,width=9,y=.48,m=roadway){const length=Math.hypot(b.x-a.x,b.z-a.z);if(length<.01)return;civicBox((a.x+b.x)/2,y,(a.z+b.z)/2,width,.22,length+width*.25,m,Math.atan2(b.x-a.x,b.z-a.z));}
+ // River bands follow a continuous centreline; surface geometry deliberately
+ // separates civic roads and water from the canonical dependency graph.
+ function ribbon(from,to,low,high,y,m){const vertices=[],indices=[];const n=Math.max(16,Math.ceil((to-from)/22));for(let i=0;i<=n;i++){const x=from+(to-from)*i/n;vertices.push(x-origin.x,y,low(x)-origin.z,x-origin.x,y,high(x)-origin.z);if(i){const k=(i-1)*2;indices.push(k,k+1,k+2,k+1,k+3,k+2);}}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));g.setIndex(indices);g.computeVertexNormals();const mesh=new THREE.Mesh(g,m);root.add(mesh);return mesh;}
+ const west=geography.minX-450,east=geography.extentX+550;
+ function river(name,from,center,half){
+  ribbon(from,east,x=>center(x)-half(x)-5,x=>center(x)+half(x)+5,.01,shore);
+  ribbon(from,east,x=>center(x)-half(x),x=>center(x)+half(x),.07,water);
+  for(const sign of [-1,1]){
+   const edge=x=>center(x)+sign*half(x);
+   ribbon(from,east,x=>Math.min(edge(x),edge(x)+sign*10),x=>Math.max(edge(x),edge(x)+sign*10),.16,stone);
+   const quay=x=>edge(x)+sign*22;
+   ribbon(from,east,x=>quay(x)-5.5,x=>quay(x)+5.5,.29,roadway);
+   ribbon(from,east,x=>quay(x)-.22,x=>quay(x)+.22,.43,roadStripe);
+  }
+ }
+ river('Rhône',west,geography.rhone,geography.rhoneWidth);
+ // Begin Arve paving/quays after the confluence, so it never crosses the Rhône.
+ river('Arve',geography.confluence+130,geography.arve,geography.arveWidth);
+ ribbon(geography.confluence,east,x=>geography.arve(x)-geography.arveWidth(x),x=>geography.arve(x)+geography.arveWidth(x),.09,water);
+ for(const edge of geography.streets)road(local(edge.a),local(edge.b),edge.width);
+ for(const bridge of geography.bridges){
+  const a=local({x:bridge.x,z:bridge.z1}),b=local({x:bridge.x,z:bridge.z2});
+  const length=b.z-a.z,mid=(a.z+b.z)/2;
+  civicBox(a.x,.75,mid,bridge.width,1.2,length+4,stone);
+  civicBox(a.x,1.4,mid,bridge.width-3,.2,length,roadway);
+  for(const side of [-1,1])civicBox(a.x+side*(bridge.width/2-.6),2.35,mid,.7,1.6,length+3,stone);
+  civicBox(a.x,1.53,mid,.28,.05,length,roadStripe);
+  for(const t of [.26,.74])civicBox(a.x,-.1,a.z+length*t,bridge.width*.62,2.4,3.8,stone);
+ }
+ function mapLabel(text,sub,x,z,size,y){
+  const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=192;
+  const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.fillStyle='#183b4f';ctx.font='bold 72px Arial';ctx.fillText(text,512,86);ctx.font='36px Arial';ctx.fillText(sub,512,140);
+  const label=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));label.position.set(x,y,z);label.scale.set(size,size*.1875,1);root.add(label);sectorLabels.push(label);
+ }
+ for(const sector of sectors)if(sector.count)mapLabel(sector.name,sector.subtitle,sector.x,sector.z,Math.min(460,maxX*.15),130);
+ mapLabel('RHÔNE','',geography.width*.12-origin.x,geography.rhone(geography.width*.12)-origin.z,Math.min(220,maxX*.09),14);
+ mapLabel('ARVE','',geography.width*.12-origin.x,geography.arve(geography.width*.12)-origin.z,Math.min(200,maxX*.08),14);
+ // Shared land, continuous beyond the developed banks; no filled subject parcels.
  for(const b of boroughs){
   const tint=subjectColor(b.area),w=b.w/2,d=b.d/2;
   const corners=[[-w+3,-d+3],[w-3,-d+3],[w-3,d-3],[-w+3,d-3],[-w+3,-d+3]];
@@ -108,12 +136,15 @@ const roadStripe=material('#fff0d7');const treeGeometry=new THREE.IcosahedronGeo
   sites.set(complex.id,new THREE.Vector3(xx,0,zz));
   const tone=colors.indexOf(subjectColor(complex.area));
   // Courtyards and planted strips are civic scenery, not subject-coded parcels.
-  block(root,xx,.06,zz,118,.24,118,paving);
-  block(root,xx+4,.24,zz+50,89,.18,12,park);
-  block(root,xx+55,.24,zz+14,8,.18,60,park);
-  block(root,xx,.65,zz-41,120,.35,10,roadway);block(root,xx-43,.65,zz,10,.35,128,roadway);for(let lane=-44;lane<=44;lane+=12){block(root,xx+lane,.85,zz-41,6,.05,.22,roadStripe);block(root,xx-43,.85,zz+lane,.22,.05,6,roadStripe);}for(const dx of [-53,53])for(const dz of [-50,46]){block(root,xx+dx,2,zz+dz,1,3,1,trunks);block(root,xx+dx,5,zz+dz,4.5,5,4.5,treeMaterial,treeGeometry);}
+  const variation=hash(complex.id);civicBox(xx,.06,zz,112+variation*5,.24,112+(1-variation)*5,paving);
+  civicBox(xx+4,.24,zz+50,42+variation*47,.18,10+variation*4,park);
+  civicBox(xx+55,.24,zz+14,8,.18,32+variation*28,park);
+  civicBox(xx,.65,zz-41,120,.35,10,roadway);civicBox(xx-43,.65,zz,10,.35,128,roadway);
+  for(let lane=-44;lane<=44;lane+=12){civicBox(xx+lane,.85,zz-41,6,.05,.22,roadStripe);civicBox(xx-43,.85,zz+lane,.22,.05,6,roadStripe);}
+  for(const dx of [-53,53])for(const dz of [-50,46]){if(hash(complex.id+dx+','+dz)<.15)continue;const scale=.7+hash(complex.id+dz+','+dx)*.55;civicBox(xx+dx,1.5*scale,zz+dz,1,3*scale,1,trunks);const crown=new THREE.Mesh(treeGeometry,treeMaterial);crown.position.set(xx+dx,4.7*scale,zz+dz);crown.scale.set(4.5*scale,5*scale,4.5*scale);root.add(crown);}
+
   const placements=[[-24,-24],[24,-24],[-24,24],[24,24],[0,0],[0,-48]];
-  for(let k=0;k<complex.buildings.length&&k<6;k++){const [dx,dz]=placements[k],b=complex.buildings[k],t=tower(root,b,xx+dx,zz+dz,tone,facades);structures.set(b.id,t);}
+  for(let k=0;k<complex.buildings.length&&k<6;k++){const [dx,dz]=placements[k],b=complex.buildings[k],t=tower(root,b,xx+dx,zz+dz,tone,facades);t.group.rotation.y=(hash(b.id)-.5)*.16;structures.set(b.id,t);}
   const power=station(root,xx+51,zz-29,complex.id);powers.set(complex.id,power);
   if(complex.mathlib.length){
    const source=new Set(complex.mathlib.flatMap(x=>x.sourceModules));
@@ -126,6 +157,7 @@ const roadStripe=material('#fff0d7');const treeGeometry=new THREE.IcosahedronGeo
   const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.font='bold 25px Arial';ctx.fillStyle='#233f56';ctx.fillText(complex.id.split('/').at(-1).replace('@root','Root'),256,48);
   const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));sprite.position.set(xx,3,zz+53);sprite.scale.set(59,9,1);root.add(sprite);labels.push(sprite);
  });
+ for(const {m,items} of civicBatches.values()){const batch=new THREE.InstancedMesh(geom,m,items.length);items.forEach((matrix,i)=>batch.setMatrixAt(i,matrix));batch.instanceMatrix.needsUpdate=true;civic.add(batch);}
  const keys=new Set();let yaw=.68,distance=clamp(bounds*1.2,170,1300),overhead=false,focus=new THREE.Vector3(),running=true,last=performance.now();
  const minDistance=60,maxDistance=Math.max(260,bounds*3);let mapZoom=1;
  function fitMap(){const aspect=camera.aspect||1,halfH=Math.max((maxZ+160)/2,(maxX+160)/(2*aspect))*mapZoom;mapCamera.left=-halfH*aspect;mapCamera.right=halfH*aspect;mapCamera.top=halfH;mapCamera.bottom=-halfH;mapCamera.updateProjectionMatrix();mapCamera.up.set(0,0,-1);mapCamera.position.set(focus.x,Math.max(500,bounds+200),focus.z);mapCamera.lookAt(focus.x,0,focus.z);mapCamera.updateMatrixWorld();}
@@ -153,10 +185,10 @@ const roadStripe=material('#fff0d7');const treeGeometry=new THREE.IcosahedronGeo
  function update(now){if(!running)return;const dt=Math.min(.05,(now-last)/1000);last=now;
   if(keys.has('arrowleft'))yaw-=dt;if(keys.has('arrowright'))yaw+=dt;
   if(overhead){if(keys.has('arrowup'))mapZoom=clamp(mapZoom-dt*.7,.15,2);if(keys.has('arrowdown'))mapZoom=clamp(mapZoom+dt*.7,.15,2);}else{if(keys.has('arrowup'))distance-=95*dt;if(keys.has('arrowdown'))distance+=95*dt;}
-  const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  const forward=overhead?new THREE.Vector3(0,0,-1):new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),right=overhead?new THREE.Vector3(1,0,0):new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
   for(const [k,v,t] of [['w',forward,1],['s',forward,-1],['a',right,-1],['d',right,1]])if(keys.has(k))focus.addScaledVector(v,110*dt*t);
   focus.x=clamp(focus.x,-bounds,bounds);focus.z=clamp(focus.z,-bounds,bounds);
-  for(const label of labels)label.visible=overhead?mapZoom<.35:distance<550;for(const label of boroughLabels)label.visible=overhead?mapZoom>=.35:distance>=550;for(const line of boroughOutlines)line.visible=overhead&&mapZoom>=.35;pose();scene.fog=overhead?null:worldFog;renderer.render(scene,overhead?mapCamera:camera);requestAnimationFrame(update);
+  for(const label of labels)label.visible=overhead?mapZoom<.35:distance<550;for(const label of boroughLabels)label.visible=overhead?mapZoom>=.2&&mapZoom<.55:distance>=550&&distance<1200;for(const line of boroughOutlines)line.visible=false;for(const label of sectorLabels)label.visible=overhead?mapZoom>=.55:distance>=1200;pose();scene.fog=overhead?null:worldFog;renderer.render(scene,overhead?mapCamera:camera);requestAnimationFrame(update);
  }requestAnimationFrame(update);
  return {focus(id){const p=sites.get(id);if(p){focus.copy(p);distance=185;overhead=false;highlight(id,false);}},overview(){focus.set(0,0,0);mapZoom=1;overhead=true;fitMap();},district(){overhead=false;distance=180;},highlight,dispose(){running=false;observer.disconnect();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);const gs=new Set(),ms=new Set();scene.traverse(o=>{if(o.geometry&&o.geometry!==geom)gs.add(o.geometry);if(o.material&&!materials.includes(o.material)&&![frame,glass,steel,cream,scaffold].includes(o.material))ms.add(o.material);});for(const g of gs)g.dispose();const textures=new Set();for(const m of new Set([...ms,...facades.flat(),...baseFacades])){if(m.map)textures.add(m.map);m.dispose();}for(const t of textures)t.dispose();scene.background?.dispose();renderer.dispose();renderer.domElement.remove();}};
 }
