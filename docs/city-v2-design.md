@@ -83,3 +83,7 @@ Pilot: `Physlib/ClassicalMechanics/HamiltonianMechanics`, with real module IDs a
 Acceptance requires: convincing surface metropolis (no floating-board effect), recognizable archetypes without height implying importance, correct directed and typed source-backed relationships or clearly labelled mock links, drilldown with exact Mathlib modules, bounded navigation, and a build that does not regress current C.4 deployment.
 
 See [City v2 roadmap](city-v2-roadmap.md) for incremental implementation and exit criteria.
+
+### Organic neighbourhood generation
+
+Within the three river-defined sectors, use deterministic seeded spatial sampling with minimum plot clearance, then assign contiguous nearby sites to subject clusters. Streets connect nearby plots using a spanning network with short additional loops; quays and bridges connect banks. Do not fill rectangular borough polygons. The fixed seed makes a given source snapshot reproducible; changing it produces an alternative artistic layout. Site locations may change when the source population changes. The current street routing is a first geometric approximation, not a road/parcel collision solver.

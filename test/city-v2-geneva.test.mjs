@@ -29,3 +29,17 @@ test('civic bridges span their corresponding rivers and land on quays',()=>{
 test('unknown source libraries are rejected instead of silently misplaced',()=>{
  assert.throws(()=>genevaLayout([{id:'Unknown',library:'Unknown',area:'Other'}]),/Unknown source library/);
 });
+
+test('seeded irregular placement is reproducible, changes with seed, and keeps plot clearance',()=>{
+ const cs=fixture([300,220,30]),g=genevaLayout(cs,{seed:'geneva-1'}),again=genevaLayout(cs,{seed:'geneva-1'}),other=genevaLayout(cs,{seed:'geneva-2'});
+ assert.deepEqual([...g.places],[...again.places]);
+ assert.notDeepEqual([...g.places],[...other.places]);
+ for(const world of [g,other]){
+  const ps=[...world.places.values()];
+  for(let i=0;i<ps.length;i++)for(let j=0;j<i;j++)if(ps[i].library===ps[j].library)assert(Math.max(Math.abs(ps[i].x-ps[j].x),Math.abs(ps[i].z-ps[j].z))>=136-1e-8);
+  for(const p of ps)for(const x of [p.x-64,p.x,p.x+64]){
+   const lo=world.rhone(x)-world.rhoneWidth(x),hi=world.rhone(x)+world.rhoneWidth(x),al=world.arve(x)-world.arveWidth(x),ah=world.arve(x)+world.arveWidth(x);
+   assert((p.library==='PhyslibAlpha'?lo-p.z-64:p.library==='Physlib'?Math.min(p.z-64-hi,al-p.z-64):p.z-64-ah)>0);
+  }
+ }
+});
