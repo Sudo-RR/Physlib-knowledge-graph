@@ -61,7 +61,7 @@ World/district views aggregate recorded edges and suppress clutter. Selection ex
 ## City and navigation art direction
 
 - Golden-hour amber directional lighting, readable ambient fill, peach/pink horizon, restrained haze, coherent colour/material palette, continuous world backdrop. Avoid purely unlit flat-colour terrain and huge empty space.
-- Distinctive irregular physics boroughs visible from above, inspired by the geographic readability of PaperView; street and plot geometry may be irregular but must avoid overlaps and retain usable access corridors.
+- Continuous neutral civic ground with shared streets, paving and landscaping. Stable physics-subject colours belong to building facades and accents, not filled ground parcels. Subject borders and labels may appear as an overhead-map overlay. Architecture role remains encoded by silhouette; street and plot geometry may be irregular but must avoid overlaps and retain usable access corridors.
 - Roads and civic architecture are decorative, **not** dependency edges. Elevated sky channels and ground-level Mathlib conduits must remain visually distinct and directionally understandable.
 - Keyboard-first exploration: WASD movement; arrows for view direction; focus, inspect, channel toggles, map/overview and escape shortcuts. Mouse for global map selection and optional interaction. Clamp zoom and camera bounds to keep users within meaningful reading scales. Maintain accessible keyboard focus and avoid hijacking typing in inputs.
 - At wide zoom, visual grouping and edge bundling are allowed, but the view must state the aggregation level and preserve drilldown.
