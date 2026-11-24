@@ -6,6 +6,7 @@ on:
       - 'test/city-v2*'
       - 'package.json'
       - 'scripts/package-site.mjs'
+      - 'site/legacy-redirect.js'
       - '.github/workflows/city-v2-ci.yml'
   workflow_dispatch:
 permissions:
@@ -32,5 +33,10 @@ jobs:
           npm run package:site
           test -f dist/site/index.html
           test -f dist/site/city-v2.html
+          test -f dist/site/city-c4.html
+          cmp dist/site/index.html dist/site/city-v2.html
+          grep -q 'city-bundle\.' dist/site/city-c4.html
+          grep -q 'href="city-c4.html"' dist/site/index.html
+          grep -q 'city-v2-bundle\.' dist/site/index.html
           grep -q 'city-v2-bundle\.' dist/site/city-v2.html
           ls dist/site/assets/city-v2-bundle.*.js >/dev/null

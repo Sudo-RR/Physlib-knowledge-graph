@@ -30,8 +30,8 @@ for(const file of ['style.css','city.css']){
   html=html.replace(`href="${file}"`,`href="${name}"`);
   await writeFile(path.join(root,name),data);
 }
-await writeFile(path.join(root,'index.html'),html);
- // Independent opt-in City v2. No changes to the C.4 default page.
+await writeFile(path.join(root,'city-c4.html'),html.replaceAll('href="index.html"','href="city-c4.html"'));
+ // City v2 is the approved default; retain its explicit URL as an alias.
  const v2Bundle=await readFile(path.join(workspace,'site','assets','city-v2-bundle.js'));
  const v2Hash=createHash('sha256').update(v2Bundle).digest('hex').slice(0,12);
  const v2Name=`city-v2-bundle.${v2Hash}.js`;
@@ -40,6 +40,7 @@ await writeFile(path.join(root,'index.html'),html);
  if(!v2Html.includes('assets/city-v2-bundle.js'))throw Error('City v2 bundle reference missing');
  v2Html=v2Html.replace('assets/city-v2-bundle.js',`assets/${v2Name}`);
  await writeFile(path.join(root,'city-v2.html'),v2Html);
+ await writeFile(path.join(root,'index.html'),v2Html);
 
 // Optional declaration snapshots are included only when deliberately generated.
 for(const file of ['declarations.json','city-declarations.json']) {
