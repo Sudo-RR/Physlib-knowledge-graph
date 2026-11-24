@@ -70,8 +70,8 @@ function createView(host,model,selectCallback){
  const total=model.complexes.length,pitch=160; const groups=new Map(); for(const c of model.complexes){if(!groups.has(c.area))groups.set(c.area,[]);groups.get(c.area).push(c);} const places=new Map(),boroughs=[]; let cursorX=0,cursorZ=0,rowDepth=0; const worldWidth=Math.max(480,Math.sqrt(total)*pitch*1.8); for(const [area,cs] of groups){const cols=Math.ceil(Math.sqrt(cs.length*1.3)),rows=Math.ceil(cs.length/cols),w=cols*pitch+100,d=rows*pitch+100;if(cursorX+w>worldWidth&&cursorX>0){cursorX=0;cursorZ+=rowDepth+70;rowDepth=0;} const bx=cursorX+w/2,bz=cursorZ+d/2; boroughs.push({area,x:bx,z:bz,w,d});cs.forEach((c,i)=>places.set(c.id,{x:cursorX+80+(i%cols)*pitch+(Math.floor(i/cols)%2?12:-12),z:cursorZ+80+Math.floor(i/cols)*pitch}));cursorX+=w+70;rowDepth=Math.max(rowDepth,d);} const maxX=Math.max(160,...boroughs.map(b=>b.x+b.w/2)),maxZ=Math.max(160,...boroughs.map(b=>b.z+b.d/2));for(const p of places.values()){p.x-=maxX/2;p.z-=maxZ/2;}for(const b of boroughs){b.x-=maxX/2;b.z-=maxZ/2;}
  const bounds=Math.max(maxX,maxZ),field=new THREE.Mesh(new THREE.PlaneGeometry(bounds*7,bounds*7),material('#adc3a1'));field.rotation.x=-Math.PI/2;field.position.y=-.3;scene.add(field);
  const sites=new Map(),structures=new Map(),powers=new Map(),labels=[];
- const roadway=material('#777e81');
- for(const b of boroughs){const tint=colors[Math.floor(hash(b.area)*colors.length)];const shape=new THREE.Shape();const w=b.w/2,d=b.d/2;[[-w*.9,-d],[w*.65,-d],[w,-d*.65],[w,d*.8],[w*.65,d],[-w*.8,d],[-w,d*.7],[-w,-d*.7]].forEach(([x,z],i)=>i?shape.lineTo(x,z):shape.moveTo(x,z));shape.closePath();const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),material(tint));mesh.rotation.x=-Math.PI/2;mesh.position.set(b.x,-.15,b.z);root.add(mesh);}
+ const roadway=material('#777e81'),boroughLabels=[];
+ for(const b of boroughs){const tint=colors[Math.floor(hash(b.area)*colors.length)];const shape=new THREE.Shape();const w=b.w/2,d=b.d/2;[[-w*.9,-d],[w*.65,-d],[w,-d*.65],[w,d*.8],[w*.65,d],[-w*.8,d],[-w,d*.7],[-w,-d*.7]].forEach(([x,z],i)=>i?shape.lineTo(x,z):shape.moveTo(x,z));shape.closePath();const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),material(tint));mesh.rotation.x=-Math.PI/2;mesh.position.set(b.x,-.15,b.z);root.add(mesh);const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=128;const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.font='bold 54px Arial';ctx.fillStyle='#233f56';ctx.fillText(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),512,77);const label=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));label.position.set(b.x,105,b.z);label.scale.set(Math.min(340,b.w*.8),Math.min(42,b.w*.1),1);root.add(label);boroughLabels.push(label);}
  model.complexes.forEach((complex,i)=>{
   const {x:xx,z:zz}=places.get(complex.id);
   sites.set(complex.id,new THREE.Vector3(xx,0,zz));
@@ -93,7 +93,7 @@ function createView(host,model,selectCallback){
   const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));sprite.position.set(xx,3,zz+53);sprite.scale.set(59,9,1);root.add(sprite);labels.push(sprite);
  });
  const keys=new Set();let yaw=.68,distance=clamp(bounds*1.2,170,1300),overhead=false,focus=new THREE.Vector3(),running=true,last=performance.now();
- const minDistance=60,maxDistance=Math.max(260,bounds*1.5);
+ const minDistance=60,maxDistance=Math.max(260,bounds*2.1);
  function pose(){const pitch=overhead?1.48:.62;distance=clamp(distance,minDistance,maxDistance);camera.position.set(focus.x+distance*Math.sin(yaw)*Math.cos(pitch),focus.y+distance*Math.sin(pitch),focus.z+distance*Math.cos(yaw)*Math.cos(pitch));camera.lookAt(focus);}
  const resize=()=>{const width=Math.max(host.clientWidth,120),height=Math.max(host.clientHeight,180);camera.aspect=width/height;camera.updateProjectionMatrix();renderer.setSize(width,height,false);};
  const observer=new ResizeObserver(resize);observer.observe(host);resize();
@@ -121,9 +121,9 @@ function createView(host,model,selectCallback){
   const forward=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw)),right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
   for(const [k,v,t] of [['w',forward,1],['s',forward,-1],['a',right,-1],['d',right,1]])if(keys.has(k))focus.addScaledVector(v,110*dt*t);
   focus.x=clamp(focus.x,-bounds,bounds);focus.z=clamp(focus.z,-bounds,bounds);
-  pose();renderer.render(scene,camera);requestAnimationFrame(update);
+  for(const label of labels)label.visible=distance<550;for(const label of boroughLabels)label.visible=distance>=550;pose();renderer.render(scene,camera);requestAnimationFrame(update);
  }requestAnimationFrame(update);
- return {focus(id){const p=sites.get(id);if(p){focus.copy(p);distance=185;overhead=false;highlight(id,false);}},overview(){focus.set(0,0,0);distance=clamp(bounds*1.3,minDistance,maxDistance);overhead=true;},district(){overhead=false;distance=180;},highlight,dispose(){running=false;observer.disconnect();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);renderer.dispose();renderer.domElement.remove();}};
+ return {focus(id){const p=sites.get(id);if(p){focus.copy(p);distance=185;overhead=false;highlight(id,false);}},overview(){focus.set(0,0,0);distance=clamp(bounds*1.7,minDistance,maxDistance);overhead=true;},district(){overhead=false;distance=180;},highlight,dispose(){running=false;observer.disconnect();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);const gs=new Set(),ms=new Set();scene.traverse(o=>{if(o.geometry&&o.geometry!==geom)gs.add(o.geometry);if(o.material&&!materials.includes(o.material)&&![frame,glass,steel,cream,scaffold].includes(o.material))ms.add(o.material);});for(const g of gs)g.dispose();for(const m of ms){m.map?.dispose();m.dispose();}renderer.dispose();renderer.domElement.remove();}};
 }
 let graph,mathRevision=null,declarations=null,model=null,view=null;
 const uri=(root,revision,path)=>root+'/blob/'+revision+'/'+path.split('/').map(encodeURIComponent).join('/');
@@ -164,7 +164,7 @@ function inspectBuilding(id){
 }
 function inspectStation(id){
  const data=stationData(model,id);if(!data)return;
- const refs=data.targets.map(t=>{const path='Mathlib/'+t.target.slice(8).replaceAll('.','/')+'.lean';const link=uri('https://github.com/leanprover-community/mathlib4',mathRevision||'master',path);
+ const refs=data.targets.map(t=>{const path=t.target.replaceAll('.','/')+'.lean';const link=uri('https://github.com/leanprover-community/mathlib4',mathRevision||'master',path);
  return '<details><summary>'+esc(t.target)+' · '+t.sourceModules.length+' importers</summary><a target="_blank" rel="noopener" href="'+link+'">View Mathlib source'+(mathRevision?' at pinned revision':' (latest)')+'</a><ul>'+t.sourceModules.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul></details>';}).join('');
  $('#details').innerHTML='<button id="back">← Complex</button><h2>Math Power Station</h2><p>'+data.totalUnique+' distinct Mathlib module targets</p><p class="muted">Ground-level pipes aggregate true recorded module imports. The same Mathlib file may be used by other complexes; this view does not show convergence to a shared node.</p><div class="stationList">'+(refs||'No Mathlib imports recorded.')+'</div>';
  $('#back').onclick=()=>inspectComplex(id);
