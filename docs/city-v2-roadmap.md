@@ -1,4 +1,6 @@
-# PhysLib City v2 — Roadmap and issue breakdown
+# PhysLib City v2 — Historical roadmap and issue breakdown
+
+**Current roadmap:** [Geneva programme](geneva/README.md). The initial v2 renderer was promoted to production on 24 November 2026; the following records the original implementation plan, not the current release requirements. New geography proceeds through G1–G5 (#59–#63).
 
 This document is the implementation plan for the [City v2 design constitution](city-v2-design.md). **Do not rewrite production C.4 in one pass.** Build and test an opt-in v2 preview while leaving canonical module/Mathlib ingestion and inspection operational.
 

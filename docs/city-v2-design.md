@@ -74,7 +74,7 @@ World/district views aggregate recorded edges and suppress clutter. Selection ex
 - A classified building must record its constituent declaration IDs and provenance; no declaration should silently vanish because it is unknown. A declaration belongs to one primary architectural building (allow cross-references).
 - Unknown metadata displays a construction site, with source-module fallback and a clear coverage indicator. Existing files remain navigable.
 - Power stations and aggregator edges are marked as *visual aggregates*, never passed off as source declarations.
-- C.4 remains the stable default until the v2 preview meets visual, fidelity, performance and navigation acceptance checks.
+- City v2 is the current production default; C.4 is retained as a legacy fallback. The Geneva redesign must pass its own preview and release gates before promotion.
 
 ## Initial pilot and acceptance
 
@@ -84,6 +84,6 @@ Acceptance requires: convincing surface metropolis (no floating-board effect), r
 
 See [City v2 roadmap](city-v2-roadmap.md) for incremental implementation and exit criteria.
 
-### Organic neighbourhood generation
+### Organic neighbourhood generation — superseded prototype
 
-Within the three river-defined sectors, use deterministic seeded spatial sampling with minimum plot clearance, then assign contiguous nearby sites to subject clusters. Streets connect nearby plots using a spanning network with short additional loops; quays and bridges connect banks. Do not fill rectangular borough polygons. The fixed seed makes a given source snapshot reproducible; changing it produces an alternative artistic layout. Site locations may change when the source population changes. The current street routing is a first geometric approximation, not a road/parcel collision solver.
+The seeded point-first sampler is a deployed experiment, not the target urban plan. The approved [Geneva programme](geneva/README.md) specifies terrain-first, street-first development, explicit lake and confluence topology, parcel-based placement, and release gates. It supersedes prior geographic recommendations while preserving all mathematical invariants above.
