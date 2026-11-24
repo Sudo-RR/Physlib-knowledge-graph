@@ -152,7 +152,7 @@ function render(){
  $('#coverage').textContent=declarations?'Source declaration inventory loaded; roles are inferred and coverage may be partial.':'No compatible declaration snapshot. Construction sites mean unknown classification, not unfinished Lean mathematics.';
  $('#demoWarning').hidden=!demo;
  $('#complexes').replaceChildren(...model.complexes.map(c=>{const button=document.createElement('button');button.textContent=c.id.split('/').slice(-2).join(' / ');button.title=c.id;button.onclick=()=>{view.focus(c.id);inspectComplex(c.id);};return button;}));
- if(model.complexes.length){if(area==='all'){const pilot=model.complexes.find(c=>c.id.includes('HamiltonianMechanics'))||model.complexes[0];view.focus(pilot.id);}else view.focus(model.complexes[0].id);inspectComplex(model.complexes[0].id);}else $('#details').textContent='No modules in this subject area.';
+ if(model.complexes.length){const pilot=area==='all'?(model.complexes.find(c=>c.id.includes('HamiltonianMechanics'))||model.complexes[0]):model.complexes[0];view.focus(pilot.id);inspectComplex(pilot.id);}else $('#details').textContent='No modules in this subject area.';
 }
 function inspectComplex(id){
  const c=model.complexes.find(x=>x.id===id);if(!c)return;selectedComplex=id;const n=neighborhood(model,id);
