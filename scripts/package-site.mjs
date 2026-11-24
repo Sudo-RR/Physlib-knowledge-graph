@@ -42,6 +42,14 @@ await writeFile(path.join(root,'city-c4.html'),html.replaceAll('href="index.html
  await writeFile(path.join(root,'city-v2.html'),v2Html);
  await writeFile(path.join(root,'index.html'),v2Html);
 
+// Standalone G1 review page, leaving the production renderer unchanged.
+const g1Bundle=await readFile(path.join(workspace,'site','assets','geneva-g1-bundle.js'));
+const g1Name='geneva-g1-bundle.'+createHash('sha256').update(g1Bundle).digest('hex').slice(0,12)+'.js';
+await writeFile(path.join(root,'assets',g1Name),g1Bundle);
+const g1Html=await readFile(path.join(workspace,'site','geneva-g1.html'),'utf8');
+if(!g1Html.includes('assets/geneva-g1-bundle.js'))throw Error('G1 bundle reference missing');
+await writeFile(path.join(root,'geneva-g1.html'),g1Html.replace('assets/geneva-g1-bundle.js','assets/'+g1Name));
+
 // Optional declaration snapshots are included only when deliberately generated.
 for(const file of ['declarations.json','city-declarations.json']) {
   try {await stat(path.join(workspace,'site','data',file));await cp(path.join(workspace,'site','data',file),path.join(root,'data',file));} catch(error) {if(error.code!=='ENOENT')throw error;}

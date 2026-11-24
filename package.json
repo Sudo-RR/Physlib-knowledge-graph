@@ -9,7 +9,7 @@
     "validate:assets": "node scripts/validate-assets.mjs",
     "compare:imports": "node scripts/compare-imports.mjs",
     "benchmark:city": "node scripts/benchmark-city.mjs",
-    "build:city": "esbuild site/city.js --bundle --format=esm --outfile=site/assets/city-bundle.js && esbuild site/city-v2.js --bundle --format=esm --outfile=site/assets/city-v2-bundle.js",
+    "build:city": "esbuild site/city.js --bundle --format=esm --outfile=site/assets/city-bundle.js && esbuild site/city-v2.js --bundle --format=esm --outfile=site/assets/city-v2-bundle.js && esbuild site/geneva-g1.js --bundle --format=esm --outfile=site/assets/geneva-g1-bundle.js",
     "package:site": "node scripts/package-site.mjs",
     "test": "node --test",
     "serve": "node scripts/serve.mjs"
