@@ -43,3 +43,15 @@ test('seeded irregular placement is reproducible, changes with seed, and keeps p
   }
  }
 });
+
+import {buildCityV2} from '../site/city-v2-model.js';
+test('the complete source graph including library root files can start the Geneva renderer',()=>{
+ const graph={source:{revision:'fixture',toolchain:'fixture'},modules:sectorSpecs.flatMap(s=>[
+ {id:s.library,path:s.library+'.lean',library:s.library,lineCount:1,imports:[]},
+ {id:s.library+'.ClassicalMechanics.Basic',path:s.library+'/ClassicalMechanics/Basic.lean',library:s.library,lineCount:10,imports:[]}
+ ])};
+ const model=buildCityV2(graph,null,{area:'all'}),city=genevaLayout(model.complexes);
+ assert.equal(city.places.size,model.complexes.length);
+ assert.equal(city.sectors.reduce((n,s)=>n+s.count,0),model.complexes.length);
+ for(const c of model.complexes)assert(sectorSpecs.some(s=>s.library===c.library));
+});
