@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import {makeFacadeMaterials} from './city-v2-facades.js';
 import {buildCityV2,roleNames,roles,neighborhood,stationData} from './city-v2-model.js';
 
 const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -11,10 +12,10 @@ const frame=material('#e7dccb'),glass=material('#2d667b'),steel=material('#5f809
 const materials=colors.map(c=>material(c));
 function block(parent,x,y,z,w,h,d,m,geometry=geom){const o=new THREE.Mesh(geometry,m);o.position.set(x,y,z);o.scale.set(w,h,d);parent.add(o);return o;}
 function path(parent,points,color,width=.4){if(points.length<2)return;const curve=new THREE.CatmullRomCurve3(points);const t=new THREE.Mesh(new THREE.TubeGeometry(curve,25,width,6,false),new THREE.MeshBasicMaterial({color}));parent.add(t);return t;}
-function tower(parent,b,x,z,c){
+function tower(parent,b,x,z,c,facades){
  const g=new THREE.Group();g.position.set(x,0,z);parent.add(g);
  const w=clamp(12+3*Math.log2(1+(b.lines||1)/110),12,20),h=clamp(25+18*Math.log2(1+(b.lines||1)/150),25,100);
- const accent=materials[c%materials.length];
+ const accent=materials[c%materials.length]; const cladding=facades[Math.max(0,roles.indexOf(b.role))%facades.length];
  block(g,0,2,0,w*1.2,4,w*1.2,accent);
  if(b.role==='provisional'){
   const levels=Math.min(8,Math.floor(h/10)),top=levels*10;
@@ -26,22 +27,22 @@ function tower(parent,b,x,z,c){
  }else{
   if(b.role===roles[0]){
    block(g,0,h*.42,0,w*.87,h*.78,w*.87,frame);
-   block(g,0,h*.47,0,w*.76,h*.62,w*.78,glass);
+   block(g,0,h*.47,0,w*.76,h*.62,w*.78,cladding);
    block(g,0,h*.9,0,w,3,w,accent);
    for(const sx of [-.37,.37])block(g,sx*w,h*.44,w*.37,1.7,h*.73,1.4,cream);
   }else if(b.role===roles[1]){
-   block(g,-w*.19,h*.44,0,w*.63,h*.83,w*.83,glass);
+   block(g,-w*.19,h*.44,0,w*.63,h*.83,w*.83,cladding);
    block(g,w*.26,h*.35,0,w*.42,h*.66,w*.73,frame);
    for(const level of [.3,.53,.76])block(g,0,h*level,0,w*1.02,1.5,w*.9,accent);
   }else if(b.role===roles[2]){
    const drum=new THREE.CylinderGeometry(.5,.5,1,12);
-   block(g,0,h*.46,0,w*.86,h*.83,w*.86,glass,drum);
+   block(g,0,h*.46,0,w*.86,h*.83,w*.86,cladding,drum);
    block(g,0,h*.91,0,w,2,w,accent,drum);
    block(g,0,h*.93+4,0,w*.34,8,w*.34,cream,drum);
   }else{
-   block(g,0,h*.25,0,w*.91,h*.48,w*.91,glass);
+   block(g,0,h*.25,0,w*.91,h*.48,w*.91,cladding);
    block(g,0,h*.61,0,w*.72,h*.28,w*.72,frame);
-   block(g,0,h*.84,0,w*.52,h*.19,w*.52,glass);
+   block(g,0,h*.84,0,w*.52,h*.19,w*.52,cladding);
    for(const level of [.49,.76,.95])block(g,0,h*level,0,w*(1.12-level*.42),2,w*(1.12-level*.42),accent);
   }
   for(let i=1;i<=6;i++)block(g,0,h*i/8,0,w*.97,.32,w*.97,cream);
@@ -61,25 +62,25 @@ function station(parent,x,z,id){
  return {group:g,pick,position:new THREE.Vector3(x,9,z)};
 }
 function createView(host,model,selectCallback){
- const scene=new THREE.Scene();scene.background=new THREE.Color('#d6a6a5');scene.fog=new THREE.FogExp2('#e3bca8',.00035);
+ const scene=new THREE.Scene(),facades=makeFacadeMaterials(THREE);const sky=document.createElement('canvas');sky.width=2;sky.height=512;const ctx=sky.getContext('2d'),gradient=ctx.createLinearGradient(0,0,0,512);gradient.addColorStop(0,'#88abd5');gradient.addColorStop(.5,'#efbfa7');gradient.addColorStop(1,'#ffe6cc');ctx.fillStyle=gradient;ctx.fillRect(0,0,2,512);scene.background=new THREE.CanvasTexture(sky);scene.background.colorSpace=THREE.SRGBColorSpace;scene.fog=new THREE.FogExp2('#eadccc',.00023);
  scene.add(new THREE.HemisphereLight('#ffeacb','#587487',2.15));
  const sun=new THREE.DirectionalLight('#ffc18d',3.2);sun.position.set(-180,240,100);scene.add(sun);
  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;host.append(renderer.domElement);
  const camera=new THREE.PerspectiveCamera(46,1,.5,20000);
  const root=new THREE.Group(),connections=new THREE.Group();scene.add(root,connections);
  const total=model.complexes.length,pitch=160; const groups=new Map(); for(const c of model.complexes){if(!groups.has(c.area))groups.set(c.area,[]);groups.get(c.area).push(c);} const places=new Map(),boroughs=[]; let cursorX=0,cursorZ=0,rowDepth=0; const worldWidth=Math.max(480,Math.sqrt(total)*pitch*1.8); for(const [area,cs] of groups){const cols=Math.ceil(Math.sqrt(cs.length*1.3)),rows=Math.ceil(cs.length/cols),w=cols*pitch+100,d=rows*pitch+100;if(cursorX+w>worldWidth&&cursorX>0){cursorX=0;cursorZ+=rowDepth+70;rowDepth=0;} const bx=cursorX+w/2,bz=cursorZ+d/2; boroughs.push({area,x:bx,z:bz,w,d});cs.forEach((c,i)=>places.set(c.id,{x:cursorX+80+(i%cols)*pitch+(Math.floor(i/cols)%2?12:-12),z:cursorZ+80+Math.floor(i/cols)*pitch}));cursorX+=w+70;rowDepth=Math.max(rowDepth,d);} const maxX=Math.max(160,...boroughs.map(b=>b.x+b.w/2)),maxZ=Math.max(160,...boroughs.map(b=>b.z+b.d/2));for(const p of places.values()){p.x-=maxX/2;p.z-=maxZ/2;}for(const b of boroughs){b.x-=maxX/2;b.z-=maxZ/2;}
- const bounds=Math.max(maxX,maxZ),field=new THREE.Mesh(new THREE.PlaneGeometry(bounds*7,bounds*7),material('#adc3a1'));field.rotation.x=-Math.PI/2;field.position.y=-.3;scene.add(field);
+ const bounds=Math.max(maxX,maxZ),field=new THREE.Mesh(new THREE.PlaneGeometry(bounds*7,bounds*7),material('#b8bf8f'));field.rotation.x=-Math.PI/2;field.position.y=-.3;scene.add(field);
  const sites=new Map(),structures=new Map(),powers=new Map(),labels=[];
- const roadway=material('#777e81'),boroughLabels=[];
+ const roadway=material('#9b9487'),boroughLabels=[];
  for(const b of boroughs){const tint=colors[Math.floor(hash(b.area)*colors.length)];const shape=new THREE.Shape();const w=b.w/2,d=b.d/2;[[-w*.9,-d],[w*.65,-d],[w,-d*.65],[w,d*.8],[w*.65,d],[-w*.8,d],[-w,d*.7],[-w,-d*.7]].forEach(([x,z],i)=>i?shape.lineTo(x,z):shape.moveTo(x,z));shape.closePath();const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),material(tint));mesh.rotation.x=-Math.PI/2;mesh.position.set(b.x,-.15,b.z);root.add(mesh);const canvas=document.createElement('canvas');canvas.width=1024;canvas.height=128;const ctx=canvas.getContext('2d');ctx.textAlign='center';ctx.font='bold 54px Arial';ctx.fillStyle='#233f56';ctx.fillText(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),512,77);const label=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(canvas),depthTest:false}));label.position.set(b.x,105,b.z);label.scale.set(Math.min(340,b.w*.8),Math.min(42,b.w*.1),1);root.add(label);boroughLabels.push(label);}
  model.complexes.forEach((complex,i)=>{
   const {x:xx,z:zz}=places.get(complex.id);
   sites.set(complex.id,new THREE.Vector3(xx,0,zz));
   const tone=Math.floor(hash(complex.id.split('/').slice(0,3).join('/'))*colors.length);
-  const pad=new THREE.Mesh(new THREE.CylinderGeometry(67,68,1,9),material('#e0d2bc'));pad.position.set(xx,.05,zz);pad.rotation.y=hash(complex.id)*.8;root.add(pad);
+  const pad=new THREE.Mesh(new THREE.CylinderGeometry(67,68,1,9),material('#f2e6cb'));pad.position.set(xx,.05,zz);pad.rotation.y=hash(complex.id)*.8;root.add(pad);
   block(root,xx,.65,zz-41,95,.35,8,roadway);block(root,xx-43,.65,zz,8,.35,80,roadway);
   const placements=[[-24,-24],[24,-24],[-24,24],[24,24],[0,0],[0,-48]];
-  for(let k=0;k<complex.buildings.length&&k<6;k++){const [dx,dz]=placements[k],b=complex.buildings[k],t=tower(root,b,xx+dx,zz+dz,tone);structures.set(b.id,t);}
+  for(let k=0;k<complex.buildings.length&&k<6;k++){const [dx,dz]=placements[k],b=complex.buildings[k],t=tower(root,b,xx+dx,zz+dz,tone,facades);structures.set(b.id,t);}
   const power=station(root,xx+51,zz-29,complex.id);powers.set(complex.id,power);
   if(complex.mathlib.length){
    const source=new Set(complex.mathlib.flatMap(x=>x.sourceModules));
@@ -123,7 +124,7 @@ function createView(host,model,selectCallback){
   focus.x=clamp(focus.x,-bounds,bounds);focus.z=clamp(focus.z,-bounds,bounds);
   for(const label of labels)label.visible=distance<550;for(const label of boroughLabels)label.visible=distance>=550;pose();renderer.render(scene,camera);requestAnimationFrame(update);
  }requestAnimationFrame(update);
- return {focus(id){const p=sites.get(id);if(p){focus.copy(p);distance=185;overhead=false;highlight(id,false);}},overview(){focus.set(0,0,0);distance=clamp(bounds*1.7,minDistance,maxDistance);overhead=true;},district(){overhead=false;distance=180;},highlight,dispose(){running=false;observer.disconnect();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);const gs=new Set(),ms=new Set();scene.traverse(o=>{if(o.geometry&&o.geometry!==geom)gs.add(o.geometry);if(o.material&&!materials.includes(o.material)&&![frame,glass,steel,cream,scaffold].includes(o.material))ms.add(o.material);});for(const g of gs)g.dispose();for(const m of ms){m.map?.dispose();m.dispose();}renderer.dispose();renderer.domElement.remove();}};
+ return {focus(id){const p=sites.get(id);if(p){focus.copy(p);distance=185;overhead=false;highlight(id,false);}},overview(){focus.set(0,0,0);distance=clamp(bounds*1.7,minDistance,maxDistance);overhead=true;},district(){overhead=false;distance=180;},highlight,dispose(){running=false;observer.disconnect();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);const gs=new Set(),ms=new Set();scene.traverse(o=>{if(o.geometry&&o.geometry!==geom)gs.add(o.geometry);if(o.material&&!materials.includes(o.material)&&![frame,glass,steel,cream,scaffold].includes(o.material))ms.add(o.material);});for(const g of gs)g.dispose();for(const m of ms){m.map?.dispose();m.dispose();}scene.background?.dispose();renderer.dispose();renderer.domElement.remove();}};
 }
 let graph,mathRevision=null,declarations=null,model=null,view=null,selectedComplex=null;
 const uri=(root,revision,path)=>root+'/blob/'+revision+'/'+path.split('/').map(encodeURIComponent).join('/');
@@ -151,7 +152,7 @@ function render(){
  $('#coverage').textContent=declarations?'Source declaration inventory loaded; roles are inferred and coverage may be partial.':'No compatible declaration snapshot. Construction sites mean unknown classification, not unfinished Lean mathematics.';
  $('#demoWarning').hidden=!demo;
  $('#complexes').replaceChildren(...model.complexes.map(c=>{const button=document.createElement('button');button.textContent=c.id.split('/').slice(-2).join(' / ');button.title=c.id;button.onclick=()=>{view.focus(c.id);inspectComplex(c.id);};return button;}));
- if(model.complexes.length){if(area==='all')view.overview();else view.focus(model.complexes[0].id);inspectComplex(model.complexes[0].id);}else $('#details').textContent='No modules in this subject area.';
+ if(model.complexes.length){if(area==='all'){const pilot=model.complexes.find(c=>c.id.includes('HamiltonianMechanics'))||model.complexes[0];view.focus(pilot.id);}else view.focus(model.complexes[0].id);inspectComplex(model.complexes[0].id);}else $('#details').textContent='No modules in this subject area.';
 }
 function inspectComplex(id){
  const c=model.complexes.find(x=>x.id===id);if(!c)return;selectedComplex=id;const n=neighborhood(model,id);
