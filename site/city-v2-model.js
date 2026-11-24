@@ -22,8 +22,8 @@ export function buildCityV2(graph,declarations=null,{area='ClassicalMechanics',d
   for(const m of modules){
    const ds=declByModule.get(m.id)||[];
    if(coverage.get(m.id)!=='complete'||ds.length===0)unclassified.add(m.id);
-   for(const d of ds){const role=d.kind==='definition'&&d.id.startsWith('source:')?null:roleOf(d.kind);if(role)typed.get(role).push(d);else unclassified.add(m.id);}
-   for(const imp of m.imports||[])if(imp.module.startsWith('Mathlib.')){if(!math.has(imp.module))math.set(imp.module,new Set());math.get(imp.module).add(m.id);}
+   for(const d of ds){const role=roleOf(d.kind);if(role)typed.get(role).push(d);else unclassified.add(m.id);}
+   for(const imp of m.imports||[])if(imp.module==='Mathlib'||imp.module.startsWith('Mathlib.')){if(!math.has(imp.module))math.set(imp.module,new Set());math.get(imp.module).add(m.id);}
   }
   const buildings=[];
   for(const role of roles){const ds=typed.get(role);if(!ds.length)continue;const moduleIds=[...new Set(ds.map(x=>x.module))].sort(sort);buildings.push({id:id+'::'+role,complexId:id,role,status:'inferred',evidence:'recorded-declaration-kind; functional role inferred',moduleIds,declarationIds:ds.map(x=>x.id),lines:moduleIds.reduce((n,m)=>n+(byId.get(m)?.lineCount||1),0)});}
