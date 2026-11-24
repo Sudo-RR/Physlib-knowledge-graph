@@ -104,11 +104,11 @@ function createView(host,model,selectCallback){
  function keydown(e){if(e.target.closest?.('input,button,textarea,select')||e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();if(['w','a','s','d','arrowleft','arrowright','arrowup','arrowdown'].includes(k)){keys.add(k);e.preventDefault();}}
  function keyup(e){keys.delete(e.key.toLowerCase());}
  window.addEventListener('keydown',keydown);window.addEventListener('keyup',keyup);
- function highlight(id,showSky=true){
+ function highlight(id,showSky=true,channel=0){
   while(connections.children.length){const child=connections.children[0];connections.remove(child);child.geometry?.dispose();child.material?.dispose();}
-  if(!showSky||!sites.has(id))return;
+  if(!showSky||!sites.has(id)||channel===3)return;
   const data=neighborhood(model,id),start=sites.get(id);
-  for(const [edges,color,reverse] of [[data.uses,pink,false],[data.usedBy,amber,true]])for(const edge of edges.slice(0,14)){
+  for(const [edges,color,reverse] of [[channel===2?[]:data.uses,pink,false],[channel===1?[]:data.usedBy,amber,true]])for(const edge of edges.slice(0,14)){
    const end=sites.get(reverse?edge.from:edge.to);if(!end)continue;
    const a=new THREE.Vector3(start.x,58,start.z),b=new THREE.Vector3(end.x,58,end.z),mid=a.clone().add(b).multiplyScalar(.5);mid.y+=Math.min(85,a.distanceTo(b)*.16)+34;
    path(connections,[a,mid,b],color,.52);
@@ -125,7 +125,7 @@ function createView(host,model,selectCallback){
  }requestAnimationFrame(update);
  return {focus(id){const p=sites.get(id);if(p){focus.copy(p);distance=185;overhead=false;highlight(id,false);}},overview(){focus.set(0,0,0);distance=clamp(bounds*1.7,minDistance,maxDistance);overhead=true;},district(){overhead=false;distance=180;},highlight,dispose(){running=false;observer.disconnect();window.removeEventListener('keydown',keydown);window.removeEventListener('keyup',keyup);const gs=new Set(),ms=new Set();scene.traverse(o=>{if(o.geometry&&o.geometry!==geom)gs.add(o.geometry);if(o.material&&!materials.includes(o.material)&&![frame,glass,steel,cream,scaffold].includes(o.material))ms.add(o.material);});for(const g of gs)g.dispose();for(const m of ms){m.map?.dispose();m.dispose();}renderer.dispose();renderer.domElement.remove();}};
 }
-let graph,mathRevision=null,declarations=null,model=null,view=null;
+let graph,mathRevision=null,declarations=null,model=null,view=null,selectedComplex=null;
 const uri=(root,revision,path)=>root+'/blob/'+revision+'/'+path.split('/').map(encodeURIComponent).join('/');
 async function load(){
  const response=await fetch('data/graph.json',{cache:'no-cache'});if(!response.ok)throw Error('Could not load PhysLib graph: '+response.status);graph=await response.json();
@@ -136,7 +136,10 @@ async function load(){
  $('#area').replaceChildren(...areas.map(a=>{const e=document.createElement('option');e.value=a;e.textContent=a==='all'?'All physics boroughs':a.replace(/([a-z])([A-Z])/g,'$1 $2');return e;}));
  $('#area').value=areas.includes(initial)?initial:areas[0];$('#demo').checked=params.get('demo')==='1';
  $('#area').addEventListener('change',render);$('#demo').addEventListener('change',render);
- $('#overview').addEventListener('click',()=>view?.overview());$('#district').addEventListener('click',()=>view?.district());
+ $('#overview').addEventListener('click',()=>view?.overview());$('#district').addEventListener('click',()=>{if(selectedComplex)view?.focus(selectedComplex);else view?.district();});
+ $('#searchComplex').addEventListener('input',()=>{const q=$('#searchComplex').value.toLowerCase();for(const b of $('#complexes').children)b.hidden=!b.title.toLowerCase().includes(q);});
+ $('#toggleInspector').onclick=()=>document.body.classList.toggle('hide-inspector');
+ window.addEventListener('keydown',e=>{if(e.target.matches?.('input,select,textarea')&&e.key!=='Escape')return;if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase();if(k==='/'){e.preventDefault();document.body.classList.remove('hide-inspector');$('#searchComplex').focus();}if(k==='m')view?.overview();if(k==='f'&&selectedComplex)view?.focus(selectedComplex);if(k==='i')document.body.classList.toggle('hide-inspector');if(k==='escape'){view?.highlight(null,false);document.activeElement?.blur();}if(['1','2','3'].includes(k)&&selectedComplex){view?.highlight(selectedComplex,true,Number(k));if(k==='3')inspectStation(selectedComplex);}});
  render();
 }
 function render(){
@@ -151,23 +154,24 @@ function render(){
  if(model.complexes.length){if(area==='all')view.overview();else view.focus(model.complexes[0].id);inspectComplex(model.complexes[0].id);}else $('#details').textContent='No modules in this subject area.';
 }
 function inspectComplex(id){
- const c=model.complexes.find(x=>x.id===id);if(!c)return;const n=neighborhood(model,id);
+ const c=model.complexes.find(x=>x.id===id);if(!c)return;selectedComplex=id;const n=neighborhood(model,id);
  $('#details').innerHTML='<h2>'+esc(c.id.split('/').at(-1))+'</h2><p class="muted">'+esc(c.id)+'</p><p>'+c.moduleIds.length+' modules · '+c.buildings.length+' visible building groups</p><p>'+n.uses.length+' outward complex imports · '+n.usedBy.length+' inbound complex imports</p><h3>Buildings</h3><div id="members"></div><button id="inspectStation">Math Power Station · '+c.mathlib.length+' Mathlib targets</button>';
  for(const b of c.buildings){const button=document.createElement('button');button.textContent=roleNames[b.role]+' — '+b.status+(b.status==='demo'?' [DEMO]':'');button.onclick=()=>{view.highlight(c.id,true);inspectBuilding(b.id);};$('#members').append(button);}
  $('#inspectStation').onclick=()=>inspectStation(id);
+ const routes=document.createElement('section');routes.innerHTML='<h3>Recorded module imports</h3>';for(const [name,edges] of [['Uses',n.uses],['Used by',n.usedBy]]){const heading=document.createElement('h4');heading.textContent=name+' · '+edges.length+' complexes';routes.append(heading);for(const edge of edges){const d=document.createElement('details'),summary=document.createElement('summary');summary.textContent=(name==='Uses'?edge.to:edge.from)+' · '+edge.count+' imports';d.append(summary);const list=document.createElement('ul');for(const imp of edge.imports){const li=document.createElement('li'),link=document.createElement('a'),m=graph.modules.find(x=>x.id===imp.from);link.textContent=imp.from+' → '+imp.to;link.href=uri(graph.source.repository,graph.source.revision,m.path)+(imp.line?'#L'+imp.line:'');link.target='_blank';link.rel='noopener';li.append(link);list.append(li);}d.append(list);routes.append(d);}}$('#details').append(routes);
 }
 function inspectBuilding(id){
  const c=model.complexes.find(x=>x.buildings.some(b=>b.id===id)),b=c?.buildings.find(b=>b.id===id);if(!b)return;
  const list=b.moduleIds.map(id=>{const m=graph.modules.find(x=>x.id===id);return '<li><a target="_blank" rel="noopener" href="'+uri(graph.source.repository,graph.source.revision,m.path)+'">'+esc(id)+'</a></li>';}).join('');
- $('#details').innerHTML='<button id="back">← Complex</button><h2>'+esc(roleNames[b.role])+'</h2><p>'+esc(b.status)+' · '+esc(b.evidence)+'</p><p class="muted">'+b.declarationIds.length+' recorded declarations; '+b.moduleIds.length+' source modules. Missing coverage does not prove mathematical incompleteness.</p><h3>Source modules</h3><ul>'+list+'</ul><h3>Recorded declarations</h3><ul>'+b.declarationIds.map(id=>'<li>'+esc(id)+'</li>').join('')+'</ul>';
+ $('#details').innerHTML='<button id="back">← Complex</button><h2>'+esc(roleNames[b.role])+'</h2><p>'+esc(b.status)+' · '+esc(b.evidence)+'</p><p class="muted">'+b.declarationIds.length+' recorded declarations; '+b.moduleIds.length+' source modules. Missing coverage does not prove mathematical incompleteness.</p><h3>Source modules</h3><ul>'+list+'</ul><h3>Recorded declarations</h3><ul>'+b.declarationIds.map(id=>{const d=declarations?.declarations.find(x=>x.id===id),m=graph.modules.find(x=>x.id===d?.module);return m?'<li><a target="_blank" rel="noopener" href="'+uri(graph.source.repository,graph.source.revision,m.path)+(d.line?'#L'+d.line:'')+'">'+esc(id)+'</a></li>':'<li>'+esc(id)+'</li>';}).join('')+'</ul>';
  $('#back').onclick=()=>inspectComplex(c.id);
 }
 function inspectStation(id){
  const data=stationData(model,id);if(!data)return;
- const refs=data.targets.map(t=>{const path=t.target.replaceAll('.','/')+'.lean';const link=uri('https://github.com/leanprover-community/mathlib4',mathRevision||'master',path);
+ selectedComplex=id;const refs=data.targets.map(t=>{const path=t.target.replaceAll('.','/')+'.lean';const link=uri('https://github.com/leanprover-community/mathlib4',mathRevision||'master',path);
  return '<details><summary>'+esc(t.target)+' · '+t.sourceModules.length+' importers</summary><a target="_blank" rel="noopener" href="'+link+'">View Mathlib source'+(mathRevision?' at pinned revision':' (latest)')+'</a><ul>'+t.sourceModules.map(m=>'<li>'+esc(m)+'</li>').join('')+'</ul></details>';}).join('');
  $('#details').innerHTML='<button id="back">← Complex</button><h2>Math Power Station</h2><p>'+data.totalUnique+' distinct Mathlib module targets</p><p class="muted">Ground-level pipes aggregate true recorded module imports. The same Mathlib file may be used by other complexes; this view does not show convergence to a shared node.</p><div class="stationList">'+(refs||'No Mathlib imports recorded.')+'</div>';
  $('#back').onclick=()=>inspectComplex(id);
 }
-function inspectPick(event){if(event.kind==='station')inspectStation(event.complex);else inspectBuilding(event.id);}
+function inspectPick(event){selectedComplex=event.complex;if(event.kind==='station')inspectStation(event.complex);else inspectBuilding(event.id);}
 load().catch(e=>{$('#coverage').textContent=e.message;console.error(e);});
