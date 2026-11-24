@@ -33,3 +33,9 @@ test('role categories are explicit and synthetic demonstration is labelled',()=>
 test('mismatched declaration revision cannot be assigned',()=>{
  assert.throws(()=>buildCityV2(graph,{source:{revision:'unrelated',toolchain:source.toolchain}}),/mismatch/);
 });
+
+test('import-only source modules remain represented even with zero declarations',()=>{
+ const declarations={source,coverage:graph.modules.map(m=>({module:m.id,status:'complete'})),declarations:[]};
+ const m=buildCityV2(graph,declarations);
+ assert(m.complexes.every(c=>c.buildings.some(b=>b.role==='provisional')));
+});
