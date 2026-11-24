@@ -16,3 +16,6 @@ Reference: [StarKnightt/night-street](https://github.com/StarKnightt/night-stree
 
 ## Site-wide colour system
 The user selected Imetomi/retro-futuristic-ui-design as the colour reference. See [colour-system.spec.md](colour-system.spec.md) for the CRT amber, LCD olive, hardware silver and terrain adaptation. Preserve distinct semantic subject and pipe colours. No glitch, scanline or text distortion is required for usability.
+
+## SynthCity architectural kit
+Reference [jeffbeene/synthcity](https://github.com/jeffbeene/synthcity/tree/5a4ee0dd231ce06653a2a9776ed2e36137918d21). Source reviewed: GeneratorItem_CityBlock.js, Generator.js, AssetManager.js, index.js. Reuse selected low-poly building OBJ geometry with normalized envelopes and our own procedural facade textures, deterministic model assignment and restrained amber emissive window masks. Retain the cassette-futurist frontend, existing Geneva geography and circular observation towers. No infinite grid, ads, cars or audio. Camera-relative streaming is a G5 LOD reference, not a requirement for G1; the existing finite world and semantic IDs remain authoritative. Full-screen bloom is deferred until measured; emissive surfaces do not require additional light objects. Asset provenance in THIRD_PARTY_ASSETS.md.

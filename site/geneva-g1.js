@@ -3,6 +3,7 @@ import {masterplan,validatePlan,capacity,VERSION} from './geneva-g1-geometry.js'
 import {buildCityV2} from './city-v2-model.js';
 import {demoMassing} from './geneva-g1-massing.js';
 import {makeFacadeMaterials} from './city-v2-facades.js';
+import {buildSynthKit,synthModel,addWindowEmission} from './geneva-synthcity-kit.js';
 const $=id=>document.getElementById(id),p=masterplan(),metrics=validatePlan(p);
 const ns='http://www.w3.org/2000/svg',el=(tag,attrs={},parent)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(parent)parent.append(e);return e;};
 const pts=p=>p.map(v=>v.join(',')).join(' ');
@@ -44,10 +45,13 @@ function init3D(){
  massGroup=new THREE.Group();scene.add(massGroup);
  const facade=makeFacadeMaterials(THREE),ivory=material('#e8e8e8'),metal=material('#909090',.35),glass=material('#687f76',.28),glow=new THREE.MeshStandardMaterial({color:'#ffb879',emissive:'#ff6a00',emissiveIntensity:.7});
  const boxGeo=new THREE.BoxGeometry(1,1,1),cylinderGeo=new THREE.CylinderGeometry(.5,.5,1,12),coneGeo=new THREE.ConeGeometry(.5,1,12),ringGeo=new THREE.TorusGeometry(.5,.035,5,20);
+ const synthKit=buildSynthKit(THREE);addWindowEmission(THREE,facade);
  const batches=new Map(),dummy=new THREE.Object3D();
  function part(t,geo,m,x,y,z,w,h,d,rx=0){const a=t.angle,c=Math.cos(a),s=Math.sin(a);dummy.position.copy(world(t.x+c*x+s*z,t.z-s*x+c*z,y));dummy.rotation.set(rx,a,0);dummy.scale.set(w,h,d);dummy.updateMatrix();const key=geo.uuid+'|'+m.uuid;if(!batches.has(key))batches.set(key,{geo,m,matrices:[]});batches.get(key).matrices.push(dummy.matrix.clone());}
  for(const t of towers){const {w,d,h,style}=t,fac=facade[style];
   part(t,boxGeo,ivory,0,1,0,w*1.08,2,d*1.08);
+  const imported=synthKit[synthModel(t)];
+  if(imported){part(t,imported,fac,0,h*.5+1,0,w,h,d);continue;}
   if(style===2){part(t,cylinderGeo,fac,0,h*.48,0,w,h*.92,d);part(t,cylinderGeo,ivory,0,h*.79,0,w*1.12,1.1,d*1.12);part(t,cylinderGeo,glass,0,h*.98,0,w*.83,h*.12,d*.83);part(t,coneGeo,metal,0,h*1.13,0,w*.38,h*.18,d*.38);}
   else if(style===3){part(t,boxGeo,fac,0,h*.36,0,w,h*.7,d);part(t,boxGeo,fac,0,h*.79,0,w*.64,h*.48,d*.64);part(t,boxGeo,ivory,0,h*.55,0,w*1.07,1.15,d*1.07);part(t,boxGeo,glow,0,h*1.03,0,w*.52,1,d*.52);}
   else if(style===4){part(t,cylinderGeo,ivory,0,h*.41,0,w*.58,h*.82,d*.58);part(t,cylinderGeo,glass,0,h*.85,0,w*1.02,h*.23,d*1.02);part(t,cylinderGeo,ivory,0,h*.99,0,w*1.04,1.3,d*1.04);part(t,ringGeo,metal,0,h*.98,0,w*1.12,d*1.12,1,Math.PI/2);part(t,coneGeo,metal,0,h*1.1,0,w*.21,h*.2,d*.21);}

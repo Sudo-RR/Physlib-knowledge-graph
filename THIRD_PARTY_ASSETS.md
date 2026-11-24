@@ -85,3 +85,16 @@ Civic crossings are infrastructure, not import edges. See the
 ## Milestone B.1 generated facade
 
 site/city-district-lod.js generates a 256x128 facade atlas in Canvas from original rectangles and colours. It contains no external image or model data. LOD shells and the transition shader are original repository code. The same CC0 five-part kit remains the only imported district architecture; its existing mirror-provenance limitation is unchanged.
+
+
+## Geneva G1 — SynthCity building geometry
+
+- Upstream: [Jeff Beene / SynthCity](https://github.com/jeffbeene/synthcity/tree/5a4ee0dd231ce06653a2a9776ed2e36137918d21), root MIT licence (Copyright 2024 Jeff Beene); package.json separately declares ISC. The repository README separately credits third-party car, music and sound assets, none of which are included here.
+- Vendored only five building OBJ texts (s_02_01, s_03_01, s_05_01, s_05_03, mega_01) from assets/models at the pinned revision, in site/geneva-synthcity-models.js. Original text retained; runtime geometry normalized to existing safe bounds and UVs replaced for local facade textures. No upstream textures, adverts, car models, sounds, or music included. Source OBJ blob SHAs:
+  - s_02_01.obj: b97f4003e7072e0a4637873cc0b156568a440465
+  - s_03_01.obj: 140bf788bad4b620aa261cbbd946d70d3841d509
+  - s_05_01.obj: d1fc36e9ef0534dd0adc375c56bf50ff613e2ac9
+  - s_05_03.obj: 0a077869e381163b8a4df08d9211693271cadb1b
+  - mega_01.obj: caf8c63d01e2c89862c86d04fd9f13ed0c3cf380
+- Licence receipt: site/assets/licenses/synthcity-mit.txt (verbatim). No separate building-model credit identified in upstream README; root licence is the basis for reuse. If different asset-specific terms become known, remove the model.
+- Art-only G1 skyline; not source-linked mathematical role assignment. Existing procedural shapes serve as fallback and preserve atomic-age circular towers.
