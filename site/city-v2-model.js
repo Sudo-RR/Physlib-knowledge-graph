@@ -21,7 +21,7 @@ export function buildCityV2(graph,declarations=null,{area='ClassicalMechanics',d
   const typed=new Map(roles.map(r=>[r,[]])),unclassified=new Set(),math=new Map();
   for(const m of modules){
    const ds=declByModule.get(m.id)||[];
-   if(coverage.get(m.id)!=='complete')unclassified.add(m.id);
+   if(coverage.get(m.id)!=='complete'||ds.length===0)unclassified.add(m.id);
    for(const d of ds){const role=roleOf(d.kind);if(role)typed.get(role).push(d);else unclassified.add(m.id);}
    for(const imp of m.imports||[])if(imp.module.startsWith('Mathlib.')){if(!math.has(imp.module))math.set(imp.module,new Set());math.get(imp.module).add(m.id);}
   }
