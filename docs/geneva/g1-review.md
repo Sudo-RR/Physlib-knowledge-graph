@@ -11,3 +11,6 @@ User requested north-up as default and buildings visible immediately. The previe
 
 ## Landing page decision — 24 November 2026
 User explicitly requested G1 as default. Package index.html from G1; retain source-linked city-v2.html and city-c4.html with prominent navigation. Preserve old source explorer deep links. G1 remains an illustrative skyline study; G2–G5 acceptance and actual browser evidence are outstanding.
+
+## Civic infill review
+Added a connected cross-bank road network, low-rise architecture, public squares, street trees and park planting. All remain illustrative; current tower massing is preserved. Review in the default north-up view and flat plan. The visual milestone is not full G2/G3 acceptance.
