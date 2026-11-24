@@ -38,6 +38,8 @@ jobs:
       - run: npm run build:city
       - run: npm run build:data
       - run: npm run validate:data
+      - run: node scripts/city-v2-inventory.mjs .physlib-source
+      - run: node scripts/validate-declarations.mjs site/data/graph.json site/data/declarations.json
       - name: Read Mathlib revision pinned by Physlib
         id: mathlib_pin
         run: echo "revision=$(node scripts/mathlib-pin.mjs .physlib-source)" >> "$GITHUB_OUTPUT"
