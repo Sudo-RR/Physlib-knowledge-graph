@@ -13,7 +13,7 @@ function block(parent,x,y,z,w,h,d,m,geometry=geom){const o=new THREE.Mesh(geomet
 function path(parent,points,color,width=.4){if(points.length<2)return;const curve=new THREE.CatmullRomCurve3(points);const t=new THREE.Mesh(new THREE.TubeGeometry(curve,25,width,6,false),new THREE.MeshBasicMaterial({color}));parent.add(t);return t;}
 function tower(parent,b,x,z,c){
  const g=new THREE.Group();g.position.set(x,0,z);parent.add(g);
- const w=clamp(14+5*Math.log2(1+(b.lines||1)/110),14,31),h=clamp(25+18*Math.log2(1+(b.lines||1)/150),25,100);
+ const w=clamp(12+3*Math.log2(1+(b.lines||1)/110),12,20),h=clamp(25+18*Math.log2(1+(b.lines||1)/150),25,100);
  const accent=materials[c%materials.length];
  block(g,0,2,0,w*1.2,4,w*1.2,accent);
  if(b.role==='provisional'){
@@ -61,25 +61,26 @@ function station(parent,x,z,id){
  return {group:g,pick,position:new THREE.Vector3(x,9,z)};
 }
 function createView(host,model,selectCallback){
- const scene=new THREE.Scene();scene.background=new THREE.Color('#d6a6a5');scene.fog=new THREE.FogExp2('#e3bca8',.0011);
+ const scene=new THREE.Scene();scene.background=new THREE.Color('#d6a6a5');scene.fog=new THREE.FogExp2('#e3bca8',.00035);
  scene.add(new THREE.HemisphereLight('#ffeacb','#587487',2.15));
  const sun=new THREE.DirectionalLight('#ffc18d',3.2);sun.position.set(-180,240,100);scene.add(sun);
  const renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio||1,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.1;host.append(renderer.domElement);
- const camera=new THREE.PerspectiveCamera(46,1,.5,7000);
+ const camera=new THREE.PerspectiveCamera(46,1,.5,20000);
  const root=new THREE.Group(),connections=new THREE.Group();scene.add(root,connections);
- const total=model.complexes.length,cols=Math.ceil(Math.sqrt(Math.max(1,total)*1.45)),rows=Math.ceil(Math.max(1,total)/cols),pitch=115;
- const bounds=Math.max(cols,rows)*pitch,field=new THREE.Mesh(new THREE.PlaneGeometry(bounds*7,bounds*7),material('#adc3a1'));field.rotation.x=-Math.PI/2;field.position.y=-.3;scene.add(field);
+ const total=model.complexes.length,pitch=160; const groups=new Map(); for(const c of model.complexes){if(!groups.has(c.area))groups.set(c.area,[]);groups.get(c.area).push(c);} const places=new Map(),boroughs=[]; let cursorX=0,cursorZ=0,rowDepth=0; const worldWidth=Math.max(480,Math.sqrt(total)*pitch*1.8); for(const [area,cs] of groups){const cols=Math.ceil(Math.sqrt(cs.length*1.3)),rows=Math.ceil(cs.length/cols),w=cols*pitch+100,d=rows*pitch+100;if(cursorX+w>worldWidth&&cursorX>0){cursorX=0;cursorZ+=rowDepth+70;rowDepth=0;} const bx=cursorX+w/2,bz=cursorZ+d/2; boroughs.push({area,x:bx,z:bz,w,d});cs.forEach((c,i)=>places.set(c.id,{x:cursorX+80+(i%cols)*pitch+(Math.floor(i/cols)%2?12:-12),z:cursorZ+80+Math.floor(i/cols)*pitch}));cursorX+=w+70;rowDepth=Math.max(rowDepth,d);} const maxX=Math.max(160,...boroughs.map(b=>b.x+b.w/2)),maxZ=Math.max(160,...boroughs.map(b=>b.z+b.d/2));for(const p of places.values()){p.x-=maxX/2;p.z-=maxZ/2;}for(const b of boroughs){b.x-=maxX/2;b.z-=maxZ/2;}
+ const bounds=Math.max(maxX,maxZ),field=new THREE.Mesh(new THREE.PlaneGeometry(bounds*7,bounds*7),material('#adc3a1'));field.rotation.x=-Math.PI/2;field.position.y=-.3;scene.add(field);
  const sites=new Map(),structures=new Map(),powers=new Map(),labels=[];
- const roadway=material('#aba093');
+ const roadway=material('#777e81');
+ for(const b of boroughs){const tint=colors[Math.floor(hash(b.area)*colors.length)];const shape=new THREE.Shape();const w=b.w/2,d=b.d/2;[[-w*.9,-d],[w*.65,-d],[w,-d*.65],[w,d*.8],[w*.65,d],[-w*.8,d],[-w,d*.7],[-w,-d*.7]].forEach(([x,z],i)=>i?shape.lineTo(x,z):shape.moveTo(x,z));shape.closePath();const mesh=new THREE.Mesh(new THREE.ShapeGeometry(shape),material(tint));mesh.rotation.x=-Math.PI/2;mesh.position.set(b.x,-.15,b.z);root.add(mesh);}
  model.complexes.forEach((complex,i)=>{
-  const row=Math.floor(i/cols),col=i%cols,xx=(col-(cols-1)/2)*pitch+(row%2?18:-11)+(hash(complex.id)-.5)*16,zz=(row-(rows-1)/2)*pitch+(hash(complex.id+'z')-.5)*24;
+  const {x:xx,z:zz}=places.get(complex.id);
   sites.set(complex.id,new THREE.Vector3(xx,0,zz));
   const tone=Math.floor(hash(complex.id.split('/').slice(0,3).join('/'))*colors.length);
-  const pad=new THREE.Mesh(new THREE.CylinderGeometry(72,73,1,9),material(colors[tone]));pad.position.set(xx,.05,zz);pad.rotation.y=hash(complex.id)*.8;root.add(pad);
+  const pad=new THREE.Mesh(new THREE.CylinderGeometry(67,68,1,9),material('#e0d2bc'));pad.position.set(xx,.05,zz);pad.rotation.y=hash(complex.id)*.8;root.add(pad);
   block(root,xx,.65,zz-41,95,.35,8,roadway);block(root,xx-43,.65,zz,8,.35,80,roadway);
-  const placements=[[-20,-14],[20,-14],[-20,20],[20,20],[0,2],[1,-31]];
+  const placements=[[-24,-24],[24,-24],[-24,24],[24,24],[0,0],[0,-48]];
   for(let k=0;k<complex.buildings.length&&k<6;k++){const [dx,dz]=placements[k],b=complex.buildings[k],t=tower(root,b,xx+dx,zz+dz,tone);structures.set(b.id,t);}
-  const power=station(root,xx+43,zz-29,complex.id);powers.set(complex.id,power);
+  const power=station(root,xx+51,zz-29,complex.id);powers.set(complex.id,power);
   if(complex.mathlib.length){
    const source=new Set(complex.mathlib.flatMap(x=>x.sourceModules));
    for(const b of complex.buildings.filter(x=>x.moduleIds.some(m=>source.has(m))).slice(0,5)){
@@ -111,7 +112,7 @@ function createView(host,model,selectCallback){
    const end=sites.get(reverse?edge.from:edge.to);if(!end)continue;
    const a=new THREE.Vector3(start.x,58,start.z),b=new THREE.Vector3(end.x,58,end.z),mid=a.clone().add(b).multiplyScalar(.5);mid.y+=Math.min(85,a.distanceTo(b)*.16)+34;
    path(connections,[a,mid,b],color,.52);
-   const direction=b.clone().sub(mid).normalize(),arrow=new THREE.Mesh(new THREE.ConeGeometry(1.5,4,6),new THREE.MeshBasicMaterial({color}));arrow.position.copy(b.clone().addScaledVector(direction,-10));arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);connections.add(arrow);
+   const direction=reverse?a.clone().sub(mid).normalize():b.clone().sub(mid).normalize(),arrow=new THREE.Mesh(new THREE.ConeGeometry(1.5,4,6),new THREE.MeshBasicMaterial({color}));arrow.position.copy((reverse?a:b).clone().addScaledVector(direction,-10));arrow.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction);connections.add(arrow);
   }
  }
  function update(now){if(!running)return;const dt=Math.min(.05,(now-last)/1000);last=now;
@@ -130,9 +131,9 @@ async function load(){
  const response=await fetch('data/graph.json',{cache:'no-cache'});if(!response.ok)throw Error('Could not load PhysLib graph: '+response.status);graph=await response.json();
  try{const res=await fetch('data/mathlib.json',{cache:'no-cache'});if(res.ok)mathRevision=(await res.json()).source?.revision||null;}catch{}
  try{const res=await fetch('data/declarations.json',{cache:'no-cache'});if(res.ok){const candidate=await res.json();if(candidate.source?.revision===graph.source?.revision&&candidate.source?.toolchain===graph.source?.toolchain)declarations=candidate;}}catch{}
- const params=new URLSearchParams(location.search),initial=params.get('area')||'ClassicalMechanics';
- const areas=buildCityV2(graph,null,{area:initial}).areas;
- $('#area').replaceChildren(...areas.map(a=>{const e=document.createElement('option');e.value=a;e.textContent=a.replace(/([a-z])([A-Z])/g,'$1 $2');return e;}));
+ const params=new URLSearchParams(location.search),initial=params.get('area')||'all';
+ const areas=['all',...buildCityV2(graph,null,{area:initial}).areas];
+ $('#area').replaceChildren(...areas.map(a=>{const e=document.createElement('option');e.value=a;e.textContent=a==='all'?'All physics boroughs':a.replace(/([a-z])([A-Z])/g,'$1 $2');return e;}));
  $('#area').value=areas.includes(initial)?initial:areas[0];$('#demo').checked=params.get('demo')==='1';
  $('#area').addEventListener('change',render);$('#demo').addEventListener('change',render);
  $('#overview').addEventListener('click',()=>view?.overview());$('#district').addEventListener('click',()=>view?.district());
@@ -144,10 +145,10 @@ function render(){
  model=buildCityV2(graph,declarations,{area,demo});view?.dispose();$('#canvas').replaceChildren();
  view=createView($('#canvas'),model,inspectPick);
  $('#summary').textContent=model.complexes.length+' complexes · '+model.complexes.reduce((n,c)=>n+c.moduleIds.length,0)+' modules · '+graph.source.revision.slice(0,10);
- $('#coverage').textContent=declarations?'Optional declaration data loaded; classification may be partial.':'No compatible declaration snapshot. Construction sites mean unknown classification, not unfinished Lean mathematics.';
+ $('#coverage').textContent=declarations?'Source declaration inventory loaded; roles are inferred and coverage may be partial.':'No compatible declaration snapshot. Construction sites mean unknown classification, not unfinished Lean mathematics.';
  $('#demoWarning').hidden=!demo;
  $('#complexes').replaceChildren(...model.complexes.map(c=>{const button=document.createElement('button');button.textContent=c.id.split('/').slice(-2).join(' / ');button.title=c.id;button.onclick=()=>{view.focus(c.id);inspectComplex(c.id);};return button;}));
- if(model.complexes.length){view.focus(model.complexes[0].id);inspectComplex(model.complexes[0].id);}else $('#details').textContent='No modules in this subject area.';
+ if(model.complexes.length){if(area==='all')view.overview();else view.focus(model.complexes[0].id);inspectComplex(model.complexes[0].id);}else $('#details').textContent='No modules in this subject area.';
 }
 function inspectComplex(id){
  const c=model.complexes.find(x=>x.id===id);if(!c)return;const n=neighborhood(model,id);
