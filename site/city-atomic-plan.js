@@ -17,6 +17,14 @@ export function atomicPlan(node,semanticHeight,concept='campus'){
 }
 export function atomicBounds(plan){return {width:plan.width+1.4,depth:plan.depth+2,height:plan.height+1.8};}
 
+// Illustrative styles only: stable file IDs select a silhouette, never a verified role.
+export function skylineMassing(module){
+ const a=module.architecture,c=Math.abs(Math.cos(a.rotation||0)),s=Math.abs(Math.sin(a.rotation||0));
+ const budget=.96*Math.min(module.decorativeBounds.maxX-module.decorativeBounds.minX,module.decorativeBounds.maxZ-module.decorativeBounds.minZ)/(c+s);
+ const width=budget*[1,1,.88,1][a.type],depth=budget*[.94,.88,.92,1][a.type];
+ return {width,depth,height:a.height,type:a.type,classification:'illustrative',name:['Structural tower','Modular tower','Interface tower','Articulated theorem tower'][a.type],footprint:{width:width*c+depth*s,depth:depth*c+width*s}};
+}
+
 /** Candidate screen-space occlusion: project neighbour AABBs into the subject view. */
 export function atomicCameraPose(module,modules,aspect=1.5,view='selected'){
  const p=module.position,h=module.displayHeight,b=module.decorativeBounds,w=b.maxX-b.minX,d=b.maxZ-b.minZ;

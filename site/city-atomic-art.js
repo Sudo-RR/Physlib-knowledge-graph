@@ -1,6 +1,6 @@
 import {mixColor} from './city-colors.js';
 import * as THREE from 'three';
-import {atomicPalette as P} from './city-atomic-plan.js';
+import {atomicPalette as P,skylineMassing} from './city-atomic-plan.js';
 import {projectedHeight,addLodShader} from './city-district-lod.js';
 
 /** Original reusable architecture; bounded batches, shared primitive resources, no per-file GLB. */
@@ -13,17 +13,37 @@ export function createAtomicArt(manifest){
  const accent=m=>['c2','c3','c4'].includes(manifest.visual)?m.identity.primary:manifest.concept==='metropolis'?P.amber:m.boroughId==='PhyslibAlpha'?P.coral:m.boroughId==='QuantumInfo'?P.orchid:m.architecture.type===0?P.amber:m.architecture.type===2?P.coral:P.teal;
  function add(m,shape,mat,x,y,z,w,h,d,detail=0,tint=null){if(manifest.visual==='c3'){x*=1.13;z*=1.13;w*=1.13;d*=1.13;}const key=[shape,mat,detail].join('/');if(!batches.has(key))batches.set(key,{geometry:shapes[shape],material:mats[mat],detail,items:[]});const angle=m.architecture.rotation||0;part.position.set(m.position.x+x*Math.cos(angle)+z*Math.sin(angle),y,m.position.z+z*Math.cos(angle)-x*Math.sin(angle));part.scale.set(w,h,d);part.rotation.set(0,m.architecture.rotation||0,0);part.updateMatrix();batches.get(key).items.push({id:m.id,matrix:part.matrix.clone(),tint:tint??(mat==='accent'||(['c2','c3','c4'].includes(manifest.visual)&&mat==='amber')?accent(m):['c2','c3','c4'].includes(manifest.visual)&&mat==='glass'?mixColor(m.identity.primary,'#dcebe8',.34):0xffffff)});}
  for(const m of Object.values(manifest.modules)){
-  const a=m.architecture,{width:w,depth:d,height:h,type}=a,city=manifest.concept==='metropolis'||manifest.composition==='porcelain';
+  const a=m.architecture,{width:w,depth:d,height:h,type}=manifest.visual==='c4'?skylineMassing(m):a,city=manifest.concept==='metropolis'||manifest.composition==='porcelain';
   if(manifest.visual==='c4'){
-   // A complete podium / broad shaft / crown silhouette at the cheapest tier.
-   add(m,'box','accent',0,h*.075,0,w,.15*h,d);
-   add(m,type===0?'drum':'box','glass',0,h*.52,0,w*.9,h*.74,d*.9,0,mixColor(m.identity.primary,'#17374b',.62));
-   add(m,type===0?'lowDome':type===2?'drum':'box','accent',0,h*.93,0,w*.94,h*.08,d*.94);
-   for(let y=3;y<h*.87;y+=3)add(m,type===0?'round':'box','ivory',0,y,0,w*.92,.16,d*.92,1);
-   for(const x of [-.38,.38])add(m,'box','accent',x*w,h*.53,d*.46,.28,h*.7,.25,1);
-   add(m,'box','ink',0,1.4,d*.505,1.8,2.8,.22,1);
-   add(m,'box','ivory',0,3.1,d*.48,w*.65,.25,1.7,1);
-   if(type===1)add(m,'box','ivory',-w*.15,h*.985,0,w*.6,.4,d*.65,1);
+   const glass=mixColor(m.identity.primary,'#20495e',.78);
+   // Broad podiums and distinct silhouettes persist at city LOD; no layout moves.
+   add(m,'box','accent',0,h*.075,0,w,h*.15,d);
+   if(type===0){
+    add(m,'box','ivory',0,h*.46,0,w*.86,h*.62,d*.86);
+    add(m,'box','glass',0,h*.47,0,w*.88,h*.52,d*.88,1,glass);
+    add(m,'box','ivory',0,h*.82,0,w*.67,h*.16,d*.7);
+    add(m,'box','accent',0,h*.94,0,w*.82,h*.08,d*.82);
+    for(const x of [-.31,.31])add(m,'box','ivory',x*w,h*.46,d*.45,w*.12,h*.62,.35,1);
+   }else if(type===1){
+    add(m,'box','glass',-w*.15,h*.48,0,w*.64,h*.66,d*.88,0,glass);
+    add(m,'box','ivory',w*.29,h*.44,0,w*.4,h*.58,d*.72);
+    add(m,'box','accent',-w*.15,h*.9,0,w*.68,h*.14,d*.92);
+    for(const y of [.35,.62])add(m,'box','ivory',0,h*y,0,w*.98,h*.045,d*.96,1);
+   }else if(type===2){
+    add(m,'drum','glass',0,h*.52,0,w*.96,h*.74,d*.96,0,glass);
+    add(m,'lowDome','accent',0,h*.89,0,w*.98,h*.16,d*.98);
+    add(m,'box','ivory',-w*.27,h*.54,0,w*.1,h*.78,d*.8);
+   }else{
+    add(m,'box','glass',0,h*.39,0,w*.9,h*.48,d*.9,0,glass);
+    add(m,'box','glass',-w*.12,h*.73,-d*.08,w*.64,h*.24,d*.64,0,glass);
+    add(m,'box','accent',0,h*.64,0,w*.96,h*.035,d*.96);
+    add(m,'box','accent',-w*.12,h*.88,-d*.08,w*.73,h*.045,d*.73);
+    add(m,'box','ivory',-w*.16,h*.95,-d*.08,w*.46,h*.07,d*.48);
+   }
+   for(let y=3.2;y<h*.84;y+=3.2)add(m,type===2?'round':'box','ivory',0,y,0,w*(type===3&&y>h*.63?.68:.91),.18,d*(type===3&&y>h*.63?.68:.91),1);
+   for(const x of [-.3,0,.3])add(m,'box','accent',x*w,h*.46,d*.455,.2,h*.55,.25,2);
+   add(m,'box','ink',0,1.4,d*.48,2.1,2.8,.25,1);
+   add(m,'box','ivory',0,3.1,d*.43,w*.72,.3,d*.12,1);
    continue;
   }
   if(manifest.visual==='c3'){

@@ -31,6 +31,16 @@ for(const file of ['style.css','city.css']){
   await writeFile(path.join(root,name),data);
 }
 await writeFile(path.join(root,'index.html'),html);
+ // Independent opt-in City v2. No changes to the C.4 default page.
+ const v2Bundle=await readFile(path.join(workspace,'site','assets','city-v2-bundle.js'));
+ const v2Hash=createHash('sha256').update(v2Bundle).digest('hex').slice(0,12);
+ const v2Name=`city-v2-bundle.${v2Hash}.js`;
+ await writeFile(path.join(root,'assets',v2Name),v2Bundle);
+ let v2Html=await readFile(path.join(workspace,'site','city-v2.html'),'utf8');
+ if(!v2Html.includes('assets/city-v2-bundle.js'))throw Error('City v2 bundle reference missing');
+ v2Html=v2Html.replace('assets/city-v2-bundle.js',`assets/${v2Name}`);
+ await writeFile(path.join(root,'city-v2.html'),v2Html);
+
 // Optional declaration snapshots are included only when deliberately generated.
 for(const file of ['declarations.json','city-declarations.json']) {
   try {await stat(path.join(workspace,'site','data',file));await cp(path.join(workspace,'site','data',file),path.join(root,'data',file));} catch(error) {if(error.code!=='ENOENT')throw error;}

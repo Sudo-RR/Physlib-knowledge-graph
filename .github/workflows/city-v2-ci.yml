@@ -1,0 +1,36 @@
+name: City v2 preview checks
+on:
+  pull_request:
+    paths:
+      - 'site/city-v2*'
+      - 'test/city-v2*'
+      - 'package.json'
+      - 'scripts/package-site.mjs'
+      - '.github/workflows/city-v2-ci.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - run: npm test
+      - run: npm run build:city
+      - name: Check v2 preview bundle
+        run: test -s site/assets/city-v2-bundle.js && test -f site/city-v2.html
+      - name: Verify GitHub Pages package with test snapshots
+        run: |
+          mkdir -p site/data
+          cp test/fixtures/city/graph.json site/data/graph.json
+          cp test/fixtures/city/mathlib.json site/data/mathlib.json
+          cp test/fixtures/city/mathlib-bridge.json site/data/mathlib-bridge.json
+          npm run package:site
+          test -f dist/site/index.html
+          test -f dist/site/city-v2.html
+          grep -q 'city-v2-bundle\.' dist/site/city-v2.html
+          ls dist/site/assets/city-v2-bundle.*.js >/dev/null
