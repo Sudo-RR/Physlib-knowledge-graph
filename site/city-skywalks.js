@@ -13,17 +13,18 @@ export function skywalkCurve(edge,nodes,positions,floors,manifest=null){
  const from=positions.get(edge.from),to=positions.get(edge.to);
  const a=new THREE.Vector3(from.x,floors.get(edge.from).height-.2,from.z),b=new THREE.Vector3(to.x,floors.get(edge.to).height-.2,to.z);
  const direction=b.clone().sub(a);direction.y=0;direction.normalize();
- const wA=buildingStyle(edge.from),wB=buildingStyle(edge.to);
+ const wA=manifest?.modules[edge.from]?.footprint||buildingStyle(edge.from),wB=manifest?.modules[edge.to]?.footprint||buildingStyle(edge.to);
  const offset=(size)=>Math.min(size.width/(2*Math.max(.001,Math.abs(direction.x))),size.depth/(2*Math.max(.001,Math.abs(direction.z))))+.12;
  a.addScaledVector(direction,offset(wA));b.addScaledVector(direction,-offset(wB));
  if(manifest){
   const ma=manifest.modules[edge.from],mb=manifest.modules[edge.to];
   if(ma&&mb){
    a.addScaledVector(direction,1.3);b.addScaledVector(direction,-1.3);a.y=ma.dock.y;b.y=mb.dock.y;
-   const level=Math.max(...Object.values(manifest.modules).map(m=>m.decorativeHeight))+4;
+   let level=Math.max(...Object.values(manifest.modules).map(m=>m.decorativeHeight))+4;
    const corridor=m=>manifest.corridors.find(c=>c.kind==='skywalk'&&c.districtId===m.districtId&&c.bounds.minX<=m.position.x&&c.bounds.maxX>=m.position.x);
    const ca=corridor(ma),cb=corridor(mb),aa=a.clone().setY(level),bb=b.clone().setY(level);
-   return new THREE.CatmullRomCurve3([a,aa,new THREE.Vector3(a.x,level,ca?(ca.bounds.minZ+ca.bounds.maxZ)/2:a.z),new THREE.Vector3(b.x,level,cb?(cb.bounds.minZ+cb.bounds.maxZ)/2:b.z),bb,b],false,'centripetal');
+   const make=()=>new THREE.CatmullRomCurve3([a,aa.clone().setY(level),new THREE.Vector3(a.x,level,ca?(ca.bounds.minZ+ca.bounds.maxZ)/2:a.z),new THREE.Vector3(b.x,level,cb?(cb.bounds.minZ+cb.bounds.maxZ)/2:b.z),bb.clone().setY(level),b],false,'centripetal');
+   let route=make();if(['c2','c3','c4'].includes(manifest.visual)){for(const p of route.getPoints(160))for(const o of manifest.obstructions){const q=o.bounds;if(p.x>q.minX-.4&&p.x<q.maxX+.4&&p.z>q.minZ-.4&&p.z<q.maxZ+.4&&p.y<o.maxY+.4)level=Math.max(level,o.maxY+4);}route=make();}return route;
   }
  }
  let level=Math.max(a.y,b.y)+.8;
@@ -55,7 +56,7 @@ export function createSkywalks({edges,nodes,positions,floors,manifest=null}){
   const arrowMaterial=new THREE.MeshBasicMaterial({color:0xf3bf75}),arrow=new THREE.Mesh(new THREE.ConeGeometry(.13,.4,6),arrowMaterial);
   group.add(arrow);arrows.push({object:arrow,curve});
   // End collars connect to the roof crown and identify the real import endpoints.
-  for(const p of [points[0],points.at(-1)]){const mesh=new THREE.Mesh(new THREE.TorusGeometry(.32,.045,6,20),rail);mesh.rotation.x=Math.PI/2;mesh.position.copy(p);group.add(mesh);}
+  for(const [i,p] of [points[0],points.at(-1)].entries()){const identity=manifest?.visual==='c2'?manifest.modules[i?edge.to:edge.from].identity:null,material=identity?rail.clone():rail;if(identity){material.color.set(identity.primary);material.emissive.set(0x000000);}const mesh=new THREE.Mesh(new THREE.TorusGeometry(.32,.045,6,20),material);if(identity)mesh.userData.districtColor=identity.primary;mesh.rotation.x=Math.PI/2;mesh.position.copy(p);group.add(mesh);}
  }
  for(const [transforms,material] of [[deckTransforms,deck],[railTransforms,rail]])if(transforms.length){
   const mesh=new THREE.InstancedMesh(unitBox,material,transforms.length);transforms.forEach((m,i)=>mesh.setMatrixAt(i,m));mesh.computeBoundingSphere();mesh.castShadow=true;mesh.receiveShadow=true;mesh.userData.decorative=true;group.add(mesh);

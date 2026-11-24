@@ -11,7 +11,7 @@ import {createCollisionGrid,cameraClearance} from '../site/city-camera.js';
 import {skywalkCurve} from '../site/city-skywalks.js';
 import {buildFloorIndex} from '../site/city-floors.js';
 import * as THREE from 'three';
-const read=n=>JSON.parse(fs.readFileSync(`site/data/${n}.json`));
+const read=n=>JSON.parse(fs.readFileSync(`test/fixtures/city/${n}.json`));
 const city=buildFullCity(read('graph'),read('mathlib'),read('mathlib-bridge'));
 test('full three-borough hierarchy is exact, deterministic, spacious and corridor safe',()=>{
  const before=JSON.stringify(city),m=createBoroughManifest(city);

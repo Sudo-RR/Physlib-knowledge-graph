@@ -1,3 +1,6 @@
+import {metropolisManifest} from './city-metropolis.js';
+import {chromaticManifest} from './city-chromatic-layout.js';
+import {atomicPlan,atomicBounds} from './city-atomic-plan.js';
 import {buildHierarchy,surfaceRoots} from './city-hierarchy.js';
 import {buildingStyle,roofStyle} from './city-art.js';
 import {buildFloorIndex} from './city-floors.js';
@@ -15,16 +18,16 @@ function shelves(items,gap,minWidth=0){
  for(const item of items){if(x&&x+item.w>target){z+=row+gap;x=0;row=0;}placements.push({...item,x,z});x+=item.w+gap;row=Math.max(row,item.d);w=Math.max(w,x-gap);}
  return {w:Math.max(minWidth,w),d:z+row,placements};
 }
-export function createBoroughManifest(city,{floors=buildFloorIndex(city.nodes),config={}}={}){
- const p={...planning,...config},hierarchy=buildHierarchy(city.nodes),nodes=new Map(city.nodes.map(n=>[n.id,n]));
+export function createBoroughManifest(city,{floors=buildFloorIndex(city.nodes),config={},visual=null,concept='campus',composition='vivid'}={}){
+ const skyline=visual==='c4',chromatic=['c2','c3','c4'].includes(visual),atomic=['c1','c2','c3','c4'].includes(visual),p={...planning,...(atomic?{relativeGap:.35,heightSetback:.08,parcelMargin:9,districtGap:16}:{}),...config},hierarchy=buildHierarchy(city.nodes),nodes=new Map(city.nodes.map(n=>[n.id,n]));
  const modules={},parcels=[],corridors=[],chunks=[],boroughs=[],rivers=[],crossings=[];
- const surfaceHeight=Math.max(5,...city.nodes.filter(n=>n.library!=='Mathlib').map(n=>floors.get(n.id).height+1.2));
+ let surfaceHeight=Math.max(5,...city.nodes.filter(n=>n.library!=='Mathlib').map(n=>floors.get(n.id).height+1.2));
  function measure(dir){
   const items=dir.children.map(c=>({id:c.id,dir:c,...measure(c)}));
   if(dir.files.length){
-   const specs=dir.files.map(id=>{const height=floors.get(id).height,s=buildingStyle(id),d=decorativeEnvelope(id,height),gap=Math.max(p.minBuildingGap,p.relativeGap*s.width,p.orbitClearance,height*p.heightSetback);
-    return {id,w:d.width+gap*2,d:d.depth+gap*2,semantic:s,decorative:d,height,gap};});
-   const local=shelves(specs,p.streetClearance+p.skywalkRightOfWay+p.pipeRightOfWay);
+   const specs=dir.files.map(id=>{const rawHeight=floors.get(id).height,plan=atomic?atomicPlan(nodes.get(id),rawHeight,skyline?'skyscraper':concept):null,height=plan?.height??rawHeight,s=plan?{width:plan.width,depth:plan.depth}:buildingStyle(id),d=plan?(chromatic?{width:Math.max(plan.width,plan.depth)*1.35+2,depth:Math.max(plan.width,plan.depth)*1.35+2,height:plan.height+1.8}:atomicBounds(plan)):decorativeEnvelope(id,height),gap=Math.max(p.minBuildingGap,p.relativeGap*s.width,p.orbitClearance,(skyline?Math.min(height,20):height)*p.heightSetback)+(chromatic?2:0);
+    return {id,w:d.width+gap*2,d:d.depth+gap*2,semantic:s,decorative:d,height,gap,plan,rawHeight};});
+   const local=chromatic?chromaticCourts(specs,p.streetClearance+p.skywalkRightOfWay+p.pipeRightOfWay,dir.count):atomic?atomicCourts(specs,p.streetClearance+p.skywalkRightOfWay+p.pipeRightOfWay):shelves(specs,p.streetClearance+p.skywalkRightOfWay+p.pipeRightOfWay);
    items.unshift({id:dir.id+'/@files',files:true,w:local.w,d:local.d,local});
   }
   const pack=shelves(items,p.districtGap,24);return {w:pack.w+p.parcelMargin*2,d:pack.d+p.parcelMargin*2,pack};
@@ -37,10 +40,10 @@ export function createBoroughManifest(city,{floors=buildFloorIndex(city.nodes),c
   for(const item of measure.pack.placements){const ix=x+p.parcelMargin+item.x,iz=z+p.parcelMargin+item.z;
    if(item.dir){corridors.push({id:item.id+'/@entry',kind:'street',boroughId,districtId,bounds:rectangle(ix+2,iz-p.streetClearance,p.streetClearance,p.streetClearance+7),minY:0,maxY:.1});place(item.dir,item,ix,iz,boroughId,districtId);continue;}
    const ids=[];
-   for(const cell of item.local.placements){const id=cell.id,cx=ix+cell.x+cell.w/2+(roofStyle(id)-1.5)*p.courtyardVariation/3,cz=iz+cell.z+cell.d/2+((id.length%3)-1)*p.courtyardVariation/3;ids.push(id);
+   for(const cell of item.local.placements){const id=cell.id,cx=ix+cell.x+cell.w/2+(cell.offsetX||0)+(roofStyle(id)-1.5)*p.courtyardVariation/3,cz=iz+cell.z+cell.d/2+(cell.offsetZ||0)+((id.length%3)-1)*p.courtyardVariation/3;ids.push(id);
     const decorative=rectangle(cx-cell.decorative.width/2,cz-cell.decorative.depth/2,cell.decorative.width,cell.decorative.depth);
     const plot=rectangle(ix+cell.x,iz+cell.z,cell.w,cell.d);
-    modules[id]={id,sourcePath:nodes.get(id).module.path,boroughId,districtId,parcelId:dir.id,directoryPath:nodes.get(id).module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/'),position:{x:cx,y:0,z:cz},footprint:cell.semantic,semanticHeight:cell.height,decorativeHeight:cell.decorative.height,decorativeBounds:decorative,plotBounds:plot,clearance:cell.gap,dock:{bounds:rectangle(decorative.minX-1,decorative.minZ-1,cell.decorative.width+2,cell.decorative.depth+2),y:cell.height+1.5}};
+    modules[id]={id,sourcePath:nodes.get(id).module.path,boroughId,districtId,parcelId:dir.id,directoryPath:nodes.get(id).module.path.replaceAll('\\','/').split('/').slice(0,-1).join('/'),position:{x:cx,y:0,z:cz},footprint:chromatic?{width:cell.semantic.width*Math.abs(Math.cos(cell.rotation||0))+cell.semantic.depth*Math.abs(Math.sin(cell.rotation||0)),depth:cell.semantic.depth*Math.abs(Math.cos(cell.rotation||0))+cell.semantic.width*Math.abs(Math.sin(cell.rotation||0))}:cell.semantic,semanticHeight:cell.rawHeight,displayHeight:cell.height,architecture:cell.plan?{...cell.plan,rotation:chromatic?cell.rotation:Math.floor(cell.localIndex/3)%2?Math.PI:0,motif:cell.motif}:null,decorativeHeight:cell.decorative.height,decorativeBounds:decorative,plotBounds:plot,clearance:cell.gap,dock:{bounds:rectangle(decorative.minX-1,decorative.minZ-1,cell.decorative.width+2,cell.decorative.depth+2),y:cell.decorative.height+.5}};
    }
    // Bands run along the public edge of each row; they are NOT graph edges.
    const rows=[...new Set(item.local.placements.map(c=>c.z))];
@@ -53,8 +56,9 @@ export function createBoroughManifest(city,{floors=buildFloorIndex(city.nodes),c
   }
  }
  function descendants(dir){return [...dir.files,...dir.children.flatMap(descendants)];}
- const prepared=hierarchy.roots.map(root=>{const districts=root.children.map(dir=>({id:dir.id,dir,...measure(dir)}));
-  if(root.files.length){const dir={...root,id:root.id+'/@root',name:'Core / Root Modules',children:[],depth:1,count:root.files.length};districts.unshift({id:dir.id,dir,...measure(dir)});}
+ const measureDistrict=dir=>{const m=measure(dir);return chromatic?{...m,w:Math.max(72,m.w),d:m.d+60}:m;};
+ const prepared=hierarchy.roots.map(root=>{const districts=root.children.map(dir=>({id:dir.id,dir,...measureDistrict(dir)}));
+  if(root.files.length){const dir={...root,id:root.id+'/@root',name:'Core / Root Modules',children:[],depth:1,count:root.files.length};districts.unshift({id:dir.id,dir,...measureDistrict(dir)});}
   return {root,pack:shelves(districts,p.districtGap,180)};});
  const depth=Math.max(220,...prepared.map(b=>b.pack.d+p.parcelMargin*4));let cursor=0;
  for(const {root,pack} of prepared){const width=pack.w+p.parcelMargin*4,bounds=rectangle(cursor,0,width,depth),districtIds=[];
@@ -71,7 +75,12 @@ export function createBoroughManifest(city,{floors=buildFloorIndex(city.nodes),c
  const obstructions=crossings.flatMap(c=>[c.bounds.minZ,c.bounds.maxZ].map((z,i)=>({id:c.id+'/rail-'+i,kind:'civic-rail',bounds:rectangle(c.bounds.minX,z-.12,c.bounds.maxX-c.bounds.minX,.24),minY:1.3,maxY:2.1})));
  const approaches=crossings.flatMap(c=>[{id:c.id+'/west-approach',kind:'civic-approach',bounds:rectangle(c.bounds.minX-10,c.bounds.minZ,10,6),slope:.1},{id:c.id+'/east-approach',kind:'civic-approach',bounds:rectangle(c.bounds.maxX,c.bounds.minZ,10,6),slope:-.1}]);
  for(const b of boroughs)obstructions.push({id:b.id+'/landmark',kind:'civic-landmark',bounds:rectangle(b.bounds.minX+11,11,4,4),minY:0,maxY:5});
- return {layoutVersion:3,config:p,hierarchy,boroughs,parcels,modules,chunks,corridors,rivers,crossings,approaches,obstructions,surfaceHeight:surfaceHeight+6,bounds:rectangle(0,-20,cursor,depth+40),unknown:hierarchy.unknown};
+ if(atomic)surfaceHeight=Math.max(5,...Object.values(modules).map(m=>m.decorativeHeight));
+ const blocks=[];if(atomic)for(const parcel of parcels){const local=Object.values(modules).filter(m=>m.parcelId===parcel.id);for(let i=0;i<local.length;i+=6){const ms=local.slice(i,i+6),bs=ms.map(m=>m.plotBounds);blocks.push({id:parcel.id+'/visual-court-'+i/6,synthetic:true,directoryPath:ms[0].directoryPath,moduleIds:ms.map(m=>m.id),bounds:{minX:Math.min(...bs.map(b=>b.minX)),maxX:Math.max(...bs.map(b=>b.maxX)),minZ:Math.min(...bs.map(b=>b.minZ)),maxZ:Math.max(...bs.map(b=>b.maxZ))}});}}
+ const courtyards=[];if(atomic)for(const block of blocks){const ms=block.moduleIds.map(id=>modules[id]),rows=[...new Set(ms.map(m=>m.plotBounds.minZ))].sort((a,b)=>a-b);if(rows.length>1){const front=ms.filter(m=>m.plotBounds.minZ===rows[0]),end=Math.max(...front.map(m=>m.plotBounds.maxZ)),bounds=rectangle(block.bounds.minX,end+8.5,block.bounds.maxX-block.bounds.minX,8);courtyards.push({id:block.id,kind:'landscaped-civic-court',synthetic:true,directoryPath:block.directoryPath,bounds});}}
+ const parks=[];if(atomic)for(const parcel of parcels.filter(p=>p.depth===1)){const b=parcel.bounds,ms=parcel.moduleIds.map(id=>modules[id].plotBounds),cs=corridors.filter(c=>c.districtId===parcel.id).map(c=>c.bounds),stepX=(b.maxX-b.minX-8)/8,stepZ=(b.maxZ-b.minZ-8)/8;for(let row=0;row<8;row++){let start=null;for(let col=0;col<=8;col++){const q=rectangle(b.minX+4+col*stepX,b.minZ+4+row*stepZ,stepX,stepZ),free=col<8&&![...ms,...cs].some(a=>overlaps(a,q));if(free&&start===null)start=col;if(!free&&start!==null){parks.push({id:parcel.id+'/park/'+row+'/'+start,bounds:rectangle(b.minX+4+start*stepX,b.minZ+4+row*stepZ,(col-start)*stepX,stepZ)});start=null;}}}}
+ const manifest={layoutVersion:atomic?4:3,parks,courtyards,visual:atomic?'c1':'c',concept,blocks,serviceCorridors:corridors.filter(c=>c.kind==='pipe-service'),skywalkCorridors:corridors.filter(c=>c.kind==='skywalk'),roofDockingZones:Object.values(modules).map(m=>({id:m.id,...m.dock})),config:p,hierarchy,boroughs,parcels,modules,chunks,corridors,rivers,crossings,approaches,obstructions,surfaceHeight:surfaceHeight+6,bounds:rectangle(0,-20,cursor,depth+40),unknown:hierarchy.unknown};
+ const result=chromatic?chromaticManifest(manifest,composition):manifest;if(skyline){result.visual='c4';for(const m of Object.values(result.modules))m.presentation='skyline';for(const c of result.skywalkCorridors)c.maxY=Math.max(c.maxY,result.surfaceHeight+6);}return visual==='c3'?metropolisManifest(result,concept):result;
 }
 
 export function validateBoroughManifest(m){
@@ -96,3 +105,18 @@ export function streetConnectivity(manifest){
  return {segments:roads.length,components:new Set(roads.map((_,i)=>find(i))).size};
 }
 
+
+// Six real files per visual court, stable source order; this creates no source directory.
+function atomicCourts(specs,gap){
+ const cw=Math.max(...specs.map(s=>s.w)),cd=Math.max(...specs.map(s=>s.d)),columns=Math.min(3,specs.length),placements=[];
+ specs.forEach((s,i)=>{const row=Math.floor(i/columns),col=i%columns;placements.push({...s,localIndex:i,x:col*cw+(cw-s.w)/2,z:row*(cd+gap+8)+(cd-s.d)/2,w:s.w,d:cd});});
+ // All row ends align so the street/service/skywalk bands never cross another court.
+ for(const c of placements)c.z=Math.floor(c.localIndex/columns)*(cd+gap+8);
+ return {w:columns*cw,d:Math.ceil(specs.length/columns)*cd+(Math.ceil(specs.length/columns)-1)*(gap+8),placements};
+}
+
+function chromaticCourts(specs,gap,count){
+ const motif=count<=6?'institute-square':count<=20?'research-crescent':count>80?'science-promenade':'terraced-campus',columns=Math.min(specs.length,motif==='institute-square'?2:motif==='science-promenade'?4:3),cw=Math.max(...specs.map(s=>s.w)),cd=Math.max(...specs.map(s=>s.d)),placements=[];
+ specs.forEach((s,i)=>{const row=Math.floor(i/columns),col=i%columns,side=col-(columns-1)/2,offsetX=motif==='terraced-campus'?(row%2?-2:2):0,offsetZ=motif==='research-crescent'?Math.abs(side)*2.5:motif==='terraced-campus'?(col%2?2:-2):0,rotation=(row%2?Math.PI:0)+(motif==='research-crescent'?side*.18:motif==='terraced-campus'?(col%2?.12:-.12):0);placements.push({...s,localIndex:i,motif,rotation,offsetX,offsetZ,x:col*cw+(cw-s.w)/2,z:row*(cd+gap+8)+Math.floor(row/2)*(motif==='science-promenade'?12:0),w:s.w,d:cd});});
+ return {w:columns*cw,d:Math.max(...placements.map(c=>c.z+c.d)),placements};
+}

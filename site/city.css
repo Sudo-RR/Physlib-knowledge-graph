@@ -72,3 +72,55 @@
 .city-benchmark-details pre{white-space:pre-wrap;max-width:620px}
 
 #geography-breadcrumbs{display:flex;gap:4px;flex-wrap:wrap;margin-top:8px}#geography-breadcrumbs button{font-size:10px;background:#fff;border:1px solid #b6c4bd;color:#153b43;padding:4px 7px}.geography-minimap{position:absolute;right:10px;top:92px;width:184px;background:#fffffff0;border:1px solid #83988f;z-index:3;padding:5px;font-size:9px}.geography-minimap svg{width:100%;height:106px;display:block}.geography-minimap [role=button]{cursor:pointer}.geography-minimap [role=button]:hover{stroke:#002fa7;stroke-width:3}@media(max-width:760px){.geography-minimap{width:120px;top:110px}.geography-minimap svg{height:70px}}
+
+/* C.1: the city is the primary artifact; exact source tools remain at its sides. */
+.atomic-city{--atomic-ink:#27334d;--atomic-paper:#f3e9d2;color:var(--atomic-ink)}
+.atomic-city .app{grid-template-columns:220px minmax(0,1fr) 292px}
+.atomic-city .masthead{height:56px;background:#fffaf0;border-color:#d6cdbb}
+.atomic-city .app{height:calc(100vh - 56px)}
+.atomic-city .canvas-top{padding:9px 16px;background:#fffaf0;display:block}
+.atomic-city .canvas-top .breadcrumb,.atomic-city .canvas-top h1,.atomic-city .canvas-top p,.atomic-city .snapshot-block{display:none}
+.atomic-city #geography-breadcrumbs{margin:0;gap:6px}
+.atomic-city #geography-breadcrumbs button{font-size:12px;padding:6px 9px;color:var(--atomic-ink);border-color:#a8a18e;background:#fffaf0}
+.atomic-city .toolbar{padding:7px 12px;gap:5px;min-height:44px;background:#fffaf0}
+.atomic-city .toolbar .controls{gap:4px;flex-wrap:wrap}
+.atomic-city .toolbar button,.atomic-city .toolbar select{min-height:30px;font-size:11px;color:var(--atomic-ink)}
+.atomic-city .toolbar-label>strong,.atomic-city .toolbar-label .divider,.atomic-city .toolbar label[for=quality]{display:none}
+.atomic-city .city-current,.atomic-city .city-movement,.atomic-city .city-skywalk-info,.atomic-city .city-asset-status{display:none}
+.atomic-city:not(.city-debug) .city-district-controls{display:none}
+.atomic-city .city-layer-key{padding:7px 9px;top:auto;bottom:12px;right:12px;background:#fffaf0;max-width:200px}
+.atomic-city .geography-minimap{top:12px;right:12px;width:165px;background:#fffaf0}
+.atomic-city .geography-minimap:not([open]){width:auto}
+.atomic-city .city-district-label{font-size:11px;background:#fffaf0;color:#27334d;border-color:#9a9d84;padding:5px 8px}
+.atomic-city .city-topic-label{font-size:12px}
+.atomic-city .index-label{display:none}
+.atomic-city .panel-heading{min-height:58px;padding:14px 16px}
+.atomic-city .panel-heading h2{font-size:18px}
+.atomic-city .inspector-content{padding:12px 16px 25px}
+.atomic-city .inspector-content>h2{font-size:18px;line-height:1.3;overflow-wrap:anywhere}
+.atomic-city .inspector p,.atomic-city .city-path{font-size:12px!important;color:#46516a!important;line-height:1.5}
+.atomic-city .inspect-list button,.atomic-city .floor-list button,.atomic-city .floor-list button small{font-size:12px}
+.atomic-city .city-tree-folder summary,.atomic-city .city-tree-file{font-size:12px}
+.atomic-city .bottom{min-height:32px;padding:7px 12px;font-size:10px}
+.atomic-city :focus-visible{outline:2px solid #27334d;outline-offset:3px}
+.atomic-city ::selection{background:#ffc34b;color:#27334d}
+.atomic-city input{caret-color:#146f6b}.atomic-city input::placeholder{color:#59606a}
+@media(max-width:1100px){.atomic-city .app{grid-template-columns:180px minmax(0,1fr) 250px}.atomic-city .toolbar .controls button{font-size:10px;padding:5px}.atomic-city .toolbar-label{gap:3px}}
+@media(max-width:760px){.atomic-city .app{height:auto;display:flex}.atomic-city .sidebar{height:210px}.atomic-city .canvas-wrap{height:520px;min-height:520px}.atomic-city .toolbar{flex-wrap:wrap}.atomic-city .canvas-top{padding:8px}.atomic-city .toolbar button{min-height:34px}.atomic-city .geography-minimap{top:9px;right:9px}.atomic-city .inspector-content>h2{overflow-wrap:break-word}}
+.atomic-city .city-tree-folder summary,.atomic-city .city-tree-file{overflow-wrap:normal;word-break:normal;white-space:nowrap}.atomic-city .sidebar-content{overflow:auto}
+@media(max-width:760px){.atomic-city .toolbar button,.atomic-city .toolbar select{min-height:44px}.atomic-city #zoom-in,.atomic-city #zoom-out{min-width:44px}}
+
+.chromatic-city .district-context{display:flex;align-items:center;gap:7px;color:#27334d!important;font-size:12px!important}
+.district-context i{width:14px;height:14px;flex:none;border:1px solid #27334d}
+.chromatic-city .city-tree-file small{display:block;margin-top:4px;color:#46516a;font-size:11px}
+#explore-files,#explore-inspector{display:none}
+.explore-city #explore-files,.explore-city #explore-inspector{display:block}
+.chromatic-city.explore-city .app{grid-template-columns:0 minmax(0,1fr) 0}
+.explore-city main{grid-column:2}
+.explore-city .sidebar,.explore-city .inspector{position:fixed;top:142px;bottom:20px;width:300px;z-index:20;box-shadow:0 12px 35px #17243a35;background:#fffaf0;visibility:hidden;pointer-events:none;overflow:auto}
+.explore-city .sidebar{left:12px}.explore-city .inspector{right:12px}
+.explore-city.explore-files-open .sidebar,.explore-city.explore-inspector-open .inspector{visibility:visible;pointer-events:auto}
+.explore-city .masthead{height:42px}.explore-city .app{height:calc(100vh - 42px)}
+.chromatic-city .geography-minimap[open]{width:240px}
+.chromatic-city .geography-minimap svg{height:160px}
+@media(max-width:760px){.chromatic-city.explore-city .app{display:block}.explore-city main{height:calc(100vh - 42px);display:flex;flex-direction:column}.chromatic-city.explore-city .canvas-wrap{height:auto;min-height:360px;flex:1}.explore-city .sidebar,.explore-city .inspector{height:auto;width:min(300px,calc(100vw - 24px));top:250px;bottom:12px}.explore-city .bottom{display:none}.chromatic-city .geography-minimap[open]{width:180px}}
