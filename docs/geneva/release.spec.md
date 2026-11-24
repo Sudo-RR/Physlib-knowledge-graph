@@ -15,3 +15,5 @@ Establish current v2 baseline and C.4 historical comparison where comparable; me
 3. Performance and accessibility evidence recorded; known limitations documented.
 4. Publish preview, review in browser, explicitly approve promotion. Preserve rollback to previous working City v2 commit and legacy C.4.
 5. After publication verify homepage and explicit v2 route, content hash and revision marker, real browser startup, overview and inspector. Record link to deployment run and screenshots. If live mismatch, distinguish cache from runtime error with actual bundle/version. No new speculative push while pending deploy; use diagnostic evidence.
+
+User explicitly approved early source-linked promotion on 24 November 2026. The actual snapshot allocation gate is mandatory before publication; formal polygonal blocks, complete Lean-aware declaration dependencies, real browser and performance acceptance remain open. Do not treat a successful deploy as G5 completion.

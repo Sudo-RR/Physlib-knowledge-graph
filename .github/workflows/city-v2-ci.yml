@@ -3,7 +3,9 @@ on:
   pull_request:
     paths:
       - 'site/city-v2*'
-      - 'site/geneva-g1*'
+      - 'site/geneva-*'
+      - 'scripts/build-geneva-production.mjs'
+      - 'test/geneva-*'
       - 'test/geneva-g1*'
       - 'test/city-v2*'
       - 'package.json'
@@ -32,6 +34,7 @@ jobs:
           cp test/fixtures/city/graph.json site/data/graph.json
           cp test/fixtures/city/mathlib.json site/data/mathlib.json
           cp test/fixtures/city/mathlib-bridge.json site/data/mathlib-bridge.json
+          node scripts/build-geneva-production.mjs
           npm run package:site
           test -f dist/site/index.html
           test -f dist/site/city-v2.html

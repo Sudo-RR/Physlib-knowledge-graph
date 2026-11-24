@@ -44,6 +44,8 @@ jobs:
         run: node scripts/validate-city-v2-startup.mjs
       - name: Validate G1 terrain and capacity against actual snapshot
         run: node scripts/validate-geneva-g1.mjs
+      - name: Build and validate source-linked Geneva city
+        run: node scripts/build-geneva-production.mjs --require-inventory
       - name: Read Mathlib revision pinned by Physlib
         id: mathlib_pin
         run: echo "revision=$(node scripts/mathlib-pin.mjs .physlib-source)" >> "$GITHUB_OUTPUT"

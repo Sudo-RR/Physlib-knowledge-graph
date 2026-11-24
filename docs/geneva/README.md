@@ -23,3 +23,6 @@ This programme supersedes the rectangular and seeded point-first layout recommen
 
 ## Explicit non-goals
 Exact GIS reconstruction, live mapping service, full traffic simulation, interiors, mathematical ontology redesign, underground Mathlib city, invented dependency edges, runtime Lean build, photorealism at the expense of navigation.
+
+## Production integration — 24 November 2026
+User approved source-linked production on the Geneva homepage. The pinned deployment snapshot generates the city manifest from the existing canonical source model and partial declaration inventory. Reserved skyline and civic envelopes are allocated by source library and subject, then subdivided into exact role IDs and local stations; decorative remaining towers and infill retain no mathematical IDs. This is a constrained envelope allocation, not formal polygonal parcel extraction. Existing source explorer and `geneva-g1.html?study=1` remain available. G2/G3 geometric review, G4 visual review and G5 browser/performance evidence remain open.
