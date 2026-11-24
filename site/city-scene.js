@@ -49,19 +49,21 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   let districtScope=comparisonEnabled,geographicFocus=null;
   const layout=layoutFullCity(city,{legacy:!urban,floors:canonicalFloors,visual:skyline?'c4':metropolis?'c3':chromatic?'c2':atomic?'c1':null,composition:parameters.get('composition')||'vivid',concept:parameters.get('concept')||(metropolis?'spaceage':'campus')}), scene=new THREE.Scene();
   if(atomic)for(const [id,m] of Object.entries(layout.manifest.modules))floors.get(id).height=m.displayHeight;
-  const sky=document.createElement('canvas');sky.width=2;sky.height=256;const skyContext=sky.getContext('2d'),gradient=skyContext.createLinearGradient(0,0,0,256);gradient.addColorStop(0,atomic?'#d8eee5':'#345c80');gradient.addColorStop(.55,atomic?'#f2ecda':'#93b8cb');gradient.addColorStop(1,'#f3dac2');skyContext.fillStyle=gradient;skyContext.fillRect(0,0,2,256);scene.background=new THREE.CanvasTexture(sky);scene.background.colorSpace=THREE.SRGBColorSpace;
+  const sky=document.createElement('canvas');sky.width=2;sky.height=256;const skyContext=sky.getContext('2d'),gradient=skyContext.createLinearGradient(0,0,0,256);gradient.addColorStop(0,skyline?'#687ca5':atomic?'#d8eee5':'#345c80');if(skyline)gradient.addColorStop(.18,'#efbca3');gradient.addColorStop(.55,skyline?'#efbca3':atomic?'#f2ecda':'#93b8cb');gradient.addColorStop(1,skyline?'#efbca3':'#f3dac2');skyContext.fillStyle=gradient;skyContext.fillRect(0,0,2,256);scene.background=new THREE.CanvasTexture(sky);scene.background.colorSpace=THREE.SRGBColorSpace;
+  const environmentSpan=Math.max(layout.width,layout.depth),surfaceFog=skyline?new THREE.Fog(0xefbca3,environmentSpan*1.05,environmentSpan*3.8):null;
+  if(skyline)scene.fog=surfaceFog;
   const camera=new THREE.PerspectiveCamera(40,1,.1,Math.max(3000,layout.width*8,layout.depth*8)),renderer=new THREE.WebGLRenderer({antialias:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio,1)*renderProfile.pixelScale);renderer.outputColorSpace=THREE.SRGBColorSpace;host.append(renderer.domElement);
   renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','Interactive city. Drag or use two fingers on a trackpad to pan; pinch or use the zoom buttons to zoom. Right-drag to rotate slightly. Use W A S D to move.');
   const overlay=document.createElement('div');overlay.className='city-labels';overlay.setAttribute('aria-hidden','true');host.append(overlay);
   const tooltip=document.createElement('div');tooltip.className='city-hover';tooltip.hidden=true;overlay.append(tooltip);
-  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.zoomSpeed=.65;controls.minPolarAngle=.2;controls.maxPolarAngle=.95;controls.minDistance=5;controls.maxDistance=Math.max(250,layout.width*3,layout.depth*3);controls.screenSpacePanning=false;controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.ROTATE};controls.touches={ONE:THREE.TOUCH.PAN,TWO:THREE.TOUCH.DOLLY_ROTATE};
-  scene.add(new THREE.HemisphereLight(0xe8f3ff,0x566372,2.1));
-  const sun=new THREE.DirectionalLight(0xfff5e6,2.7);sun.position.set(-80,160,90);scene.add(sun);
+  const controls=new OrbitControls(camera,renderer.domElement);controls.enableDamping=true;controls.zoomSpeed=.65;controls.minPolarAngle=.2;controls.maxPolarAngle=skyline?1.32:.95;controls.minDistance=5;controls.maxDistance=Math.max(250,layout.width*3,layout.depth*3);controls.screenSpacePanning=false;controls.mouseButtons={LEFT:THREE.MOUSE.PAN,MIDDLE:THREE.MOUSE.DOLLY,RIGHT:THREE.MOUSE.ROTATE};controls.touches={ONE:THREE.TOUCH.PAN,TWO:THREE.TOUCH.DOLLY_ROTATE};
+  scene.add(new THREE.HemisphereLight(skyline?0x96b4d3:0xe8f3ff,skyline?0x65465d:0x566372,skyline?1.15:2.1));
+  const sun=new THREE.DirectionalLight(skyline?0xffbc82:0xfff5e6,skyline?3.3:2.7);sun.position.set(-80,160,90);scene.add(sun);
   if(showcaseEnabled||atomic){
-    renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
-    const p=layout.positions.get(showcaseModule)||layout.positions.get(showcaseNodes[0]?.id)||{x:0,z:0};sun.position.set(p.x-25,55,p.z+18);sun.target.position.set(p.x,0,p.z);scene.add(sun.target);
-    sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;sun.shadow.camera.near=1;sun.shadow.camera.far=110;sun.shadow.normalBias=.045;
+    renderer.shadowMap.enabled=!skyline;renderer.shadowMap.type=THREE.PCFShadowMap;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
+    const p=layout.positions.get(showcaseModule)||layout.positions.get(showcaseNodes[0]?.id)||{x:0,z:0};sun.position.set(p.x-(skyline?110:25),skyline?85:55,p.z+(skyline?60:18));sun.target.position.set(p.x,0,p.z);scene.add(sun.target);
+    sun.castShadow=!skyline;sun.shadow.mapSize.set(1024,1024);sun.shadow.camera.left=-45;sun.shadow.camera.right=45;sun.shadow.camera.top=45;sun.shadow.camera.bottom=-45;sun.shadow.camera.near=1;sun.shadow.camera.far=110;sun.shadow.normalBias=.045;
   }
   const materials={
     Physlib:new THREE.MeshStandardMaterial({map:facade('#2d4f73','#cce4f5'),roughness:.42,metalness:.32}),
@@ -82,6 +84,14 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   function scenery(object,underground=false,local=false){object.userData.showcaseLocal=local;scene.add(object);(underground?belowScenery:aboveScenery).push(object);}
   const ground=new THREE.Mesh(new THREE.PlaneGeometry(Math.max(180,layout.width+160),Math.max(180,layout.depth+160)),new THREE.MeshBasicMaterial({color:0x9bcf9a,transparent:true,opacity:.74,depthWrite:false,side:THREE.DoubleSide}));ground.rotation.x=-Math.PI/2;ground.position.y=-.2;scene.add(ground);
   if(urban)ground.visible=false;
+  if(skyline){
+    // One two-triangle ground sheet, drawn beneath the existing ordered parcels.
+    ground.geometry.dispose();ground.material.dispose();
+    ground.geometry=new THREE.PlaneGeometry(environmentSpan*24,environmentSpan*24);
+    ground.material=new THREE.MeshBasicMaterial({color:0x91a797,depthWrite:false});
+    const b=layout.manifest.bounds;ground.position.set((b.minX+b.maxX)/2,-.3,(b.minZ+b.maxZ)/2);
+    ground.renderOrder=-110;ground.visible=true;
+  }
   if(!urban){
   // Root boundary rings and roads are decorative geography, not dependency edges.
   for(const zone of layout.zones){
@@ -246,8 +256,9 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
     underground=value;
     host.dispatchEvent(new CustomEvent('city-layer-change',{detail:{underground:value}}));
     controls.minPolarAngle=value?2.19:.2;
-    controls.maxPolarAngle=value?2.94:.95;
-    ground.visible=!value&&!urban;
+    controls.maxPolarAngle=value?2.94:skyline?1.32:.95;
+    ground.visible=!value&&(!urban||skyline);
+    if(skyline)scene.fog=value?null:surfaceFog;
     for(const object of aboveScenery)object.visible=!value;
     for(const object of belowScenery)object.visible=value;
     network.visible=!urban&&showPipes&&!value&&!comparisonEnabled;
@@ -280,9 +291,9 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   renderer.domElement.addEventListener('keydown',interruptBenchmark);
   function overview(){geographicFocus=null;
     districtScope=false;setLayer(false);
-    const direction=new THREE.Vector3(0,chromatic?.82:1,1).normalize();
+    const direction=new THREE.Vector3(skyline?.14:0,skyline?.28:chromatic?.82:1,1).normalize();
     const box={min:{x:bounds.minX,y:0,z:bounds.minZ},max:{x:bounds.maxX,y:urban?layout.manifest.surfaceHeight:30,z:bounds.maxZ}};
-    const fit=fitBox(box,direction,camera.fov,camera.aspect,chromatic?1.04:1.15);
+    const fit=fitBox(box,direction,camera.fov,camera.aspect,skyline?1.01:chromatic?1.04:1.15);
     const centre=new THREE.Vector3(fit.centre.x,fit.centre.y,fit.centre.z);
     controls.maxDistance=Math.max(controls.maxDistance,fit.distance*1.2);
     travel(centre,centre.clone().addScaledVector(direction,fit.distance));
@@ -314,7 +325,7 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
     interruptBenchmark();
     if(comparisonEnabled){districtScope=!id||showcaseIds.has(id);showAll();}
     if(selected&&buildings.has(selected)){const previous=buildings.get(selected);clearFloors(previous);previous.body.material=previous.hitMaterial||baseMaterial(previous.node);previous.body.renderOrder=0;if(previous.surface){previous.surface.material=baseMaterial(previous.node);previous.surface.renderOrder=0;}}
-    selected=id;if(chromatic)for(const object of aboveScenery)object.userData.setScope?.(layout.manifest.modules[id]?.districtId);if(atomic&&layout.manifest.modules[id]){const p=layout.manifest.modules[id].position;sun.position.set(p.x-25,55,p.z+18);sun.target.position.set(p.x,0,p.z);renderer.shadowMap.needsUpdate=true;}updateInspectionArt(id);setBuildingFocus();drawPipes();drawHubs(id);const b=buildings.get(id);selectionOutline.visible=Boolean(b);if(!b)return drawLinks([],false);const selectedHeight=floors.get(id).height;selectionOutline.position.copy(b.group.position).add(new THREE.Vector3(0,b.direction*selectedHeight/2,0));selectionOutline.scale.set(b.footprint.width+.2,selectedHeight+.3,b.footprint.depth+.2);b.body.material=selectedMaterial(b.node);b.body.renderOrder=50;if(b.surface){b.surface.material=selectedMaterial(b.node);b.surface.renderOrder=50;}
+    selected=id;if(chromatic)for(const object of aboveScenery)object.userData.setScope?.(layout.manifest.modules[id]?.districtId);if(atomic&&layout.manifest.modules[id]){const p=layout.manifest.modules[id].position;sun.position.set(p.x-(skyline?110:25),skyline?85:55,p.z+(skyline?60:18));sun.target.position.set(p.x,0,p.z);renderer.shadowMap.needsUpdate=true;}updateInspectionArt(id);setBuildingFocus();drawPipes();drawHubs(id);const b=buildings.get(id);selectionOutline.visible=Boolean(b);if(!b)return drawLinks([],false);const selectedHeight=floors.get(id).height;selectionOutline.position.copy(b.group.position).add(new THREE.Vector3(0,b.direction*selectedHeight/2,0));selectionOutline.scale.set(b.footprint.width+.2,selectedHeight+.3,b.footprint.depth+.2);b.body.material=selectedMaterial(b.node);b.body.renderOrder=50;if(b.surface){b.surface.material=selectedMaterial(b.node);b.surface.renderOrder=50;}
     if(b.hitMaterial)b.body.material=b.hitMaterial;
     const data=floors.get(id);if(data.floors.length){b.body.visible=false;const h=data.height/data.floors.length;
       for(const floor of data.floors){const mesh=new THREE.Mesh(new THREE.BoxGeometry(b.footprint.width,Math.max(.1,h-.08),b.footprint.depth),b.hitMaterial?b.hitMaterial:selectedMaterial(b.node));mesh.renderOrder=50;mesh.position.y=b.direction*(floor.index+.5)*h;mesh.userData={id,floor:floor.index,canonicalHit:urban&&b.direction>0};if(urban&&b.direction>0)mesh.visible=false;b.group.add(mesh);}}
@@ -399,5 +410,5 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
       if(now-benchmark.start>=12000){const result=summarizeFrames(benchmark.samples,now-benchmark.start);const gl=renderer.getContext(),gpuInfo=gl.getExtension('WEBGL_debug_renderer_info');Object.assign(result,{benchmarkSeries:'C3-final',cinematic:document.body.classList.contains('explore-city'),initialRenderedMs:Math.round(initialRenderedMs),citySettledMs:Math.round(citySettledMs),visual:skyline?'c4':metropolis?'c3':chromatic?'c2':atomic?'c1':'c',composition:layout.manifest?.composition||null,selectedModule:selected,cameraPath:{target:benchmark.target.toArray(),radius:benchmark.radius,steps:20,stepMs:600},benchmarkScope:parameters.get('folder')||districtMode||'surface',inspectionLod:inspectionArt?.group.visible?inspectionStats?.activeCounts:null,modularActiveLod:showcase?.group.visible?lodStats?.activeCounts:null,selectedModelCount:(inspectionArt?.group.visible?inspectionStats?.activeCounts.building||0:0)+(showcase?.group.visible?lodStats?.activeCounts.building||0:0),layoutVersion:layout.manifest?.layoutVersion||1,activeChunks:chunkStats?.activeChunks??null,totalChunks:chunkStats?.totalChunks??null,chunkLod:chunkStats?.counts??null,profile:renderProfile.name,lod:lodStats?.counts||null,lodTransitions:lodStats?.transitions||0,phaseTimings:summarizePhaseTimings(benchmark.samples),gpuTimerAvailable:Boolean(gl.getExtension('EXT_disjoint_timer_query_webgl2')),activeChunkRange:[Math.min(...benchmark.samples.map(s=>s.activeChunks)),Math.max(...benchmark.samples.map(s=>s.activeChunks))],triangleRange:[Math.min(...benchmark.samples.map(s=>s.triangles)),Math.max(...benchmark.samples.map(s=>s.triangles))],mode:districtMode,quality,canvasWidth:renderer.domElement.width,canvasHeight:renderer.domElement.height,viewportWidth:innerWidth,viewportHeight:innerHeight,pixelRatio:renderer.getPixelRatio(),browser:navigator.userAgent,gpu:gpuInfo?gl.getParameter(gpuInfo.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER),firstVisibleMs:districtFirstVisible===null?null:Math.round(districtFirstVisible),completedMs:districtCompleted===null?null:Math.round(districtCompleted)});result.finalFrameTriangles=info.render.triangles;if(parameters.get('collect')==='1'&&['127.0.0.1','localhost'].includes(location.hostname))void fetch('/__city-benchmark',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(result)}).catch(()=>{});if(benchmarkDetails)benchmarkDetails.textContent=JSON.stringify(result);if(benchmarkDownload){if(benchmarkDownload.href.startsWith('blob:'))URL.revokeObjectURL(benchmarkDownload.href);benchmarkDownload.href=URL.createObjectURL(new Blob([JSON.stringify(result,null,2)],{type:'application/json'}));benchmarkDownload.download='physlib-city-benchmark-b1-'+renderProfile.name+'-'+districtMode+'-'+quality+'-'+Date.now()+'.json';benchmarkDownload.hidden=false;}benchmarkOutput.dataset.result=JSON.stringify(result);benchmarkOutput.textContent='Moving camera · '+result.fps+' FPS · P95 '+result.p95Ms+' ms · P99 '+result.p99Ms+' ms · '+result.calls.join('–')+' calls';benchmark=null;}}
   };
   renderer.setAnimationLoop(renderFrame);
-  return {manifest:layout.manifest,reviewPose:p=>{if(!p||![p.target,p.position].every(a=>Array.isArray(a)&&a.length===3&&a.every(Number.isFinite)))return false;travel(new THREE.Vector3(...p.target),new THREE.Vector3(...p.position));return true;},pause:()=>{interruptBenchmark();renderer.setAnimationLoop(null);},resume:()=>{clock.getDelta();lastMetricFrame=metricStarted=performance.now();metricFrames=0;frameTimes.length=0;renderer.setAnimationLoop(renderFrame);},focusShowcaseView,select,selectFloor,setRelationMode:mode=>{relationMode=mode;return drawFileLinks();},setPipesVisible:value=>{showPipes=value;drawPipes();return drawFileLinks();},showDeclarationLinks:links=>drawLinks(links,true).drawn,focusFolder,focusBuilding,focusFoundations:()=>{if(selected)focusBuilding(selected);},zoom:navigation.zoom,move:navigation.move,reset:()=>{setLayer(false);showAll();travel(homeTarget,homePosition);},overview,setLayer:travelLayer,setQuality:level=>{quality=level;renderer.shadowMap.enabled=(showcaseEnabled||atomic)&&level!=='low';renderer.shadowMap.needsUpdate=true;renderer.setPixelRatio(Math.min(devicePixelRatio,{low:.75,medium:1,high:1.5}[level]||1)*renderProfile.pixelScale);resize();},get selected(){return selected;}};
+  return {manifest:layout.manifest,reviewPose:p=>{if(!p||![p.target,p.position].every(a=>Array.isArray(a)&&a.length===3&&a.every(Number.isFinite)))return false;travel(new THREE.Vector3(...p.target),new THREE.Vector3(...p.position));return true;},pause:()=>{interruptBenchmark();renderer.setAnimationLoop(null);},resume:()=>{clock.getDelta();lastMetricFrame=metricStarted=performance.now();metricFrames=0;frameTimes.length=0;renderer.setAnimationLoop(renderFrame);},focusShowcaseView,select,selectFloor,setRelationMode:mode=>{relationMode=mode;return drawFileLinks();},setPipesVisible:value=>{showPipes=value;drawPipes();return drawFileLinks();},showDeclarationLinks:links=>drawLinks(links,true).drawn,focusFolder,focusBuilding,focusFoundations:()=>{if(selected)focusBuilding(selected);},zoom:navigation.zoom,move:navigation.move,reset:()=>{setLayer(false);showAll();travel(homeTarget,homePosition);},overview,setLayer:travelLayer,setQuality:level=>{quality=level;renderer.shadowMap.enabled=!skyline&&(showcaseEnabled||atomic)&&level!=='low';renderer.shadowMap.needsUpdate=true;renderer.setPixelRatio(Math.min(devicePixelRatio,{low:.75,medium:1,high:1.5}[level]||1)*renderProfile.pixelScale);resize();},get selected(){return selected;}};
 }
