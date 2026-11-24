@@ -1,9 +1,10 @@
 // Original civic rendering inspired by SynthCity ground/storefront layer.
 // Instanced decorative scene: not mathematical nodes, no graph edges.
-export function renderCivicFabric(THREE,scene,civic,facades){
+export function renderCivicFabric(THREE,scene,civic,facades,surfaces){
  const group=new THREE.Group();group.name='decorative civic infrastructure';scene.add(group);
  const mat=(c,r=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
- const asphalt=mat('#67675d'),curb=mat('#a49c87'),mark=mat('#d9c9a5'),roof=mat('#c2bbaa'),stone=mat('#d6c8ac'),garden=mat('#657b4e'),trunk=mat('#725b43'),leaf=[mat('#566f42'),mat('#74834d'),mat('#87925a')],metal=mat('#838278',.45);
+ const asphalt=mat('#484f57'),curb=mat('#969da0'),mark=mat('#e1e4e3'),roof=mat('#aeb7bd'),stone=mat('#bfc7ca'),garden=mat('#54705a'),trunk=mat('#655e55'),leaf=[mat('#46624e'),mat('#607c61'),mat('#779077')],metal=mat('#78838b',.45);
+ asphalt.map=surfaces.asphalt;
  const lit=new THREE.MeshStandardMaterial({color:'#ffb879',emissive:'#ff6a00',emissiveIntensity:.8});
  const box=new THREE.BoxGeometry(1,1,1),round=new THREE.CylinderGeometry(.5,.5,1,10),sphere=new THREE.IcosahedronGeometry(.5,1);
  const batches=new Map(),dummy=new THREE.Object3D();
@@ -15,11 +16,11 @@ export function renderCivicFabric(THREE,scene,civic,facades){
  // Every route segment shares its junction coordinates. Round caps avoid
  // small gaps at bends, and a thin pavement apron gives roads real edges.
  const joints=new Map();
- for(const r of civic.roads){line(r.a,r.b,r.width+.8,.12,curb);line(r.a,r.b,r.width,.18,asphalt);
+ for(const r of civic.roads){line(r.a,r.b,r.width+.5,.12,curb);line(r.a,r.b,r.width,.18,asphalt);
   for(const q of [r.a,r.b])joints.set(q.join(','),q);
   if(r.kind==='arterial'&&Math.hypot(r.a[0]-r.b[0],r.a[1]-r.b[1])>4){const a=r.a,b=r.b,lerp=f=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];line(lerp(.28),lerp(.65),.16,.25,mark);}
  }
- for(const [x,z] of joints.values()){part(round,curb,x,.12,z,5.8,.08,5.8);part(round,asphalt,x,.18,z,5,.08,5);}
+ for(const [x,z] of joints.values()){part(round,curb,x,.12,z,5.5,.08,5.5);part(round,asphalt,x,.18,z,5,.08,5);}
  for(const t of civic.infill){const {x,z,w,d,h,angle,style}=t;
   part(box,stone,x,.3,z,w*1.02,.6,d*1.02,angle);
   part(box,facades[style],x,h*.5+.4,z,w,h,d,angle);
