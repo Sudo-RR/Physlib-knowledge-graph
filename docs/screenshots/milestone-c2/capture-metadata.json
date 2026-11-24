@@ -1,0 +1,197 @@
+[
+  {
+    "name": "concept-a-world",
+    "url": "http://127.0.0.1:4173/?visual=c2",
+    "camera": "{\"position\":[3304.8138799174494,5660.052737596276,7379.5260636036055],\"target\":[3304.8138799174494,21,1740.4733260073292],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "concept-a-units",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib%2FUnits",
+    "camera": "{\"position\":[1751.0540331453208,484.48578182465724,3478.0570923501677],\"target\":[1635.1825876891564,21.000000000000004,3014.5713105255104],\"width\":1024,\"height\":611}"
+  },
+  {
+    "name": "concept-a-units",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib%2FUnits",
+    "camera": "{\"position\":[1751.0540331453208,484.48578182465724,3478.0570923501677],\"target\":[1635.1825876891564,21.000000000000004,3014.5713105255104],\"width\":1024,\"height\":611}"
+  },
+  {
+    "name": "concept-a-world",
+    "url": "http://127.0.0.1:4173/?visual=c2&",
+    "camera": "{\"position\":[3304.8138799174494,5660.052737596276,7379.5260636036055],\"target\":[3304.8138799174494,21,1740.4733260073292],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "concept-a-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib%2FClassicalMechanics",
+    "camera": "{\"position\":[722.7982596060397,955.1489974355616,1326.4000586718792],\"target\":[489.26101024714933,21,392.2510612363176],\"width\":1024,\"height\":611}"
+  },
+  {
+    "name": "concept-b-world",
+    "url": "http://127.0.0.1:4173/?visual=c2&composition=porcelain",
+    "camera": "{\"position\":[3304.8138799174494,5660.052737596276,7379.5260636036055],\"target\":[3304.8138799174494,21,1740.4733260073292],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "concept-b-units",
+    "url": "http://127.0.0.1:4173/?visual=c2&composition=porcelain&folder=Physlib%2FUnits",
+    "camera": "{\"position\":[1751.0540331453208,484.48578182465724,3478.0570923501677],\"target\":[1635.1825876891564,21.000000000000004,3014.5713105255104],\"width\":1024,\"height\":611}"
+  },
+  {
+    "name": "concept-b-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c2&composition=porcelain&folder=Physlib%2FClassicalMechanics",
+    "camera": "{\"position\":[722.7982596060397,955.1489974355616,1326.4000586718792],\"target\":[489.26101024714933,21,392.2510612363176],\"width\":1024,\"height\":611}"
+  },
+  {
+    "name": "classical-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib%2FClassicalMechanics",
+    "camera": "{\"position\":[743.4225074663818,979.6741541175858,1362.9252153539032],\"target\":[503.7539689369854,21,404.2510612363176],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "explore-selected",
+    "url": "http://127.0.0.1:4173/?visual=c2&node=Physlib.Units.ISQDimensionBase&explore=1",
+    "camera": "{\"position\":[1055.1640115935866,26.811179050730544,3066.8661436285547],\"target\":[1039.1702322196847,3.936495832529641,3039.1641051479096],\"width\":1536,\"height\":625,\"fov\":40}"
+  },
+  {
+    "name": "before-world-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956,476&reviewPose=%7B%22target%22%3A%5B3555.6859237322847%2C21%2C1776.4733260073292%5D%2C%22position%22%3A%5B3555.6859237322847%2C4510.142918047931%2C6764.409901616141%5D%7D",
+    "camera": "{\"position\":[3555.6859237322847,4510.142918047931,6764.409901616141],\"target\":[3555.6859237322847,21.00000000000003,1776.4733260073292],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "after-world-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956,476&reviewPose=%7B%22target%22%3A%5B3555.6859237322847%2C21%2C1776.4733260073292%5D%2C%22position%22%3A%5B3555.6859237322847%2C4510.142918047931%2C6764.409901616141%5D%7D",
+    "camera": "{\"position\":[3555.6859237322847,4510.142918047931,6764.409901616141],\"target\":[3555.6859237322847,21.000000000000053,1776.4733260073292],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "before-physlib-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956%2C476&folder=Physlib&reviewPose=%7B%22target%22%3A%5B1002.9364914086663%2C21%2C1408.9912541200783%5D%2C%22position%22%3A%5B1002.9364914086663%2C3354.8035489945587%2C5113.217419669588%5D%7D",
+    "camera": "{\"position\":[1002.9364914086663,3354.8035489945587,5113.217419669589],\"target\":[1002.9364914086663,21,1408.9912541200783],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "after-physlib-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&folder=Physlib&reviewPose=%7B%22target%22%3A%5B1407.3166437761479%2C21%2C1776.4733260073292%5D%2C%22position%22%3A%5B1407.3166437761479%2C3354.8035489945587%2C5480.699491556838%5D%7D",
+    "camera": "{\"position\":[1407.3166437761479,3354.8035489945587,5480.699491556839],\"target\":[1407.3166437761479,21,1776.4733260073292],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "before-units-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956%2C476&folder=Physlib%2FUnits&reviewPose=%7B%22target%22%3A%5B1220.4155217029497%2C21%2C2271.4362015288834%5D%2C%22position%22%3A%5B1220.4155217029497%2C403.6152234655871%2C2696.564227601758%5D%7D",
+    "camera": "{\"position\":[1220.4155217029497,403.6152234655871,2696.564227601758],\"target\":[1220.4155217029497,21,2271.4362015288834],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "after-units-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&folder=Physlib%2FUnits&reviewPose=%7B%22target%22%3A%5B1070.649369730013%2C21%2C3098.57131052551%5D%2C%22position%22%3A%5B1070.649369730013%2C403.6152234655871%2C3523.6993365983844%5D%7D",
+    "camera": "{\"position\":[1070.649369730013,403.6152234655871,3523.6993365983844],\"target\":[1070.649369730013,21,3098.57131052551],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "before-mechanics-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956%2C476&folder=Physlib%2FClassicalMechanics&reviewPose=%7B%22target%22%3A%5B478.68349096870287%2C21%2C296.6292580730385%5D%2C%22position%22%3A%5B478.68349096870287%2C762.1594241754598%2C1120.139729379105%5D%7D",
+    "camera": "{\"position\":[478.68349096870287,762.1594241754598,1120.1397293791047],\"target\":[478.68349096870287,21,296.6292580730385],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "after-mechanics-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&folder=Physlib%2FClassicalMechanics&reviewPose=%7B%22target%22%3A%5B503.7539689369854%2C21%2C404.2510612363175%5D%2C%22position%22%3A%5B503.7539689369854%2C762.1594241754598%2C1227.761532542384%5D%7D",
+    "camera": "{\"position\":[503.7539689369854,762.1594241754598,1227.7615325423835],\"target\":[503.7539689369854,21,404.2510612363176],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "before-withdim-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956%2C476&folder=Physlib%2FUnits%2FWithDim&reviewPose=%7B%22target%22%3A%5B1270.2139350813716%2C21%2C2216.123364344159%5D%2C%22position%22%3A%5B1270.2139350813716%2C190.64270296882896%2C2404.615256531747%5D%7D",
+    "camera": "{\"position\":[1270.2139350813716,190.64270296882896,2404.615256531747],\"target\":[1270.2139350813716,21,2216.123364344159],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "after-withdim-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&folder=Physlib%2FUnits%2FWithDim&reviewPose=%7B%22target%22%3A%5B1135.5209858628157%2C21%2C2993.3716265254343%5D%2C%22position%22%3A%5B1135.5209858628157%2C190.64270296882896%2C3181.863518713022%5D%7D",
+    "camera": "{\"position\":[1135.5209858628157,190.64270296882896,3181.863518713022],\"target\":[1135.5209858628157,21,2993.3716265254343],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "before-selected-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956%2C476&node=Physlib.Units.ISQDimensionBase&reviewOffset=35%2C30%2C7",
+    "camera": "{\"position\":[1226.5206271821899,34.278799817967,2257.421397631528],\"target\":[1191.5206271821899,4.278799817967001,2250.421397631528],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "after-selected-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&node=Physlib.Units.ISQDimensionBase&reviewOffset=35%2C30%2C7",
+    "camera": "{\"position\":[1074.1702322196847,34.278799817967,3046.1641051479105],\"target\":[1039.1702322196847,4.278799817967002,3039.1641051479105],\"width\":956,\"height\":476,\"fov\":40}"
+  },
+  {
+    "name": "surface-overview",
+    "url": "http://127.0.0.1:4173/?visual=c2",
+    "camera": "{\"position\":[3555.6859237322847,4972.228134446092,7814.556416795246],\"target\":[3555.6859237322847,21.00000000000006,1776.4733260073292],\"width\":1024,\"height\":612,\"fov\":40}"
+  },
+  {
+    "name": "physlib-borough",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib",
+    "camera": "{\"position\":[2500.116008728065,4392.197459807668,6147.670785814997],\"target\":[1407.3166437761479,21,1776.4733260073292],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "physlibalpha-borough",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=PhyslibAlpha",
+    "camera": "{\"position\":[5664.378864470897,4494.42300434514,6249.896330352469],\"target\":[4546.023113384612,20.999999999999993,1776.4733260073292],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "quantuminfo-borough",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=QuantumInfo",
+    "camera": "{\"position\":[7660.690848166316,3886.1938193022715,5641.6671453096005],\"target\":[6694.392393340748,21,1776.473326007329],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "units-district",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib%2FUnits",
+    "camera": "{\"position\":[1192.6521043566834,509.0109385066817,3586.5822490321916],\"target\":[1070.649369730013,21,3098.57131052551],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "classical-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib%2FClassicalMechanics",
+    "camera": "{\"position\":[743.4225074663818,979.6741541175858,1362.9252153539032],\"target\":[503.7539689369854,21,404.2510612363176],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "thermodynamics",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib%2FThermodynamics",
+    "camera": "{\"position\":[864.5317695431477,227.47371820500015,3175.43926873502],\"target\":[812.9133399918976,21,2968.9655505300198],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "electromagnetism",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=Physlib%2FElectromagnetism",
+    "camera": "{\"position\":[1904.8847616037092,727.3757139545415,1001.4739568091195],\"target\":[1728.2908331150738,21,295.0982428545779],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "nested-withdim",
+    "url": "http://127.0.0.1:4173/?visual=c2&node=Physlib.Units.WithDim.Area",
+    "camera": "{\"position\":[1189.7384416740201,237.86982324481824,3210.2414497702525],\"target\":[1135.5209858628157,21,2993.3716265254343],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "river-crossing",
+    "url": "http://127.0.0.1:4173/?visual=c2&folder=civic-bridge-1",
+    "camera": "{\"position\":[2903.302663286323,127.67750293610639,1954.2097619837286],\"target\":[2876.633287552296,21.000000000000004,1847.5322590476223],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "units-selected",
+    "url": "http://127.0.0.1:4173/?visual=c2&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1055.1640115935866,26.811179050730544,3066.8661436285547],\"target\":[1039.1702322196847,3.936495832529641,3039.1641051479096],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "mathlib-roundtrip",
+    "url": "http://127.0.0.1:4173/?visual=c2&node=Mathlib.Data.Fintype.Card",
+    "camera": "{\"position\":[-117.7090472967227,-39.875426702500164,7.566829858596062],\"target\":[-152.2723565639858,-10.496613825326378,7.56682985859652],\"width\":1024,\"height\":612,\"fov\":40}"
+  },
+  {
+    "name": "explore-selected",
+    "url": "http://127.0.0.1:4173/?visual=c2&node=Physlib.Units.ISQDimensionBase&explore=1",
+    "camera": "{\"position\":[1055.1640115935866,26.811179050730544,3066.8661436285547],\"target\":[1039.1702322196847,3.9364958325296406,3039.1641051479096],\"width\":1536,\"height\":625,\"fov\":40}"
+  },
+  {
+    "name": "explore-search-qubit",
+    "url": "http://127.0.0.1:4173/?visual=c2&node=QuantumInfo.States.Pure.Qubit&explore=1",
+    "camera": "{\"position\":[6389.073450009599,35.90891019035284,1022.2111016180297],\"target\":[6367.652564861093,5.27225136378907,985.1090401977171],\"width\":1536,\"height\":625,\"fov\":40}"
+  },
+  {
+    "name": "registry-map",
+    "url": "http://127.0.0.1:4173/?visual=c2&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1055.1640115935866,26.811179050730544,3066.8661436285547],\"target\":[1039.1702322196847,3.936495832529641,3039.1641051479096],\"width\":1024,\"height\":611,\"fov\":40}"
+  },
+  {
+    "name": "mobile-selected",
+    "url": "http://127.0.0.1:4173/?visual=c2&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1055.1640115935866,26.811179050730544,3066.8661436285547],\"target\":[1039.1702322196847,3.936495832529641,3039.1641051479096],\"width\":625,\"height\":520,\"fov\":40}"
+  },
+  {
+    "name": "packaged-c2",
+    "url": "http://127.0.0.1:4173/qa-c2/index.html?visual=c2&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1055.1640115935866,26.811179050730544,3066.8661436285547],\"target\":[1039.1702322196847,3.936495832529641,3039.1641051479096],\"width\":1024,\"height\":611,\"fov\":40}"
+  }
+]

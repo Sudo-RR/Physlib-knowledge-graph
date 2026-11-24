@@ -1,0 +1,38 @@
+[
+  {
+    "key": "c2/surface/medium",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&benchSize=956,476&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c2/cinematic/medium",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&explore=1&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c2/orbit/medium",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&benchSize=956,476&node=Physlib.Units.ISQDimensionBase&cameraPath=%7B%22target%22%3A%5B1039.1702322196847%2C3.936495832529641%2C3039.1641051479096%5D%2C%22radius%22%3A45%7D"
+  },
+  {
+    "key": "c3/surface/medium",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c3&metrics=1&collect=1&benchSize=956,476&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c3/cinematic/medium",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c3&metrics=1&collect=1&explore=1&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c3/orbit/medium",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c3&metrics=1&collect=1&benchSize=956,476&node=Physlib.Units.ISQDimensionBase&cameraPath=%7B%22target%22%3A%5B1039.1702322196847%2C3.936495832529641%2C3039.1641051479096%5D%2C%22radius%22%3A45%7D"
+  },
+  {
+    "key": "c3/surface/low",
+    "quality": "low",
+    "url": "http://127.0.0.1:4173/?visual=c3&metrics=1&collect=1&benchSize=956,476&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D",
+    "instruction": "Choose Low using the Quality control before running."
+  }
+]

@@ -1,0 +1,56 @@
+[
+  {
+    "key": "c/surface/medium",
+    "visual": "c",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?metrics=1&collect=1&benchSize=956,476&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c1/surface/medium",
+    "visual": "c1",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c1&metrics=1&collect=1&benchSize=956,476&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c2/surface/medium",
+    "visual": "c2",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&benchSize=956,476&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c2/surface/low",
+    "visual": "c2",
+    "quality": "low",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&benchSize=956,476&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c2/surface/high",
+    "visual": "c2",
+    "quality": "high",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&benchSize=956,476&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  },
+  {
+    "key": "c2/dense/medium",
+    "visual": "c2",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&benchSize=956,476&folder=Physlib/ClassicalMechanics&cameraPath=%7B%22target%22%3A%5B503.7539689369854%2C12%2C404.2510612363175%5D%2C%22radius%22%3A540.7514857308445%7D"
+  },
+  {
+    "key": "c2/sparse/medium",
+    "visual": "c2",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&benchSize=956,476&folder=Physlib/Thermodynamics&cameraPath=%7B%22target%22%3A%5B812.9133399918976%2C12%2C2968.9655505300198%5D%2C%22radius%22%3A146.39921147569538%7D"
+  },
+  {
+    "key": "c2/orbit/medium",
+    "visual": "c2",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&benchSize=956,476&node=Physlib.Units.ISQDimensionBase&cameraPath=%7B%22target%22%3A%5B1039.1702322196847%2C3.936495832529641%2C3039.1641051479096%5D%2C%22radius%22%3A45%7D"
+  },
+  {
+    "key": "c2/cinematic/medium",
+    "visual": "c2",
+    "quality": "medium",
+    "url": "http://127.0.0.1:4173/?visual=c2&metrics=1&collect=1&explore=1&cameraPath=%7B%22target%22%3A%5B3555.6859237322847%2C18%2C1786.4733260073292%5D%2C%22radius%22%3A5120.18773017449%7D"
+  }
+]

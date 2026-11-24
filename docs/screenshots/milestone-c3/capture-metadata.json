@@ -1,0 +1,705 @@
+[
+  {
+    "name": "before-world",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956,476",
+    "camera": {
+      "position": [
+        3555.6859237322847,
+        4153.474912277591,
+        6816.076877565367
+      ],
+      "target": [
+        3555.6859237322847,
+        21.000000000000014,
+        1776.4733260073292
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "before-physlib",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&folder=Physlib",
+    "camera": {
+      "position": [
+        2500.116008728065,
+        4392.197459807668,
+        6147.670785814997
+      ],
+      "target": [
+        1407.3166437761479,
+        21,
+        1776.4733260073292
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "before-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&folder=Physlib%2FClassicalMechanics",
+    "camera": {
+      "position": [
+        743.4225074663818,
+        979.6741541175858,
+        1362.9252153539032
+      ],
+      "target": [
+        503.7539689369854,
+        21,
+        404.2510612363176
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "before-units",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&folder=Physlib%2FUnits",
+    "camera": {
+      "position": [
+        1192.6521043566834,
+        509.0109385066817,
+        3586.5822490321916
+      ],
+      "target": [
+        1070.649369730013,
+        21,
+        3098.57131052551
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "before-selected",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956%2C476&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1055.1640115935866,
+        26.811179050730544,
+        3066.8661436285547
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "gardens-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c3&concept=gardens&folder=Physlib%2FClassicalMechanics&benchSize=956%2C476&reviewPose=%7B%22position%22%3A%5B743.4225074663818%2C979.6741541175858%2C1362.9252153539032%5D%2C%22target%22%3A%5B503.7539689369854%2C21%2C404.2510612363176%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        743.4225074663818,
+        979.6741541175858,
+        1362.9252153539032
+      ],
+      "target": [
+        503.7539689369854,
+        21,
+        404.2510612363176
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "gardens-units",
+    "url": "http://127.0.0.1:4173/?visual=c3&concept=gardens&folder=Physlib%2FUnits&benchSize=956%2C476&reviewPose=%7B%22position%22%3A%5B1192.6521043566834%2C509.0109385066817%2C3586.5822490321916%5D%2C%22target%22%3A%5B1070.649369730013%2C21%2C3098.57131052551%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        1192.6521043566834,
+        509.0109385066817,
+        3586.5822490321916
+      ],
+      "target": [
+        1070.649369730013,
+        21,
+        3098.57131052551
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "spaceage-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c3&concept=spaceage&folder=Physlib%2FClassicalMechanics&benchSize=956%2C476&reviewPose=%7B%22position%22%3A%5B743.4225074663818%2C979.6741541175858%2C1362.9252153539032%5D%2C%22target%22%3A%5B503.7539689369854%2C21%2C404.2510612363176%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        743.4225074663818,
+        979.6741541175858,
+        1362.9252153539032
+      ],
+      "target": [
+        503.7539689369854,
+        21,
+        404.2510612363176
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "spaceage-units",
+    "url": "http://127.0.0.1:4173/?visual=c3&concept=spaceage&folder=Physlib%2FUnits&benchSize=956%2C476&reviewPose=%7B%22position%22%3A%5B1192.6521043566834%2C509.0109385066817%2C3586.5822490321916%5D%2C%22target%22%3A%5B1070.649369730013%2C21%2C3098.57131052551%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        1192.6521043566834,
+        509.0109385066817,
+        3586.5822490321916
+      ],
+      "target": [
+        1070.649369730013,
+        21,
+        3098.57131052551
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "classical-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=Physlib%2FClassicalMechanics",
+    "camera": {
+      "position": [
+        997.412866486957,
+        695.2594265604376,
+        1163.7262882362734
+      ],
+      "target": [
+        503.7539689369854,
+        47.5,
+        404.2510612363176
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "units-district",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=Physlib%2FUnits",
+    "camera": {
+      "position": [
+        1334.4435607215264,
+        390.44451641260883,
+        3504.408527435531
+      ],
+      "target": [
+        1070.649369730013,
+        44.3043481006615,
+        3098.57131052551
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "units-selected",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1049.6652268320715,
+        18.946686452440904,
+        3057.341969041725
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "surface-overview",
+    "url": "http://127.0.0.1:4173/?visual=c3",
+    "camera": {
+      "position": [
+        3555.6859237322847,
+        5009.808823276517,
+        7828.069451954299
+      ],
+      "target": [
+        3555.6859237322847,
+        47.5,
+        1776.4733260073283
+      ],
+      "width": 1024,
+      "height": 612,
+      "fov": 40
+    }
+  },
+  {
+    "name": "classical-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=Physlib%2FClassicalMechanics",
+    "camera": {
+      "position": [
+        997.412866486957,
+        695.2594265604376,
+        1163.7262882362734
+      ],
+      "target": [
+        503.7539689369854,
+        47.5,
+        404.2510612363176
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "units-district",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=Physlib%2FUnits",
+    "camera": {
+      "position": [
+        1334.4435607215264,
+        390.44451641260883,
+        3504.408527435531
+      ],
+      "target": [
+        1070.649369730013,
+        44.3043481006615,
+        3098.57131052551
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "units-selected",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1051.4747086617933,
+        21.534650352425697,
+        3060.476083506176
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "surface-overview",
+    "url": "http://127.0.0.1:4173/?visual=c3",
+    "camera": {
+      "position": [
+        3555.685923732285,
+        5009.808823276517,
+        7828.069451954299
+      ],
+      "target": [
+        3555.685923732285,
+        47.5,
+        1776.4733260073278
+      ],
+      "width": 1024,
+      "height": 612,
+      "fov": 40
+    }
+  },
+  {
+    "name": "physlib-borough",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=Physlib",
+    "camera": {
+      "position": [
+        3549.6195638928416,
+        2858.544058844435,
+        5072.323972340704
+      ],
+      "target": [
+        1407.3166437761479,
+        47.500000000000014,
+        1776.4733260073297
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "units-selected",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1051.4747086617933,
+        21.534650352425697,
+        3060.476083506176
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "mathlib-roundtrip",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Mathlib.Data.Fintype.Card",
+    "camera": {
+      "position": [
+        -117.7090472967227,
+        -39.87542670250014,
+        7.566829858596062
+      ],
+      "target": [
+        -152.2723565639858,
+        -10.496613825326378,
+        7.56682985859652
+      ],
+      "width": 1024,
+      "height": 612,
+      "fov": 40
+    }
+  },
+  {
+    "name": "explore-selected",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase&explore=1",
+    "camera": {
+      "position": [
+        1051.4747086617933,
+        21.534650352425697,
+        3060.476083506176
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 1536,
+      "height": 625,
+      "fov": 40
+    }
+  },
+  {
+    "name": "after-world-matched",
+    "url": "http://127.0.0.1:4173/?visual=c3&benchSize=956,476&reviewPose=%7B%22position%22%3A%5B3555.6859237322847%2C4153.474912277591%2C6816.076877565367%5D%2C%22target%22%3A%5B3555.6859237322847%2C21.000000000000014%2C1776.4733260073292%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        3555.6859237322847,
+        4153.474912277591,
+        6816.076877565367
+      ],
+      "target": [
+        3555.6859237322847,
+        21.000000000000043,
+        1776.4733260073292
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "after-physlib-matched",
+    "url": "http://127.0.0.1:4173/?visual=c3&benchSize=956%2C476&folder=Physlib&reviewPose=%7B%22position%22%3A%5B2500.116008728065%2C4392.197459807668%2C6147.670785814997%5D%2C%22target%22%3A%5B1407.3166437761479%2C21%2C1776.4733260073292%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        2500.116008728065,
+        4392.197459807668,
+        6147.670785814997
+      ],
+      "target": [
+        1407.3166437761479,
+        21,
+        1776.4733260073292
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "after-mechanics-matched",
+    "url": "http://127.0.0.1:4173/?visual=c3&benchSize=956%2C476&folder=Physlib%2FClassicalMechanics&reviewPose=%7B%22position%22%3A%5B743.4225074663818%2C979.6741541175858%2C1362.9252153539032%5D%2C%22target%22%3A%5B503.7539689369854%2C21%2C404.2510612363176%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        743.4225074663818,
+        979.6741541175858,
+        1362.9252153539032
+      ],
+      "target": [
+        503.7539689369854,
+        21,
+        404.2510612363176
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "after-units-matched",
+    "url": "http://127.0.0.1:4173/?visual=c3&benchSize=956%2C476&folder=Physlib%2FUnits&reviewPose=%7B%22position%22%3A%5B1192.6521043566834%2C509.0109385066817%2C3586.5822490321916%5D%2C%22target%22%3A%5B1070.649369730013%2C21%2C3098.57131052551%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        1192.6521043566834,
+        509.0109385066817,
+        3586.5822490321916
+      ],
+      "target": [
+        1070.649369730013,
+        21,
+        3098.57131052551
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "after-selected-matched",
+    "url": "http://127.0.0.1:4173/?visual=c3&benchSize=956%2C476&node=Physlib.Units.ISQDimensionBase&reviewPose=%7B%22position%22%3A%5B1055.1640115935866%2C26.811179050730544%2C3066.8661436285547%5D%2C%22target%22%3A%5B1039.1702322196847%2C3.936495832529641%2C3039.1641051479096%5D%2C%22width%22%3A956%2C%22height%22%3A476%2C%22fov%22%3A40%7D",
+    "camera": {
+      "position": [
+        1055.1640115935866,
+        26.811179050730544,
+        3066.8661436285547
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 956,
+      "height": 476,
+      "fov": 40
+    }
+  },
+  {
+    "name": "classical-mechanics",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=Physlib%2FClassicalMechanics",
+    "camera": {
+      "position": [
+        997.412866486957,
+        695.2594265604376,
+        1163.7262882362734
+      ],
+      "target": [
+        503.7539689369854,
+        47.5,
+        404.2510612363176
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "units-district",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=Physlib%2FUnits",
+    "camera": {
+      "position": [
+        1334.4435607215264,
+        390.44451641260883,
+        3504.408527435531
+      ],
+      "target": [
+        1070.649369730013,
+        44.3043481006615,
+        3098.57131052551
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "units-selected",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1051.4747086617933,
+        21.534650352425697,
+        3060.476083506176
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "surface-overview",
+    "url": "http://127.0.0.1:4173/?visual=c3",
+    "camera": {
+      "position": [
+        3555.6859237322847,
+        5009.808823276517,
+        7828.0694519543
+      ],
+      "target": [
+        3555.6859237322847,
+        47.5,
+        1776.4733260073288
+      ],
+      "width": 1024,
+      "height": 612,
+      "fov": 40
+    }
+  },
+  {
+    "name": "physlib-borough",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=Physlib",
+    "camera": {
+      "position": [
+        3549.6195638928416,
+        2858.544058844435,
+        5072.323972340704
+      ],
+      "target": [
+        1407.3166437761479,
+        47.500000000000014,
+        1776.4733260073297
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "river-crossing",
+    "url": "http://127.0.0.1:4173/?visual=c3&folder=civic-bridge-1",
+    "camera": {
+      "position": [
+        2957.76843695836,
+        153.96229231156033,
+        1972.3555658261828
+      ],
+      "target": [
+        2876.6332875522953,
+        47.49999999999998,
+        1847.5322590476223
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "district-selected-context",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1334.4435607215264,
+        390.44451641260883,
+        3504.408527435531
+      ],
+      "target": [
+        1070.649369730013,
+        44.3043481006615,
+        3098.57131052551
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "home-recovery",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        285.053008235016,
+        52,
+        65.30090509271578
+      ],
+      "target": [
+        280.053008235016,
+        2,
+        47.300905092715766
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "registry-map",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1051.4747086617933,
+        21.534650352425697,
+        3060.476083506176
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  },
+  {
+    "name": "mobile-selected",
+    "url": "http://127.0.0.1:4173/?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1051.515241054779,
+        21.592620743785087,
+        3060.5462876701795
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 625,
+      "height": 520,
+      "fov": 40
+    }
+  },
+  {
+    "name": "packaged-c3",
+    "url": "http://127.0.0.1:4173/qa-c3/index.html?visual=c3&node=Physlib.Units.ISQDimensionBase",
+    "camera": {
+      "position": [
+        1051.4747086617933,
+        21.534650352425697,
+        3060.476083506176
+      ],
+      "target": [
+        1039.1702322196847,
+        3.936495832529641,
+        3039.1641051479096
+      ],
+      "width": 1024,
+      "height": 611,
+      "fov": 40
+    }
+  }
+]

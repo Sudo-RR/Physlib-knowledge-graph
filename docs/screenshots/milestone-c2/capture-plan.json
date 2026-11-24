@@ -1,0 +1,272 @@
+[
+  {
+    "name": "before-world-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956,476&reviewPose=%7B%22target%22%3A%5B3555.6859237322847%2C21%2C1776.4733260073292%5D%2C%22position%22%3A%5B3555.6859237322847%2C4510.142918047931%2C6764.409901616141%5D%7D",
+    "pose": {
+      "target": [
+        3555.6859237322847,
+        21,
+        1776.4733260073292
+      ],
+      "position": [
+        3555.6859237322847,
+        4510.142918047931,
+        6764.409901616141
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical absolute world pose"
+  },
+  {
+    "name": "after-world-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956,476&reviewPose=%7B%22target%22%3A%5B3555.6859237322847%2C21%2C1776.4733260073292%5D%2C%22position%22%3A%5B3555.6859237322847%2C4510.142918047931%2C6764.409901616141%5D%7D",
+    "pose": {
+      "target": [
+        3555.6859237322847,
+        21,
+        1776.4733260073292
+      ],
+      "position": [
+        3555.6859237322847,
+        4510.142918047931,
+        6764.409901616141
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical absolute world pose"
+  },
+  {
+    "name": "before-physlib-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956,476&folder=Physlib&reviewPose=%7B%22target%22%3A%5B1002.9364914086663%2C21%2C1408.9912541200783%5D%2C%22position%22%3A%5B1002.9364914086663%2C3354.8035489945587%2C5113.217419669588%5D%7D",
+    "pose": {
+      "target": [
+        1002.9364914086663,
+        21,
+        1408.9912541200783
+      ],
+      "position": [
+        1002.9364914086663,
+        3354.8035489945587,
+        5113.217419669588
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical target-relative direction, distance and height; changed-layout territory centres"
+  },
+  {
+    "name": "after-physlib-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956,476&folder=Physlib&reviewPose=%7B%22target%22%3A%5B1407.3166437761479%2C21%2C1776.4733260073292%5D%2C%22position%22%3A%5B1407.3166437761479%2C3354.8035489945587%2C5480.699491556838%5D%7D",
+    "pose": {
+      "target": [
+        1407.3166437761479,
+        21,
+        1776.4733260073292
+      ],
+      "position": [
+        1407.3166437761479,
+        3354.8035489945587,
+        5480.699491556838
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical target-relative direction, distance and height; changed-layout territory centres"
+  },
+  {
+    "name": "before-units-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956,476&folder=Physlib/Units&reviewPose=%7B%22target%22%3A%5B1220.4155217029497%2C21%2C2271.4362015288834%5D%2C%22position%22%3A%5B1220.4155217029497%2C403.6152234655871%2C2696.564227601758%5D%7D",
+    "pose": {
+      "target": [
+        1220.4155217029497,
+        21,
+        2271.4362015288834
+      ],
+      "position": [
+        1220.4155217029497,
+        403.6152234655871,
+        2696.564227601758
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical target-relative direction, distance and height; changed-layout territory centres"
+  },
+  {
+    "name": "after-units-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956,476&folder=Physlib/Units&reviewPose=%7B%22target%22%3A%5B1070.649369730013%2C21%2C3098.57131052551%5D%2C%22position%22%3A%5B1070.649369730013%2C403.6152234655871%2C3523.6993365983844%5D%7D",
+    "pose": {
+      "target": [
+        1070.649369730013,
+        21,
+        3098.57131052551
+      ],
+      "position": [
+        1070.649369730013,
+        403.6152234655871,
+        3523.6993365983844
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical target-relative direction, distance and height; changed-layout territory centres"
+  },
+  {
+    "name": "before-mechanics-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956,476&folder=Physlib/ClassicalMechanics&reviewPose=%7B%22target%22%3A%5B478.68349096870287%2C21%2C296.6292580730385%5D%2C%22position%22%3A%5B478.68349096870287%2C762.1594241754598%2C1120.139729379105%5D%7D",
+    "pose": {
+      "target": [
+        478.68349096870287,
+        21,
+        296.6292580730385
+      ],
+      "position": [
+        478.68349096870287,
+        762.1594241754598,
+        1120.139729379105
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical target-relative direction, distance and height; changed-layout territory centres"
+  },
+  {
+    "name": "after-mechanics-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956,476&folder=Physlib/ClassicalMechanics&reviewPose=%7B%22target%22%3A%5B503.7539689369854%2C21%2C404.2510612363175%5D%2C%22position%22%3A%5B503.7539689369854%2C762.1594241754598%2C1227.761532542384%5D%7D",
+    "pose": {
+      "target": [
+        503.7539689369854,
+        21,
+        404.2510612363175
+      ],
+      "position": [
+        503.7539689369854,
+        762.1594241754598,
+        1227.761532542384
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical target-relative direction, distance and height; changed-layout territory centres"
+  },
+  {
+    "name": "before-withdim-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956,476&folder=Physlib/Units/WithDim&reviewPose=%7B%22target%22%3A%5B1270.2139350813716%2C21%2C2216.123364344159%5D%2C%22position%22%3A%5B1270.2139350813716%2C190.64270296882896%2C2404.615256531747%5D%7D",
+    "pose": {
+      "target": [
+        1270.2139350813716,
+        21,
+        2216.123364344159
+      ],
+      "position": [
+        1270.2139350813716,
+        190.64270296882896,
+        2404.615256531747
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical target-relative direction, distance and height; changed-layout territory centres"
+  },
+  {
+    "name": "after-withdim-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956,476&folder=Physlib/Units/WithDim&reviewPose=%7B%22target%22%3A%5B1135.5209858628157%2C21%2C2993.3716265254343%5D%2C%22position%22%3A%5B1135.5209858628157%2C190.64270296882896%2C3181.863518713022%5D%7D",
+    "pose": {
+      "target": [
+        1135.5209858628157,
+        21,
+        2993.3716265254343
+      ],
+      "position": [
+        1135.5209858628157,
+        190.64270296882896,
+        3181.863518713022
+      ]
+    },
+    "fov": 40,
+    "canvas": [
+      956,
+      476
+    ],
+    "viewport": [
+      1536,
+      791
+    ],
+    "match": "Identical target-relative direction, distance and height; changed-layout territory centres"
+  },
+  {
+    "name": "before-selected-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&benchSize=956,476&node=Physlib.Units.ISQDimensionBase&reviewOffset=35,30,7",
+    "match": "Identical module-relative offset, target height, FOV and canvas"
+  },
+  {
+    "name": "after-selected-matched",
+    "url": "http://127.0.0.1:4173/?visual=c2&benchSize=956,476&node=Physlib.Units.ISQDimensionBase&reviewOffset=35,30,7",
+    "match": "Identical module-relative offset, target height, FOV and canvas"
+  }
+]

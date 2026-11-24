@@ -76,6 +76,12 @@ variants are decorative and assert no mathematical role or completion status.
 
 ## Milestone C geography
 
+Milestone C.1 adds original parametric Three.js architecture, planted courts and
+palette changes. No new external assets, textures or fonts were redistributed.
+The optional C kit retains the same cache, fallback and licensing provisions;
+C.1's broad original geometry does not depend on its GLB. See the
+[C.1 report](docs/city-milestone-c1.md).
+
 No new external assets were imported. Terrain, streets, river ribbons, civic
 bridges and geographic map geometry are original repository code. The existing
 shared Kenney CC0 kit and documented provenance limitation remain unchanged.
@@ -85,3 +91,20 @@ Civic crossings are infrastructure, not import edges. See the
 ## Milestone B.1 generated facade
 
 site/city-district-lod.js generates a 256x128 facade atlas in Canvas from original rectangles and colours. It contains no external image or model data. LOD shells and the transition shader are original repository code. The same CC0 five-part kit remains the only imported district architecture; its existing mirror-provenance limitation is unchanged.
+
+## Milestone C.2 chromatic boroughs
+
+The persistent colour registry, parcel materials, civic landmarks, trees and
+bridge geometry are original repository code. No new third-party models,
+textures or fonts were imported. Existing Kenney licensing and provenance
+limitations remain unchanged. Civic landmarks and crossings are decorative
+infrastructure, not Lean modules or mathematical edges. See the
+[C.2 report](docs/city-milestone-c2.md).
+
+## Milestone C.3 civic architecture
+
+C.3 introduces original procedural civic centres, grove trees and architectural
+parts through shared Three.js geometry. No external models, textures, fonts or
+dependencies were added. Existing Kenney CC0 licensing and documented provenance
+limitations remain unchanged. Civic scenery is nonselectable and creates no
+mathematical module or dependency edge. See the [C.3 report](docs/city-milestone-c3.md).

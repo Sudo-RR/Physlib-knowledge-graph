@@ -1,0 +1,1531 @@
+{
+  "version": 5,
+  "registryVersion": 1,
+  "manifestHash": "10b0cf45a3413462c2daa58f5c96cfabb66eb43892914b507bee6f8b4aa8905e",
+  "deterministic": true,
+  "sourceHashes": [
+    "40de214ae1760eb45d05b083b87889e895805281a52d860984ef91e1c84f8200",
+    "638f9e1fd4b7f01e4a697460f8f0e296ed9602689afa2106b8b53848ecd762f2",
+    "db53d9268d6b7c732dcb20b41a960c29046bd10fdac322c195dd70fd8fd6b331"
+  ],
+  "nodes": 2256,
+  "edges": 6598,
+  "boroughs": [
+    {
+      "id": "Physlib",
+      "count": 669,
+      "bounds": {
+        "minX": 0,
+        "minZ": 0,
+        "maxX": 2814.6332875522958,
+        "maxZ": 3552.9466520146584
+      }
+    },
+    {
+      "id": "PhyslibAlpha",
+      "count": 828,
+      "bounds": {
+        "minX": 2938.6332875522958,
+        "minZ": 0,
+        "maxX": 6153.412939216927,
+        "maxZ": 3552.9466520146584
+      }
+    },
+    {
+      "id": "QuantumInfo",
+      "count": 82,
+      "bounds": {
+        "minX": 6277.412939216927,
+        "minZ": 0,
+        "maxX": 7111.371847464569,
+        "maxZ": 3552.9466520146584
+      }
+    }
+  ],
+  "directories": [
+    {
+      "id": "Physlib/@root",
+      "label": "Core / Root Modules",
+      "count": 1,
+      "identity": {
+        "key": "Physlib/@root",
+        "primary": "#197789",
+        "ground": "#639ea2",
+        "neighborhood": "#76a9a9",
+        "dark": "#18495e",
+        "text": "#ffffff",
+        "borough": "#13a8a5",
+        "pattern": "portico-1-1",
+        "finCount": 1,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 18,
+        "minZ": 18,
+        "maxX": 90,
+        "maxZ": 135.5070413101639
+      }
+    },
+    {
+      "id": "Physlib/ClassicalFieldTheory",
+      "label": "ClassicalFieldTheory",
+      "count": 2,
+      "identity": {
+        "key": "Physlib/ClassicalFieldTheory",
+        "primary": "#3883aa",
+        "ground": "#78a7b9",
+        "neighborhood": "#89b0bd",
+        "dark": "#264f6c",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "observatory-1-1",
+        "finCount": 1,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 106,
+        "minZ": 18,
+        "maxX": 198.4502929568684,
+        "maxZ": 229.13869601565997
+      }
+    },
+    {
+      "id": "Physlib/ClassicalMechanics",
+      "label": "ClassicalMechanics",
+      "count": 55,
+      "identity": {
+        "key": "Physlib/ClassicalMechanics",
+        "primary": "#e85d4b",
+        "ground": "#ef8d78",
+        "neighborhood": "#f19984",
+        "dark": "#753e42",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "fin-array-1-1",
+        "finCount": 1,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 214.4502929568684,
+        "minZ": 18,
+        "maxX": 793.0576449171024,
+        "maxZ": 790.502122472635
+      }
+    },
+    {
+      "id": "Physlib/CondensedMatter",
+      "label": "CondensedMatter",
+      "count": 20,
+      "identity": {
+        "key": "Physlib/CondensedMatter",
+        "primary": "#23a798",
+        "ground": "#69bfac",
+        "neighborhood": "#7cc5b2",
+        "dark": "#1c5f64",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "orbital-gate-1-1",
+        "finCount": 1,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 809.0576449171024,
+        "minZ": 18,
+        "maxX": 1170.1235014779636,
+        "maxZ": 447.47966149610994
+      }
+    },
+    {
+      "id": "Physlib/Cosmology",
+      "label": "Cosmology",
+      "count": 15,
+      "identity": {
+        "key": "Physlib/Cosmology",
+        "primary": "#ac71d1",
+        "ground": "#c79ad3",
+        "neighborhood": "#cea5d4",
+        "dark": "#5a477e",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "portico-2-1",
+        "finCount": 2,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 1186.1235014779636,
+        "minZ": 18,
+        "maxX": 1480.1678411820083,
+        "maxZ": 299.09245648774925
+      }
+    },
+    {
+      "id": "Physlib/Electromagnetism",
+      "label": "Electromagnetism",
+      "count": 36,
+      "identity": {
+        "key": "Physlib/Electromagnetism",
+        "primary": "#298cce",
+        "ground": "#6dadd1",
+        "neighborhood": "#80b5d2",
+        "dark": "#1f537d",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "observatory-2-1",
+        "finCount": 2,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 1496.1678411820083,
+        "minZ": 18,
+        "maxX": 1960.4138250481385,
+        "maxZ": 572.1964857091557
+      }
+    },
+    {
+      "id": "Physlib/FluidDynamics",
+      "label": "FluidDynamics",
+      "count": 17,
+      "identity": {
+        "key": "Physlib/FluidDynamics",
+        "primary": "#257c9c",
+        "ground": "#6ba2af",
+        "neighborhood": "#7dacb4",
+        "dark": "#1d4c66",
+        "text": "#ffffff",
+        "borough": "#13a8a5",
+        "pattern": "fin-array-2-1",
+        "finCount": 2,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 1976.4138250481385,
+        "minZ": 18,
+        "maxX": 2298.4205004649216,
+        "maxZ": 367.949269578815
+      }
+    },
+    {
+      "id": "Physlib/LatticeQFT",
+      "label": "LatticeQFT",
+      "count": 1,
+      "identity": {
+        "key": "Physlib/LatticeQFT",
+        "primary": "#b5962d",
+        "ground": "#cdb364",
+        "neighborhood": "#d3bb72",
+        "dark": "#5e5734",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "orbital-gate-2-1",
+        "finCount": 2,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 2314.4205004649216,
+        "minZ": 18,
+        "maxX": 2386.4205004649216,
+        "maxZ": 122.29295047292747
+      }
+    },
+    {
+      "id": "Physlib/Mathematics",
+      "label": "Mathematics",
+      "count": 57,
+      "identity": {
+        "key": "Physlib/Mathematics",
+        "primary": "#35946d",
+        "ground": "#76b28f",
+        "neighborhood": "#87ba98",
+        "dark": "#255651",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "portico-3-1",
+        "finCount": 3,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 18,
+        "minZ": 806.502122472635,
+        "maxX": 716.2496549731345,
+        "maxZ": 1509.7093257423285
+      }
+    },
+    {
+      "id": "Physlib/Meta",
+      "label": "Meta",
+      "count": 17,
+      "identity": {
+        "key": "Physlib/Meta",
+        "primary": "#667f93",
+        "ground": "#97a4a9",
+        "neighborhood": "#a4aeaf",
+        "dark": "#3b4d62",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "observatory-3-1",
+        "finCount": 3,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 732.2496549731345,
+        "minZ": 806.502122472635,
+        "maxX": 1058.751890947211,
+        "maxZ": 1104.6372632889854
+      }
+    },
+    {
+      "id": "Physlib/Optics",
+      "label": "Optics",
+      "count": 4,
+      "identity": {
+        "key": "Physlib/Optics",
+        "primary": "#e17e99",
+        "ground": "#eba3ad",
+        "neighborhood": "#edadb3",
+        "dark": "#724d65",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "fin-array-3-1",
+        "finCount": 3,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 1074.751890947211,
+        "minZ": 806.502122472635,
+        "maxX": 1221.8572573730034,
+        "maxZ": 971.8480208377619
+      }
+    },
+    {
+      "id": "Physlib/Particles",
+      "label": "Particles",
+      "count": 72,
+      "identity": {
+        "key": "Physlib/Particles",
+        "primary": "#c56832",
+        "ground": "#d89467",
+        "neighborhood": "#dca075",
+        "dark": "#654336",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "orbital-gate-3-1",
+        "finCount": 3,
+        "bands": 1,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 1237.8572573730034,
+        "minZ": 806.502122472635,
+        "maxX": 1951.4558735530995,
+        "maxZ": 1889.6671822160633
+      }
+    },
+    {
+      "id": "Physlib/ProbabilisticTheory",
+      "label": "ProbabilisticTheory",
+      "count": 23,
+      "identity": {
+        "key": "Physlib/ProbabilisticTheory",
+        "primary": "#72a13e",
+        "ground": "#9fbb6f",
+        "neighborhood": "#abc27c",
+        "dark": "#405c3c",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "portico-1-2",
+        "finCount": 1,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 1967.4558735530995,
+        "minZ": 806.502122472635,
+        "maxX": 2306.7507374248885,
+        "maxZ": 1218.5906293280918
+      }
+    },
+    {
+      "id": "Physlib/QFT",
+      "label": "QFT",
+      "count": 72,
+      "identity": {
+        "key": "Physlib/QFT",
+        "primary": "#7852a4",
+        "ground": "#a385b5",
+        "neighborhood": "#af93b9",
+        "dark": "#43396a",
+        "text": "#ffffff",
+        "borough": "#13a8a5",
+        "pattern": "observatory-1-2",
+        "finCount": 1,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 18,
+        "minZ": 1905.6671822160633,
+        "maxX": 658.9389275102358,
+        "maxZ": 2825.3954732910734
+      }
+    },
+    {
+      "id": "Physlib/QuantumMechanics",
+      "label": "QuantumMechanics",
+      "count": 59,
+      "identity": {
+        "key": "Physlib/QuantumMechanics",
+        "primary": "#6679d7",
+        "ground": "#97a0d7",
+        "neighborhood": "#a4aad7",
+        "dark": "#3b4a81",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "fin-array-1-2",
+        "finCount": 1,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 674.9389275102358,
+        "minZ": 1905.6671822160633,
+        "maxX": 1224.1563391294185,
+        "maxZ": 2735.350079112041
+      }
+    },
+    {
+      "id": "Physlib/Relativity",
+      "label": "Relativity",
+      "count": 114,
+      "identity": {
+        "key": "Physlib/Relativity",
+        "primary": "#c84d87",
+        "ground": "#da82a1",
+        "neighborhood": "#de90a8",
+        "dark": "#67365d",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "orbital-gate-1-2",
+        "finCount": 1,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "science-promenade",
+      "bounds": {
+        "minX": 1240.1563391294185,
+        "minZ": 1905.6671822160633,
+        "maxX": 2232.1000695931525,
+        "maxZ": 2888.5780782599045
+      }
+    },
+    {
+      "id": "Physlib/SpaceAndTime",
+      "label": "SpaceAndTime",
+      "count": 54,
+      "identity": {
+        "key": "Physlib/SpaceAndTime",
+        "primary": "#4869ae",
+        "ground": "#8395bb",
+        "neighborhood": "#92a0bf",
+        "dark": "#2d436e",
+        "text": "#ffffff",
+        "borough": "#13a8a5",
+        "pattern": "portico-2-2",
+        "finCount": 2,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 2248.1000695931525,
+        "minZ": 1905.6671822160633,
+        "maxX": 2796.6332875522958,
+        "maxZ": 2556.258071601993
+      }
+    },
+    {
+      "id": "Physlib/StatisticalMechanics",
+      "label": "StatisticalMechanics",
+      "count": 8,
+      "identity": {
+        "key": "Physlib/StatisticalMechanics",
+        "primary": "#a1ab31",
+        "ground": "#bfc266",
+        "neighborhood": "#c7c875",
+        "dark": "#556136",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "observatory-2-2",
+        "finCount": 2,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 18,
+        "minZ": 2904.5780782599045,
+        "maxX": 275.0910866929514,
+        "maxZ": 3094.5663768606446
+      }
+    },
+    {
+      "id": "Physlib/StringTheory",
+      "label": "StringTheory",
+      "count": 13,
+      "identity": {
+        "key": "Physlib/StringTheory",
+        "primary": "#a74465",
+        "ground": "#c37c8a",
+        "neighborhood": "#cb8a94",
+        "dark": "#58324d",
+        "text": "#ffffff",
+        "borough": "#13a8a5",
+        "pattern": "fin-array-2-2",
+        "finCount": 2,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 291.0910866929514,
+        "minZ": 2904.5780782599045,
+        "maxX": 692.3424746521152,
+        "maxZ": 3246.9043416966706
+      }
+    },
+    {
+      "id": "Physlib/Thermodynamics",
+      "label": "Thermodynamics",
+      "count": 4,
+      "identity": {
+        "key": "Physlib/Thermodynamics",
+        "primary": "#ec8b39",
+        "ground": "#f2ac6c",
+        "neighborhood": "#f4b579",
+        "dark": "#77523a",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "orbital-gate-2-2",
+        "finCount": 2,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 708.3424746521152,
+        "minZ": 2904.5780782599045,
+        "maxX": 917.4842053316801,
+        "maxZ": 3033.353022800135
+      }
+    },
+    {
+      "id": "Physlib/Units",
+      "label": "Units",
+      "count": 25,
+      "identity": {
+        "key": "Physlib/Units",
+        "primary": "#efbc29",
+        "ground": "#f4cd61",
+        "neighborhood": "#f5d270",
+        "dark": "#786832",
+        "text": "#000000",
+        "borough": "#13a8a5",
+        "pattern": "portico-3-2",
+        "finCount": 3,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 933.4842053316801,
+        "minZ": 2904.5780782599045,
+        "maxX": 1207.8145341283457,
+        "maxZ": 3292.564542791116
+      }
+    },
+    {
+      "id": "PhyslibAlpha/@root",
+      "label": "Core / Root Modules",
+      "count": 2,
+      "identity": {
+        "key": "PhyslibAlpha/@root",
+        "primary": "#b53764",
+        "ground": "#cd7389",
+        "neighborhood": "#d38393",
+        "dark": "#5e2d4d",
+        "text": "#ffffff",
+        "borough": "#d9527c",
+        "pattern": "observatory-3-2",
+        "finCount": 3,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 2956.6332875522958,
+        "minZ": 18,
+        "maxX": 3054.753496935053,
+        "maxZ": 136.06010469137857
+      }
+    },
+    {
+      "id": "PhyslibAlpha/ClassicalFieldTheory",
+      "label": "ClassicalFieldTheory",
+      "count": 144,
+      "identity": {
+        "key": "PhyslibAlpha/ClassicalFieldTheory",
+        "primary": "#d87d52",
+        "ground": "#e4a27d",
+        "neighborhood": "#e8ac88",
+        "dark": "#6e4c45",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "fin-array-3-2",
+        "finCount": 3,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "science-promenade",
+      "bounds": {
+        "minX": 3070.753496935053,
+        "minZ": 18,
+        "maxX": 3980.0579764268136,
+        "maxZ": 1328.8045923488376
+      }
+    },
+    {
+      "id": "PhyslibAlpha/ClassicalMechanics",
+      "label": "ClassicalMechanics",
+      "count": 16,
+      "identity": {
+        "key": "PhyslibAlpha/ClassicalMechanics",
+        "primary": "#bb685f",
+        "ground": "#d19486",
+        "neighborhood": "#d7a090",
+        "dark": "#61434b",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "orbital-gate-3-2",
+        "finCount": 3,
+        "bands": 2,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 3996.057976426813,
+        "minZ": 18,
+        "maxX": 4320.694832542933,
+        "maxZ": 380.7363171929459
+      }
+    },
+    {
+      "id": "PhyslibAlpha/CondensedMatter",
+      "label": "CondensedMatter",
+      "count": 67,
+      "identity": {
+        "key": "PhyslibAlpha/CondensedMatter",
+        "primary": "#55a8ad",
+        "ground": "#8bc0bb",
+        "neighborhood": "#9ac6be",
+        "dark": "#335f6e",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "portico-1-3",
+        "finCount": 1,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 4336.694832542933,
+        "minZ": 18,
+        "maxX": 4971.515743548085,
+        "maxZ": 689.4726518586654
+      }
+    },
+    {
+      "id": "PhyslibAlpha/Electromagnetism",
+      "label": "Electromagnetism",
+      "count": 2,
+      "identity": {
+        "key": "PhyslibAlpha/Electromagnetism",
+        "primary": "#78a4d5",
+        "ground": "#a3bdd6",
+        "neighborhood": "#afc4d6",
+        "dark": "#435e80",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "observatory-1-3",
+        "finCount": 1,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 4987.515743548085,
+        "minZ": 18,
+        "maxX": 5099.909153721109,
+        "maxZ": 147.02145275303272
+      }
+    },
+    {
+      "id": "PhyslibAlpha/Mathematics",
+      "label": "Mathematics",
+      "count": 140,
+      "identity": {
+        "key": "PhyslibAlpha/Mathematics",
+        "primary": "#8c64aa",
+        "ground": "#b191b9",
+        "neighborhood": "#bb9ebd",
+        "dark": "#4c416c",
+        "text": "#ffffff",
+        "borough": "#d9527c",
+        "pattern": "fin-array-1-3",
+        "finCount": 1,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "science-promenade",
+      "bounds": {
+        "minX": 5115.909153721108,
+        "minZ": 18,
+        "maxX": 6135.412939216927,
+        "maxZ": 1321.995558698407
+      }
+    },
+    {
+      "id": "PhyslibAlpha/Particles",
+      "label": "Particles",
+      "count": 139,
+      "identity": {
+        "key": "PhyslibAlpha/Particles",
+        "primary": "#c09a36",
+        "ground": "#d4b66a",
+        "neighborhood": "#dabe78",
+        "dark": "#635938",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "orbital-gate-1-3",
+        "finCount": 1,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "science-promenade",
+      "bounds": {
+        "minX": 2956.6332875522958,
+        "minZ": 1344.8045923488376,
+        "maxX": 4174.249529906151,
+        "maxZ": 2624.48188269949
+      }
+    },
+    {
+      "id": "PhyslibAlpha/ProbabilisticTheory",
+      "label": "ProbabilisticTheory",
+      "count": 233,
+      "identity": {
+        "key": "PhyslibAlpha/ProbabilisticTheory",
+        "primary": "#acbd5d",
+        "ground": "#c7ce84",
+        "neighborhood": "#ced28f",
+        "dark": "#5a694a",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "portico-2-3",
+        "finCount": 2,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "science-promenade",
+      "bounds": {
+        "minX": 4190.249529906151,
+        "minZ": 1344.8045923488376,
+        "maxX": 5455.303188533193,
+        "maxZ": 2890.2113397757284
+      }
+    },
+    {
+      "id": "PhyslibAlpha/QuantumMechanics",
+      "label": "QuantumMechanics",
+      "count": 36,
+      "identity": {
+        "key": "PhyslibAlpha/QuantumMechanics",
+        "primary": "#c35aaf",
+        "ground": "#d68bbc",
+        "neighborhood": "#db98c0",
+        "dark": "#643c6f",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "observatory-2-3",
+        "finCount": 2,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 5471.303188533193,
+        "minZ": 1344.8045923488376,
+        "maxX": 5910.937959829706,
+        "maxZ": 1940.0235759298416
+      }
+    },
+    {
+      "id": "PhyslibAlpha/Relativity",
+      "label": "Relativity",
+      "count": 36,
+      "identity": {
+        "key": "PhyslibAlpha/Relativity",
+        "primary": "#db5b71",
+        "ground": "#e78b92",
+        "neighborhood": "#ea989b",
+        "dark": "#6f3d53",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "fin-array-2-3",
+        "finCount": 2,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 2956.6332875522958,
+        "minZ": 2906.2113397757284,
+        "maxX": 3428.981978507828,
+        "maxZ": 3534.9466520146584
+      }
+    },
+    {
+      "id": "PhyslibAlpha/SpaceAndTime",
+      "label": "SpaceAndTime",
+      "count": 13,
+      "identity": {
+        "key": "PhyslibAlpha/SpaceAndTime",
+        "primary": "#5396bc",
+        "ground": "#8ab3c5",
+        "neighborhood": "#99bbc7",
+        "dark": "#325775",
+        "text": "#000000",
+        "borough": "#d9527c",
+        "pattern": "orbital-gate-2-3",
+        "finCount": 2,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 3444.981978507828,
+        "minZ": 2906.2113397757284,
+        "maxX": 3671.5774017721187,
+        "maxZ": 3293.6772498023934
+      }
+    },
+    {
+      "id": "QuantumInfo/@root",
+      "label": "Core / Root Modules",
+      "count": 1,
+      "identity": {
+        "key": "QuantumInfo/@root",
+        "primary": "#5e4a99",
+        "ground": "#9280ad",
+        "neighborhood": "#9f8eb3",
+        "dark": "#373565",
+        "text": "#ffffff",
+        "borough": "#7956c7",
+        "pattern": "portico-3-3",
+        "finCount": 3,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 6295.412939216927,
+        "minZ": 18,
+        "maxX": 6367.412939216927,
+        "maxZ": 120.5423741714826
+      }
+    },
+    {
+      "id": "QuantumInfo/Capacity",
+      "label": "Capacity",
+      "count": 2,
+      "identity": {
+        "key": "QuantumInfo/Capacity",
+        "primary": "#40a5bf",
+        "ground": "#7dbec7",
+        "neighborhood": "#8dc4c9",
+        "dark": "#295e76",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "observatory-3-3",
+        "finCount": 3,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 6383.412939216927,
+        "minZ": 18,
+        "maxX": 6463.578567559466,
+        "maxZ": 127.08281417126946
+      }
+    },
+    {
+      "id": "QuantumInfo/Channels",
+      "label": "Channels",
+      "count": 7,
+      "identity": {
+        "key": "QuantumInfo/Channels",
+        "primary": "#8871ce",
+        "ground": "#ae9ad1",
+        "neighborhood": "#b8a5d2",
+        "dark": "#4a477d",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "fin-array-3-3",
+        "finCount": 3,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 6479.578567559466,
+        "minZ": 18,
+        "maxX": 6614.0651075733385,
+        "maxZ": 245.486540013872
+      }
+    },
+    {
+      "id": "QuantumInfo/ClassicalInfo",
+      "label": "ClassicalInfo",
+      "count": 6,
+      "identity": {
+        "key": "QuantumInfo/ClassicalInfo",
+        "primary": "#d99e58",
+        "ground": "#e5b981",
+        "neighborhood": "#e8c08c",
+        "dark": "#6e5b48",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "orbital-gate-3-3",
+        "finCount": 3,
+        "bands": 3,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 6630.065107573338,
+        "minZ": 18,
+        "maxX": 6838.647541523343,
+        "maxZ": 236.16268867048592
+      }
+    },
+    {
+      "id": "QuantumInfo/Entropy",
+      "label": "Entropy",
+      "count": 4,
+      "identity": {
+        "key": "QuantumInfo/Entropy",
+        "primary": "#a571c0",
+        "ground": "#c29ac8",
+        "neighborhood": "#c9a5ca",
+        "dark": "#574776",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "portico-1-4",
+        "finCount": 1,
+        "bands": 4,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 6854.6475415233435,
+        "minZ": 18,
+        "maxX": 6956.44760900079,
+        "maxZ": 196.30006747744676
+      }
+    },
+    {
+      "id": "QuantumInfo/ForMathlib",
+      "label": "ForMathlib",
+      "count": 48,
+      "identity": {
+        "key": "QuantumInfo/ForMathlib",
+        "primary": "#599a95",
+        "ground": "#8eb6aa",
+        "neighborhood": "#9cbeb0",
+        "dark": "#355963",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "observatory-1-4",
+        "finCount": 1,
+        "bands": 4,
+        "version": 1
+      },
+      "motif": "terraced-campus",
+      "bounds": {
+        "minX": 6295.412939216927,
+        "minZ": 261.486540013872,
+        "maxX": 6805.704869109077,
+        "maxZ": 756.6697784933976
+      }
+    },
+    {
+      "id": "QuantumInfo/Measurements",
+      "label": "Measurements",
+      "count": 1,
+      "identity": {
+        "key": "QuantumInfo/Measurements",
+        "primary": "#a8ad58",
+        "ground": "#c4c381",
+        "neighborhood": "#cbc98c",
+        "dark": "#586248",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "fin-array-1-4",
+        "finCount": 1,
+        "bands": 4,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 6821.704869109077,
+        "minZ": 261.486540013872,
+        "maxX": 6893.704869109077,
+        "maxZ": 366.5704034351608
+      }
+    },
+    {
+      "id": "QuantumInfo/Operators",
+      "label": "Operators",
+      "count": 1,
+      "identity": {
+        "key": "QuantumInfo/Operators",
+        "primary": "#d179a0",
+        "ground": "#e0a0b2",
+        "neighborhood": "#e4aab7",
+        "dark": "#6b4a68",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "orbital-gate-1-4",
+        "finCount": 1,
+        "bands": 4,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 6909.704869109077,
+        "minZ": 261.486540013872,
+        "maxX": 6981.704869109077,
+        "maxZ": 371.0713842671947
+      }
+    },
+    {
+      "id": "QuantumInfo/ResourceTheory",
+      "label": "ResourceTheory",
+      "count": 3,
+      "identity": {
+        "key": "QuantumInfo/ResourceTheory",
+        "primary": "#6578a1",
+        "ground": "#969fb3",
+        "neighborhood": "#a3a9b7",
+        "dark": "#3a4a68",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "portico-2-4",
+        "finCount": 2,
+        "bands": 4,
+        "version": 1
+      },
+      "motif": "institute-square",
+      "bounds": {
+        "minX": 6997.704869109077,
+        "minZ": 261.486540013872,
+        "maxX": 7093.371847464569,
+        "maxZ": 433.65351836936463
+      }
+    },
+    {
+      "id": "QuantumInfo/States",
+      "label": "States",
+      "count": 9,
+      "identity": {
+        "key": "QuantumInfo/States",
+        "primary": "#4ea1d0",
+        "ground": "#87bbd3",
+        "neighborhood": "#96c2d3",
+        "dark": "#305c7e",
+        "text": "#000000",
+        "borough": "#7956c7",
+        "pattern": "observatory-2-4",
+        "finCount": 2,
+        "bands": 4,
+        "version": 1
+      },
+      "motif": "research-crescent",
+      "bounds": {
+        "minX": 6295.412939216927,
+        "minZ": 772.6697784933976,
+        "maxX": 6495.750473642208,
+        "maxZ": 1081.0222487457722
+      }
+    }
+  ],
+  "adjacency": [
+    {
+      "from": "Physlib/@root",
+      "to": "Physlib/ClassicalFieldTheory",
+      "oklabDistance": 0.06314622263585656,
+      "requiresPattern": true,
+      "patterns": [
+        "portico-1-1",
+        "observatory-1-1"
+      ]
+    },
+    {
+      "from": "Physlib/ClassicalFieldTheory",
+      "to": "Physlib/ClassicalMechanics",
+      "oklabDistance": 0.2755111305702584,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-1-1",
+        "fin-array-1-1"
+      ]
+    },
+    {
+      "from": "Physlib/ClassicalMechanics",
+      "to": "Physlib/CondensedMatter",
+      "oklabDistance": 0.2785185451903947,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-1-1",
+        "orbital-gate-1-1"
+      ]
+    },
+    {
+      "from": "Physlib/ClassicalMechanics",
+      "to": "Physlib/Mathematics",
+      "oklabDistance": 0.2671180949264097,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-1-1",
+        "portico-3-1"
+      ]
+    },
+    {
+      "from": "Physlib/ClassicalMechanics",
+      "to": "Physlib/Meta",
+      "oklabDistance": 0.22417842135786567,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-1-1",
+        "observatory-3-1"
+      ]
+    },
+    {
+      "from": "Physlib/CondensedMatter",
+      "to": "Physlib/Cosmology",
+      "oklabDistance": 0.23454004938688686,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-1-1",
+        "portico-2-1"
+      ]
+    },
+    {
+      "from": "Physlib/Cosmology",
+      "to": "Physlib/Electromagnetism",
+      "oklabDistance": 0.1622438983759223,
+      "requiresPattern": false,
+      "patterns": [
+        "portico-2-1",
+        "observatory-2-1"
+      ]
+    },
+    {
+      "from": "Physlib/Electromagnetism",
+      "to": "Physlib/FluidDynamics",
+      "oklabDistance": 0.08253914115703725,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-2-1",
+        "fin-array-2-1"
+      ]
+    },
+    {
+      "from": "Physlib/FluidDynamics",
+      "to": "Physlib/LatticeQFT",
+      "oklabDistance": 0.24158688306750675,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-2-1",
+        "orbital-gate-2-1"
+      ]
+    },
+    {
+      "from": "Physlib/Mathematics",
+      "to": "Physlib/Meta",
+      "oklabDistance": 0.10980865674105446,
+      "requiresPattern": false,
+      "patterns": [
+        "portico-3-1",
+        "observatory-3-1"
+      ]
+    },
+    {
+      "from": "Physlib/Meta",
+      "to": "Physlib/Optics",
+      "oklabDistance": 0.1959214744018803,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-3-1",
+        "fin-array-3-1"
+      ]
+    },
+    {
+      "from": "Physlib/Optics",
+      "to": "Physlib/Particles",
+      "oklabDistance": 0.13659265526824282,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-3-1",
+        "orbital-gate-3-1"
+      ]
+    },
+    {
+      "from": "Physlib/Particles",
+      "to": "Physlib/ProbabilisticTheory",
+      "oklabDistance": 0.18563865202549412,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-3-1",
+        "portico-1-2"
+      ]
+    },
+    {
+      "from": "Physlib/Particles",
+      "to": "Physlib/Relativity",
+      "oklabDistance": 0.14162576906827573,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-3-1",
+        "orbital-gate-1-2"
+      ]
+    },
+    {
+      "from": "Physlib/Particles",
+      "to": "Physlib/QuantumMechanics",
+      "oklabDistance": 0.259322834891511,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-3-1",
+        "fin-array-1-2"
+      ]
+    },
+    {
+      "from": "Physlib/QFT",
+      "to": "Physlib/QuantumMechanics",
+      "oklabDistance": 0.11573133684484586,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-1-2",
+        "fin-array-1-2"
+      ]
+    },
+    {
+      "from": "Physlib/QuantumMechanics",
+      "to": "Physlib/Relativity",
+      "oklabDistance": 0.20305554410191753,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-1-2",
+        "orbital-gate-1-2"
+      ]
+    },
+    {
+      "from": "Physlib/Relativity",
+      "to": "Physlib/SpaceAndTime",
+      "oklabDistance": 0.21575129992165015,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-1-2",
+        "portico-2-2"
+      ]
+    },
+    {
+      "from": "Physlib/StatisticalMechanics",
+      "to": "Physlib/StringTheory",
+      "oklabDistance": 0.29309962032157816,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-2-2",
+        "fin-array-2-2"
+      ]
+    },
+    {
+      "from": "Physlib/StringTheory",
+      "to": "Physlib/Thermodynamics",
+      "oklabDistance": 0.23871033020728316,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-2-2",
+        "orbital-gate-2-2"
+      ]
+    },
+    {
+      "from": "Physlib/Thermodynamics",
+      "to": "Physlib/Units",
+      "oklabDistance": 0.12310299731499207,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-2-2",
+        "portico-3-2"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/@root",
+      "to": "PhyslibAlpha/ClassicalFieldTheory",
+      "oklabDistance": 0.1838759951142994,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-3-2",
+        "fin-array-3-2"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/ClassicalFieldTheory",
+      "to": "PhyslibAlpha/ClassicalMechanics",
+      "oklabDistance": 0.08215100026827508,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-3-2",
+        "orbital-gate-3-2"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/ClassicalFieldTheory",
+      "to": "PhyslibAlpha/Particles",
+      "oklabDistance": 0.09303637823567641,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-3-2",
+        "orbital-gate-1-3"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/ClassicalMechanics",
+      "to": "PhyslibAlpha/CondensedMatter",
+      "oklabDistance": 0.2019624126249564,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-3-2",
+        "portico-1-3"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/CondensedMatter",
+      "to": "PhyslibAlpha/Electromagnetism",
+      "oklabDistance": 0.07635949806565422,
+      "requiresPattern": false,
+      "patterns": [
+        "portico-1-3",
+        "observatory-1-3"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/Electromagnetism",
+      "to": "PhyslibAlpha/Mathematics",
+      "oklabDistance": 0.16632081470628965,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-1-3",
+        "fin-array-1-3"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/Mathematics",
+      "to": "PhyslibAlpha/ProbabilisticTheory",
+      "oklabDistance": 0.30368636292781037,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-1-3",
+        "portico-2-3"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/Mathematics",
+      "to": "PhyslibAlpha/QuantumMechanics",
+      "oklabDistance": 0.09823404024772239,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-1-3",
+        "observatory-2-3"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/Particles",
+      "to": "PhyslibAlpha/ProbabilisticTheory",
+      "oklabDistance": 0.08893212705283414,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-1-3",
+        "portico-2-3"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/ProbabilisticTheory",
+      "to": "PhyslibAlpha/QuantumMechanics",
+      "oklabDistance": 0.3094803855674742,
+      "requiresPattern": false,
+      "patterns": [
+        "portico-2-3",
+        "observatory-2-3"
+      ]
+    },
+    {
+      "from": "PhyslibAlpha/Relativity",
+      "to": "PhyslibAlpha/SpaceAndTime",
+      "oklabDistance": 0.23402212473223355,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-2-3",
+        "orbital-gate-2-3"
+      ]
+    },
+    {
+      "from": "QuantumInfo/@root",
+      "to": "QuantumInfo/Capacity",
+      "oklabDistance": 0.24657127584048572,
+      "requiresPattern": false,
+      "patterns": [
+        "portico-3-3",
+        "observatory-3-3"
+      ]
+    },
+    {
+      "from": "QuantumInfo/Capacity",
+      "to": "QuantumInfo/Channels",
+      "oklabDistance": 0.16100990163308557,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-3-3",
+        "fin-array-3-3"
+      ]
+    },
+    {
+      "from": "QuantumInfo/Channels",
+      "to": "QuantumInfo/ClassicalInfo",
+      "oklabDistance": 0.2664429461765315,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-3-3",
+        "orbital-gate-3-3"
+      ]
+    },
+    {
+      "from": "QuantumInfo/Channels",
+      "to": "QuantumInfo/ForMathlib",
+      "oklabDistance": 0.17050041882406536,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-3-3",
+        "observatory-1-4"
+      ]
+    },
+    {
+      "from": "QuantumInfo/ClassicalInfo",
+      "to": "QuantumInfo/Entropy",
+      "oklabDistance": 0.2306784368017007,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-3-3",
+        "portico-1-4"
+      ]
+    },
+    {
+      "from": "QuantumInfo/ForMathlib",
+      "to": "QuantumInfo/Measurements",
+      "oklabDistance": 0.14242463502034822,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-1-4",
+        "fin-array-1-4"
+      ]
+    },
+    {
+      "from": "QuantumInfo/ForMathlib",
+      "to": "QuantumInfo/States",
+      "oklabDistance": 0.08546955763543591,
+      "requiresPattern": false,
+      "patterns": [
+        "observatory-1-4",
+        "observatory-2-4"
+      ]
+    },
+    {
+      "from": "QuantumInfo/Measurements",
+      "to": "QuantumInfo/Operators",
+      "oklabDistance": 0.2009782326724611,
+      "requiresPattern": false,
+      "patterns": [
+        "fin-array-1-4",
+        "orbital-gate-1-4"
+      ]
+    },
+    {
+      "from": "QuantumInfo/Operators",
+      "to": "QuantumInfo/ResourceTheory",
+      "oklabDistance": 0.1730183056547583,
+      "requiresPattern": false,
+      "patterns": [
+        "orbital-gate-1-4",
+        "portico-2-4"
+      ]
+    }
+  ],
+  "minimumGap": 12.021018960474976,
+  "errors": [],
+  "streets": {
+    "segments": 2350,
+    "components": 1
+  },
+  "landmarks": 42,
+  "trees": 112,
+  "parks": 155,
+  "blocks": 503,
+  "courts": 247,
+  "bounds": {
+    "minX": 0,
+    "minZ": -20,
+    "maxX": 7111.371847464569,
+    "maxZ": 3572.9466520146584
+  },
+  "perturbation": {
+    "description": "One appended Units file, memory only",
+    "unchanged": 1579,
+    "total": 1579
+  }
+}

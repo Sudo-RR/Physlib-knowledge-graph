@@ -1,0 +1,281 @@
+{
+  "protocol": "Last three valid 12-second foreground runs per condition. Same 956×476 CSS canvas, 1536×791 viewport, fixed world target/radius, native Chrome. Rendering workload includes the changed physical architecture. Software rendering; not GPU evidence.",
+  "rows": [
+    {
+      "key": "c/medium",
+      "files": [
+        "1795464485746-9b012d75-4946-4d57-8994-965ba3f6fdc5.json",
+        "1795464499471-84206256-107b-4b5c-a6a3-fbf41f3b34f1.json",
+        "1795464513877-e402a70a-e374-4adb-8305-cd1b3abdcd5c.json"
+      ],
+      "fps": 45.3,
+      "p50": 21.8,
+      "p95": 26.9,
+      "p99": 31.2,
+      "worst": 37.9,
+      "calls": [
+        57,
+        70
+      ],
+      "triangles": [
+        53264,
+        56788
+      ],
+      "geometries": 58,
+      "textures": 7,
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "canvas": [
+        956,
+        476
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "path": {
+        "target": [
+          2400,
+          14,
+          1360
+        ],
+        "radius": 3350,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "firstVisibleMs": 1323,
+      "completedMs": 1323,
+      "excluded": 0,
+      "additionalValid": 0
+    },
+    {
+      "key": "c/low",
+      "files": [
+        "1795464549210-91f17808-a695-4b8e-8473-36582926e30b.json",
+        "1795464562941-0d3ec564-23c5-499c-a1fb-cba3e52cbfbb.json",
+        "1795464577419-d4d40980-460f-44ad-94d3-c3285b75d29b.json"
+      ],
+      "fps": 56.5,
+      "p50": 17.4,
+      "p95": 21.7,
+      "p99": 24.6,
+      "worst": 32.8,
+      "calls": [
+        57,
+        70
+      ],
+      "triangles": [
+        53180,
+        56788
+      ],
+      "geometries": 58,
+      "textures": 7,
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "canvas": [
+        717,
+        357
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "path": {
+        "target": [
+          2400,
+          14,
+          1360
+        ],
+        "radius": 3350,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "firstVisibleMs": 1323,
+      "completedMs": 1323,
+      "excluded": 0,
+      "additionalValid": 0
+    },
+    {
+      "key": "c/high",
+      "files": [
+        "1795464600702-06c0c9ee-c4ec-4fec-9609-bde0581b4a52.json",
+        "1795464614715-24df7976-3618-466e-ba10-e390805fcbce.json",
+        "1795464628713-a02b5bba-66f7-4f39-86ba-3769a97aa811.json"
+      ],
+      "fps": 36.5,
+      "p50": 27.2,
+      "p95": 31.5,
+      "p99": 37.7,
+      "worst": 60.9,
+      "calls": [
+        57,
+        70
+      ],
+      "triangles": [
+        53264,
+        56788
+      ],
+      "geometries": 58,
+      "textures": 7,
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "canvas": [
+        1195,
+        595
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "path": {
+        "target": [
+          2400,
+          14,
+          1360
+        ],
+        "radius": 3350,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "firstVisibleMs": 1323,
+      "completedMs": 1323,
+      "excluded": 0,
+      "additionalValid": 0
+    },
+    {
+      "key": "c1/medium",
+      "files": [
+        "1795464757160-4ca541e6-1b2d-4c34-808c-220e0df2f332.json",
+        "1795464771494-6baf3914-3088-4618-a727-9b82f0dc1aec.json",
+        "1795464785192-b038bf71-3710-427b-bd44-6797359b84a3.json"
+      ],
+      "fps": 35.6,
+      "p50": 27.1,
+      "p95": 37,
+      "p99": 45.7,
+      "worst": 58.9,
+      "calls": [
+        57,
+        69
+      ],
+      "triangles": [
+        70420,
+        79416
+      ],
+      "geometries": 67,
+      "textures": 4,
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "canvas": [
+        956,
+        476
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "path": {
+        "target": [
+          2400,
+          14,
+          1360
+        ],
+        "radius": 3350,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "firstVisibleMs": 1162,
+      "completedMs": 1162,
+      "excluded": 0,
+      "additionalValid": 3
+    },
+    {
+      "key": "c1/low",
+      "files": [
+        "1795464825452-249886f2-3d97-4097-ae9f-a99229fce638.json",
+        "1795464839337-962bfc51-d956-4721-8bd2-478266721d10.json",
+        "1795464853441-ba88994b-79c2-4db7-93c3-0b57261e7a2f.json"
+      ],
+      "fps": 46.7,
+      "p50": 21,
+      "p95": 26.8,
+      "p99": 30.7,
+      "worst": 43.4,
+      "calls": [
+        57,
+        69
+      ],
+      "triangles": [
+        70476,
+        79416
+      ],
+      "geometries": 67,
+      "textures": 4,
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "canvas": [
+        717,
+        357
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "path": {
+        "target": [
+          2400,
+          14,
+          1360
+        ],
+        "radius": 3350,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "firstVisibleMs": 1162,
+      "completedMs": 1162,
+      "excluded": 0,
+      "additionalValid": 0
+    },
+    {
+      "key": "c1/high",
+      "files": [
+        "1795464877087-ef05b024-de5e-4ebc-a59d-3c3476969a2f.json",
+        "1795464891093-444c3d76-826c-441e-93d9-5f3ba6a548e5.json",
+        "1795464905420-665628fd-23af-4ee5-a7a3-ba336f51f4d6.json"
+      ],
+      "fps": 31.2,
+      "p50": 31.6,
+      "p95": 37.6,
+      "p99": 45.6,
+      "worst": 65.9,
+      "calls": [
+        57,
+        69
+      ],
+      "triangles": [
+        70372,
+        79416
+      ],
+      "geometries": 67,
+      "textures": 4,
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "canvas": [
+        1195,
+        595
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "path": {
+        "target": [
+          2400,
+          14,
+          1360
+        ],
+        "radius": 3350,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "firstVisibleMs": 1162,
+      "completedMs": 1162,
+      "excluded": 0,
+      "additionalValid": 0
+    }
+  ]
+}

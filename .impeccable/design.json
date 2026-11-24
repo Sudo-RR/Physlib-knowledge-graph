@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-24T08:25:20Z",
+  "title": "Design System: Physlib City C1 and C2",
+  "extensions": {
+    "breakpoints": [
+      {
+        "name": "compact-desktop",
+        "value": "1100px"
+      },
+      {
+        "name": "stacked",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Source geography breadcrumb",
+      "kind": "nav",
+      "description": "Compact warm-paper navigation retaining source geography labels.",
+      "html": "<nav class=\"ds-geography\" aria-label=\"Source geography\"><button>Surface overview</button><button>Physlib</button><button>Units</button></nav>",
+      "css": ".ds-geography{display:flex;flex-wrap:wrap;gap:6px;font-family:Helvetica Neue,Helvetica,Arial,sans-serif}.ds-geography button{font:inherit;font-size:12px;padding:6px 9px;color:#27334d;border:1px solid #a8a18e;background:#fffaf0;cursor:pointer}.ds-geography button:focus-visible{outline:2px solid #27334d;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Atomic courtyard architecture",
+    "overview": "The opt-in visual=c1 scene foregrounds broad original Three.js architecture. Experience governs the scene; Operate governs source tools. Milestone C remains the default pending approval and resolution of the reported software-rendered performance regression. The opt-in visual=c2 extension adds persistent source-address colour grammar and reversible Explore drawers; source data remains unchanged and default promotion remains pending. The ordinary opt-in visual=c3 candidate adds broad space-age module silhouettes and expanded non-module civic forecourts while preserving C2 anchors, plots, heightmap, registry and graph; default C and comparison C2 remain unchanged. Independent review still finds partial metropolis/campus grouping and approval remains pending.",
+    "keyCharacteristics": [
+      "Four deterministic architectural archetypes",
+      "Warm ivory masses and coloured roofs",
+      "Canonical source semantics independent of decoration",
+      "Version-1 registry: 39 directory and 3 Root Modules territories",
+      "Four district composition motifs and four civic landmark silhouettes",
+      "Civic scenery is not graph data",
+      "C3 candidate: broad silhouettes, dark glazing, rounded porticos and non-module civic forecourts"
+    ],
+    "rules": [
+      {
+        "name": "Persistent silhouette",
+        "body": "Broad masses remain visible at every detail tier; close detail does not define the silhouette.",
+        "section": "elevation"
+      },
+      {
+        "name": "Geographic address",
+        "body": "C2 directory colour and stable civic patterns identify source geography, never proof status, completion or scientific rank. Exact assignments remain owned by site/city-colors.js.",
+        "section": "colors"
+      }
+    ],
+    "dos": [
+      "Preserve exact module identities and source floors.",
+      "Keep C1 and default C available alongside opt-in C2.",
+      "Keep C3 opt-in; retain default C and comparison C2 unchanged."
+    ],
+    "donts": [
+      "Do not equate decorative storeys with declarations.",
+      "Do not treat civic landmarks, streets, bridges or trees as modules or import endpoints."
+    ]
+  }
+}

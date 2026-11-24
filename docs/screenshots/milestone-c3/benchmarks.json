@@ -1,0 +1,532 @@
+{
+  "protocol": "Three valid 12-second foreground runs per row, medians of run statistics. Same fixed camera path and 956×476 CSS canvas for whole-city comparisons; cinematic uses its actual full canvas. Software renderer is disclosed per row.",
+  "rows": [
+    {
+      "key": "c2/surface/medium",
+      "files": [
+        "1795507945993-7779bb7b-d296-4382-b5c7-a1adaf6ce717.json",
+        "1795507959935-6496a3d4-f99f-43ba-9c1c-5d1919e39430.json",
+        "1795507974322-907da44f-72c6-4b80-90ee-038c17ecdbae.json"
+      ],
+      "fps": 36.5,
+      "p50": 26,
+      "p95": 37,
+      "p99": 43.8,
+      "worst": 59.6,
+      "calls": [
+        25,
+        25
+      ],
+      "triangles": [
+        58554,
+        67250
+      ],
+      "chunks": [
+        328,
+        420
+      ],
+      "geometries": 33,
+      "textures": 4,
+      "initialRenderedMs": 1198,
+      "firstVisibleMs": 1198,
+      "citySettledMs": 2403,
+      "path": {
+        "target": [
+          3555.6859237322847,
+          18,
+          1786.4733260073292
+        ],
+        "radius": 5120.18773017449,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "canvas": [
+        956,
+        476
+      ],
+      "cssCanvas": [
+        956,
+        476
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "phases": {
+        "updateMs": {
+          "median": 0.2,
+          "p95": 5.2
+        },
+        "renderSubmitMs": {
+          "median": 2,
+          "p95": 3.1
+        },
+        "overlayMs": {
+          "median": 0.4,
+          "p95": 0.9
+        },
+        "finishWaitMs": {
+          "median": 0,
+          "p95": 0
+        }
+      },
+      "excluded": 0
+    },
+    {
+      "key": "c3/surface/medium",
+      "files": [
+        "1795508397603-880de7fa-7ff6-45a5-8cdc-7ee209d31edf.json",
+        "1795508411171-4d59964e-0e6f-48e0-bd49-65a9636af944.json",
+        "1795508424546-52d8f4b9-2d7c-474c-a86e-1188180f7e18.json"
+      ],
+      "fps": 37.3,
+      "p50": 25.7,
+      "p95": 35.5,
+      "p99": 45.3,
+      "worst": 51.8,
+      "calls": [
+        31,
+        31
+      ],
+      "triangles": [
+        74200,
+        84436
+      ],
+      "chunks": [
+        327,
+        420
+      ],
+      "geometries": 37,
+      "textures": 4,
+      "initialRenderedMs": 1392,
+      "firstVisibleMs": 1392,
+      "citySettledMs": 1878,
+      "path": {
+        "target": [
+          3555.6859237322847,
+          18,
+          1786.4733260073292
+        ],
+        "radius": 5120.18773017449,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "canvas": [
+        956,
+        476
+      ],
+      "cssCanvas": [
+        956,
+        476
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "phases": {
+        "updateMs": {
+          "median": 0.2,
+          "p95": 6.1
+        },
+        "renderSubmitMs": {
+          "median": 1.9,
+          "p95": 3.4
+        },
+        "overlayMs": {
+          "median": 0.4,
+          "p95": 0.9
+        },
+        "finishWaitMs": {
+          "median": 0,
+          "p95": 0
+        }
+      },
+      "excluded": 0
+    },
+    {
+      "key": "c3/surface/low",
+      "files": [
+        "1795508459851-27ce6b38-3160-4b18-8945-156a0b7a038f.json",
+        "1795508473241-0f2e163b-13c3-4e39-a519-e7eff9c38ecd.json",
+        "1795508487113-adacd2a0-abff-4633-bd15-aab2ccc82dc3.json"
+      ],
+      "fps": 47.2,
+      "p50": 20.3,
+      "p95": 26.8,
+      "p99": 33.6,
+      "worst": 63.2,
+      "calls": [
+        31,
+        31
+      ],
+      "triangles": [
+        74220,
+        84436
+      ],
+      "chunks": [
+        328,
+        420
+      ],
+      "geometries": 37,
+      "textures": 4,
+      "initialRenderedMs": 1392,
+      "firstVisibleMs": 1392,
+      "citySettledMs": 1878,
+      "path": {
+        "target": [
+          3555.6859237322847,
+          18,
+          1786.4733260073292
+        ],
+        "radius": 5120.18773017449,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "canvas": [
+        717,
+        357
+      ],
+      "cssCanvas": [
+        956,
+        476
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "phases": {
+        "updateMs": {
+          "median": 0.2,
+          "p95": 5.2
+        },
+        "renderSubmitMs": {
+          "median": 2,
+          "p95": 3.1
+        },
+        "overlayMs": {
+          "median": 0.3,
+          "p95": 0.7
+        },
+        "finishWaitMs": {
+          "median": 0,
+          "p95": 0
+        }
+      },
+      "excluded": 0
+    },
+    {
+      "key": "c2/cinematic/medium",
+      "files": [
+        "1795508143488-1baf7dc7-226e-4b8e-84de-7b1c046d41a0.json",
+        "1795508157457-c5caa91f-184e-43e2-8fab-7b1168baebed.json",
+        "1795508170823-bff14c5e-2284-415d-8e66-28aaa6649765.json"
+      ],
+      "fps": 29.6,
+      "p50": 33,
+      "p95": 41.5,
+      "p99": 51.1,
+      "worst": 62.7,
+      "calls": [
+        25,
+        25
+      ],
+      "triangles": [
+        58578,
+        67250
+      ],
+      "chunks": [
+        327,
+        420
+      ],
+      "geometries": 33,
+      "textures": 4,
+      "initialRenderedMs": 1198,
+      "firstVisibleMs": 1198,
+      "citySettledMs": 2547,
+      "path": {
+        "target": [
+          3555.6859237322847,
+          18,
+          1786.4733260073292
+        ],
+        "radius": 5120.18773017449,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "canvas": [
+        1536,
+        626
+      ],
+      "cssCanvas": [
+        1536,
+        626
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "phases": {
+        "updateMs": {
+          "median": 0.2,
+          "p95": 5
+        },
+        "renderSubmitMs": {
+          "median": 1.8,
+          "p95": 3
+        },
+        "overlayMs": {
+          "median": 0.3,
+          "p95": 0.9
+        },
+        "finishWaitMs": {
+          "median": 0,
+          "p95": 0
+        }
+      },
+      "excluded": 0
+    },
+    {
+      "key": "c3/cinematic/medium",
+      "files": [
+        "1795508334438-a4830597-2963-4fa2-b8b3-470361661691.json",
+        "1795508348551-180ef9e7-b5a0-4679-b934-3d53a3e7c556.json",
+        "1795508362022-965095d0-7720-463c-92fd-e7607c51a14a.json"
+      ],
+      "fps": 28.4,
+      "p50": 35.2,
+      "p95": 40.8,
+      "p99": 46.4,
+      "worst": 75.7,
+      "calls": [
+        31,
+        31
+      ],
+      "triangles": [
+        74176,
+        84436
+      ],
+      "chunks": [
+        328,
+        420
+      ],
+      "geometries": 25,
+      "textures": 4,
+      "initialRenderedMs": 1403,
+      "firstVisibleMs": 1403,
+      "citySettledMs": 1862,
+      "path": {
+        "target": [
+          3555.6859237322847,
+          18,
+          1786.4733260073292
+        ],
+        "radius": 5120.18773017449,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "canvas": [
+        1536,
+        626
+      ],
+      "cssCanvas": [
+        1536,
+        626
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "phases": {
+        "updateMs": {
+          "median": 0.3,
+          "p95": 4.8
+        },
+        "renderSubmitMs": {
+          "median": 1.7,
+          "p95": 2.5
+        },
+        "overlayMs": {
+          "median": 0.4,
+          "p95": 0.9
+        },
+        "finishWaitMs": {
+          "median": 0,
+          "p95": 0
+        }
+      },
+      "excluded": 0
+    },
+    {
+      "key": "c2/orbit/medium",
+      "files": [
+        "1795508521347-1cd2d41f-f4a4-467e-a268-2b4f7ca48b69.json",
+        "1795508535026-714e3ba2-fcf7-420f-a37a-625677f9f4f0.json",
+        "1795508548450-78609e76-fb3f-4562-965b-35b64bfb079f.json"
+      ],
+      "fps": 44,
+      "p50": 22.3,
+      "p95": 27.5,
+      "p99": 34.4,
+      "worst": 60.6,
+      "calls": [
+        35,
+        43
+      ],
+      "triangles": [
+        20070,
+        21954
+      ],
+      "chunks": [
+        1,
+        2
+      ],
+      "geometries": 40,
+      "textures": 4,
+      "initialRenderedMs": 1328,
+      "firstVisibleMs": 1328,
+      "citySettledMs": 2440,
+      "path": {
+        "target": [
+          1039.1702322196847,
+          3.936495832529641,
+          3039.1641051479096
+        ],
+        "radius": 45,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "canvas": [
+        956,
+        476
+      ],
+      "cssCanvas": [
+        956,
+        476
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "phases": {
+        "updateMs": {
+          "median": 0.3,
+          "p95": 2.5
+        },
+        "renderSubmitMs": {
+          "median": 2.3,
+          "p95": 3.4
+        },
+        "overlayMs": {
+          "median": 0.4,
+          "p95": 0.9
+        },
+        "finishWaitMs": {
+          "median": 0,
+          "p95": 0
+        }
+      },
+      "excluded": 0
+    },
+    {
+      "key": "c3/orbit/medium",
+      "files": [
+        "1795508583088-53c7a910-a6aa-4d42-819d-36e90c0e2f05.json",
+        "1795508596501-504a4a8c-f9a5-4552-9001-0c8073b3a403.json",
+        "1795508609896-f22faac2-31af-44a8-a958-80a4142d9781.json"
+      ],
+      "fps": 42.9,
+      "p50": 22.8,
+      "p95": 28.3,
+      "p99": 35.5,
+      "worst": 64,
+      "calls": [
+        42,
+        52
+      ],
+      "triangles": [
+        30056,
+        31784
+      ],
+      "chunks": [
+        1,
+        2
+      ],
+      "geometries": 43,
+      "textures": 4,
+      "initialRenderedMs": 1650,
+      "firstVisibleMs": 1650,
+      "citySettledMs": 2164,
+      "path": {
+        "target": [
+          1039.1702322196847,
+          3.936495832529641,
+          3039.1641051479096
+        ],
+        "radius": 45,
+        "steps": 20,
+        "stepMs": 600
+      },
+      "canvas": [
+        956,
+        476
+      ],
+      "cssCanvas": [
+        956,
+        476
+      ],
+      "viewport": [
+        1536,
+        791
+      ],
+      "renderer": "ANGLE (Microsoft, Microsoft Basic Render Driver (0x0000008C) Direct3D11 vs_5_0 ps_5_0, D3D11)",
+      "phases": {
+        "updateMs": {
+          "median": 0.3,
+          "p95": 2.5
+        },
+        "renderSubmitMs": {
+          "median": 2.8,
+          "p95": 3.9
+        },
+        "overlayMs": {
+          "median": 0.4,
+          "p95": 1.1
+        },
+        "finishWaitMs": {
+          "median": 0,
+          "p95": 0
+        }
+      },
+      "excluded": 0
+    }
+  ],
+  "incomplete": [],
+  "gate": {
+    "comparisons": [
+      {
+        "scope": "surface",
+        "control": 36.5,
+        "candidate": 37.3,
+        "minimum": 32.85,
+        "passed": true
+      },
+      {
+        "scope": "cinematic",
+        "control": 29.6,
+        "candidate": 28.4,
+        "minimum": 26.64,
+        "passed": true
+      }
+    ],
+    "historical": {
+      "world": true,
+      "explore": true
+    }
+  }
+}

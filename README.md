@@ -1,5 +1,20 @@
 # Physlib Knowledge Graph
 
+Milestone C.3's architectural candidate is available at `?visual=c3`, with C.2
+retained at `?visual=c2`. Technical checks and comparison performance gates pass;
+world-scale artistic acceptance remains incomplete. See the
+[C.3 report and actual comparison screenshots](docs/city-milestone-c3.md).
+
+Milestone C.2's chromatic boroughs are available at `?visual=c2`.
+The persistent directory colour registry, civic compositions and Explore mode
+remain opt-in pending external artistic approval. See the
+[C.2 report, matched screenshots and controlled benchmarks](docs/city-milestone-c2.md).
+
+Milestone C.1's atomic courtyard architecture is available at
+`?visual=c1&node=Physlib.Units.ISQDimensionBase`. It remains opt-in pending
+artistic review and resolution of the measured software-rendering regression.
+See [concepts, captures, tests and controlled measurements](docs/city-milestone-c1.md).
+
 Milestone A's optional imported-building smoke test is available at
 `?assetFixture=kenney-tower&node=Physlib.Units.ISQDimensionBase&metrics=1`.
 The current default is the Milestone C geographic surface. See [the implementation and QA report](docs/city-milestone-a.md)

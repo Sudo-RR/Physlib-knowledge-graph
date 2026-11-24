@@ -1,0 +1,111 @@
+[
+  {
+    "name": "units-district",
+    "url": "http://127.0.0.1:4173/?visual=c1&district=units&districtView=overview&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1288.1825670614894,304.93813023209157,2561.801330538434],\"target\":[1215.416657093977,13.874490362041465,2270.737690668384],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "units-selected",
+    "url": "http://127.0.0.1:4173/?visual=c1&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1207.514406556092,26.811179050730544,2278.1234361121733],\"target\":[1191.52062718219,3.936495832529641,2250.421397631528],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "units-street",
+    "url": "http://127.0.0.1:4173/?visual=c1&district=units&districtView=street&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1201.982873226895,18.89984867294822,2268.542539342244],\"target\":[1191.52062718219,3.936495832529641,2250.421397631528],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "withdim",
+    "url": "http://127.0.0.1:4173/?visual=c1&node=Physlib.Units.WithDim.Area",
+    "camera": "{\"position\":[1304.1026819883214,148.73736959902874,2350.9892145193035],\"target\":[1270.3869621790745,13.874490362041465,2216.126335282316],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "physlib-borough",
+    "url": "http://127.0.0.1:4173/?visual=c1&folder=Physlib",
+    "camera": "{\"position\":[1854.50103579446,3420.132667905219,4815.2494316632565],\"target\":[1002.9364914086661,13.874490362041465,1408.9912541200783],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "alpha-borough",
+    "url": "http://127.0.0.1:4173/?visual=c1&folder=PhyslibAlpha",
+    "camera": "{\"position\":[4347.288393350746,3584.5575696398937,4979.67433339793],\"target\":[3454.617623531283,13.874490362041465,1408.9912541200783],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "quantum-borough",
+    "url": "http://127.0.0.1:4173/?visual=c1&folder=QuantumInfo",
+    "camera": "{\"position\":[5980.882858389976,3068.107667903734,4463.224431661771],\"target\":[5217.3245640045525,13.874490362041467,1408.9912541200783],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "surface-overview",
+    "url": "http://127.0.0.1:4173/?visual=c1&review=surface",
+    "camera": "{\"position\":[2765.6434318819365,4705.352528877329,6100.4692926353655],\"target\":[2765.6434318819365,13.874490362041463,1408.9912541200779],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "concept-a-selected",
+    "url": "http://127.0.0.1:4173/?node=Physlib.Units.ISQDimensionBase&visual=c1&concept=campus&reviewOffset=35%2C30%2C7",
+    "camera": "{\"position\":[1226.5206271821899,34.278799817967,2257.421397631528],\"target\":[1191.5206271821899,4.278799817967001,2250.421397631528],\"width\":1024,\"height\":612}",
+    "recaptured": true
+  },
+  {
+    "name": "concept-b-selected",
+    "url": "http://127.0.0.1:4173/?node=Physlib.Units.ISQDimensionBase&visual=c1&concept=metropolis&reviewOffset=35%2C30%2C7",
+    "camera": "{\"position\":[1226.5206271821899,34.278799817967,2257.421397631528],\"target\":[1191.5206271821899,4.278799817967001,2250.421397631528],\"width\":1024,\"height\":612}",
+    "recaptured": true
+  },
+  {
+    "name": "before-selected-matched",
+    "url": "http://127.0.0.1:4173/?node=Physlib.Units.ISQDimensionBase&reviewOffset=35%2C30%2C7&benchSize=956%2C476",
+    "camera": null,
+    "recaptured": true
+  },
+  {
+    "name": "after-selected-matched",
+    "url": "http://127.0.0.1:4173/?visual=c1&reviewOffset=35%2C30%2C7&benchSize=956%2C476&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1226.5206271821899,34.278799817967,2257.421397631528],\"target\":[1191.5206271821899,4.278799817967001,2250.421397631528],\"width\":956,\"height\":476}",
+    "recaptured": true
+  },
+  {
+    "name": "mathlib-unchanged",
+    "url": "http://127.0.0.1:4173/?visual=c1&node=Mathlib.Data.Fintype.Card",
+    "camera": "{\"position\":[-117.7090472967227,-39.875426702500164,7.566829858596062],\"target\":[-152.2723565639858,-10.496613825326378,7.56682985859652],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "mathlib-return",
+    "url": "http://127.0.0.1:4173/?visual=c1&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1207.514406556092,26.811179050730544,2278.1234361121733],\"target\":[1191.52062718219,3.9364958325296406,2250.421397631528],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "packaged-c-404",
+    "url": "http://127.0.0.1:4173/qa-c1/index.html?district=units&districtView=selected&node=Physlib.Units.ISQDimensionBase",
+    "camera": null
+  },
+  {
+    "name": "packaged-c1-without-kit",
+    "url": "http://127.0.0.1:4173/qa-c1/index.html?visual=c1&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1207.514406556092,26.811179050730544,2278.1234361121733],\"target\":[1191.52062718219,3.936495832529641,2250.421397631528],\"width\":1024,\"height\":612}"
+  },
+  {
+    "name": "mobile-selected",
+    "url": "http://127.0.0.1:4173/?visual=c1&node=Physlib.Units.ISQDimensionBase",
+    "camera": "{\"position\":[1207.514406556092,26.811179050730544,2278.1234361121733],\"target\":[1191.52062718219,3.936495832529641,2250.421397631528],\"width\":625,\"height\":520}"
+  },
+  {
+    "name": "before-units-district",
+    "url": "http://127.0.0.1:4173/?district=units&districtView=overview&node=Physlib.Units.ISQDimensionBase",
+    "camera": null
+  },
+  {
+    "name": "before-withdim",
+    "url": "http://127.0.0.1:4173/?node=Physlib.Units.WithDim.Area",
+    "camera": null
+  },
+  {
+    "name": "before-physlib-borough",
+    "url": "http://127.0.0.1:4173/?folder=Physlib",
+    "camera": null
+  },
+  {
+    "name": "before-surface-overview",
+    "url": "http://127.0.0.1:4173/?review=surface",
+    "camera": null
+  }
+]

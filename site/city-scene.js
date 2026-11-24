@@ -1,7 +1,7 @@
 import {contrast} from './city-colors.js';
 const contrastSafeLabel=c=>contrast(c,'#ffffff')>contrast(c,'#000000')?'#ffffff':'#000000';
 import {createAtomicArt} from './city-atomic-art.js';
-import {atomicCameraPose,reviewCameraOffset} from './city-atomic-plan.js';
+import {atomicCameraPose,reviewCameraOffset,skylineMassing} from './city-atomic-plan.js';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { districtFor } from './city-model.js';
@@ -135,7 +135,7 @@ export function createCityScene(host,city,floors,onSelect,onFloor) {
   for(const [index,node] of city.nodes.entries()){
     if(node.library==='Mathlib')continue;
     const point=layout.positions.get(node.id),data=floors.get(node.id),direction=node.library==='Mathlib'?-1:1;
-    const footprint=atomic&&direction>0?layout.manifest.modules[node.id].footprint:buildingStyle(node.id),group=new THREE.Group(),body=new THREE.Mesh(bodyGeometry,baseMaterial(node));body.scale.set(footprint.width,data.height,footprint.depth);
+    const footprint=skyline?skylineMassing(layout.manifest.modules[node.id]).footprint:atomic&&direction>0?layout.manifest.modules[node.id].footprint:buildingStyle(node.id),group=new THREE.Group(),body=new THREE.Mesh(bodyGeometry,baseMaterial(node));body.scale.set(footprint.width,data.height,footprint.depth);
     group.position.set(point.x,0,point.z);body.position.y=direction*data.height/2;body.userData={id:node.id,canonicalHit:urban&&direction>0};if(urban&&direction>0)body.visible=false;group.add(body);
     const surface=node.library==='Mathlib'?new THREE.Mesh(surfaceGeometry,baseMaterial(node)):null;if(surface){surface.position.y=.75;surface.userData={id:node.id};group.add(surface);}scene.add(group);
     buildings.set(node.id,{group,body,surface,node,direction,footprint});positions.set(node.id,new THREE.Vector3(point.x,direction*data.height,point.z));

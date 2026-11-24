@@ -1,0 +1,64 @@
+{
+  "before": {
+    "position": [
+      1497.9717830160043,
+      392.710114358775,
+      3525.893723811502
+    ],
+    "target": [
+      1070.649369730013,
+      43.80282495697825,
+      3098.5713105255104
+    ],
+    "width": 1280,
+    "height": 555,
+    "fov": 40
+  },
+  "after": {
+    "position": [
+      1497.9717830160043,
+      392.710114358775,
+      3525.893723811502
+    ],
+    "target": [
+      1070.649369730013,
+      43.80282495697825,
+      3098.5713105255104
+    ],
+    "width": 1280,
+    "height": 555,
+    "fov": 40
+  },
+  "performance": [
+    {
+      "version": "before",
+      "fps": 60,
+      "p95": 22.1,
+      "calls": [
+        29,
+        31
+      ],
+      "triangles": [
+        26004,
+        44072
+      ],
+      "foreground": true,
+      "gpu": "ANGLE (Intel, Intel(R) Graphics (0x00007D45) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    },
+    {
+      "version": "after",
+      "fps": 60,
+      "p95": 20.6,
+      "calls": [
+        29,
+        31
+      ],
+      "triangles": [
+        27412,
+        50076
+      ],
+      "foreground": true,
+      "gpu": "ANGLE (Intel, Intel(R) Graphics (0x00007D45) Direct3D11 vs_5_0 ps_5_0, D3D11)"
+    }
+  ]
+}
