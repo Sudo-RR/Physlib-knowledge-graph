@@ -1,5 +1,6 @@
 // Exact recorded module imports and partial declaration inventory; no proof-edge claims.
 import {contributorPanel} from './geneva-contributor-panel.js';
+import {evidencePanel} from './geneva-evidence-panel.js';
 import {attachDeclarationBrowser} from './geneva-declaration-browser.js';
 export function createSourceInspector({production,roleNames,subjectColors,onSelect,onFilter,onChannel}){
  const {model,layout,modulePaths,declarationLines}=production,$=id=>document.getElementById(id),byId=new Map(model.complexes.map(c=>[c.id,c])),revision=model.source.revision;
@@ -18,6 +19,7 @@ export function createSourceInspector({production,roleNames,subjectColors,onSele
  button('Focus complex',panel,()=>onSelect(id,building,true));
  const modules=details('Source modules ('+c.moduleIds.length+')',panel);for(const m of c.moduleIds)link(m,node('div',null,modules));
  attachDeclarationBrowser(panel,production,c);
+ evidencePanel(panel,production,c);
  const roles=details('Buildings ('+c.buildings.length+')',panel);roles.open=true;
  for(const b of c.buildings){const d=details(roleNames[b.role]+' · '+b.declarationIds.length+' recorded commands',roles);d.open=building===b.id;node('p',b.status==='unclassified'?'Incomplete lexical inventory; no claim of unfinished mathematics.':'Inferred functional role from recorded declaration kind; not a verified semantic classification.',d);
  for(const m of b.moduleIds)link(m,node('div',null,d));for(const decl of b.declarationIds.slice(0,100)){const rec=declarationLines[decl];if(!rec)continue;const div=node('div',null,d);link(rec[0],div,rec[1]);node('small',' — '+decl.split(':').at(-1),div);}if(b.declarationIds.length>100)node('small','First 100 commands; see linked source for the full file.',d);}

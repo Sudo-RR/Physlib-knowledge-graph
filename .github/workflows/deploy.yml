@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       physlib_sha: ${{ steps.provenance.outputs.physlib_sha }}
     steps:
@@ -47,6 +47,8 @@ jobs:
         run: node scripts/validate-geneva-g1.mjs
       - name: Build and validate source-linked Geneva city
         run: node scripts/build-geneva-production.mjs --require-inventory
+      - name: Build revision-pinned source activity and review evidence
+        run: node scripts/build-geneva-evidence.mjs .physlib-source
       - name: Generate sampled history (optional companion)
         run: |
           node scripts/build-geneva-history.mjs .physlib-source || { rm -f site/data/geneva-history.json; echo '::warning::History unavailable; publishing current city only'; }

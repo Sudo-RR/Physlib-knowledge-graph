@@ -26,6 +26,12 @@ try{
  await page.locator('#searchSource').fill(c.id);await page.locator('#sourceList button').filter({hasText:c.id}).first().click();await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
  await page.locator('#declarationBrowser > summary').click();await page.locator('#declModule').selectOption(record.module);await page.locator('#declKind').selectOption(record.kind);await page.locator('#declQuery').fill(record.name);assert(await page.locator('#declResults a').filter({hasText:record.name}).count()>0);
  await page.locator('#declQuery').fill('___no_such_command___');assert((await page.locator('#declCount').innerText()).startsWith('0 recorded'));await page.locator('#declQuery').fill('');
+ assert.equal(production.evidence.revision,production.model.source.revision);assert(Object.keys(production.evidence.activity).length>0);
+ await page.locator('#evidenceDetails > summary').click();assert((await page.locator('#evidenceDetails').innerText()).includes('Source activity:'));
+ await page.locator('#evidenceMode').selectOption('freshness');assert(Number(await page.locator('#three').getAttribute('data-evidence-markers'))>0);
+ await page.locator('#plan').click();assert(await page.locator('#map [data-evidence]').first().isVisible());
+ await page.locator('#evidenceMode').selectOption('review');assert((await page.locator('#evidenceLegend').innerText()).includes('No mapped marks'));
+ await page.locator('#evidenceMode').selectOption('off');assert(!(await page.locator('#map [data-evidence]').first().isVisible()));await page.locator('#north').click();
  await page.locator('#channels').selectOption('off');await page.locator('#channels').selectOption('both');
  await page.locator('#quality').selectOption('low');let f=await frame();await page.locator('#three canvas').focus();await page.keyboard.press('ArrowRight');await page.waitForFunction(n=>Number(document.querySelector('#three').dataset.renderedFrames)>n,f);
  await page.locator('#dusk').click();await page.screenshot({path:path.join(out,'02-focus-dusk.png')});

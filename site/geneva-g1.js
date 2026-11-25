@@ -5,6 +5,7 @@ import {subjectColors} from './geneva-production-layout.js';
 import {createSourceInspector} from './geneva-source-inspector.js';
 import {setupResearchSearch} from './geneva-research-search.js';
 import {setupHistory} from './geneva-history-ui.js';
+import {complexEvidence,palettes} from './geneva-evidence.js';
 import {demoMassing} from './geneva-g1-massing.js';
 import {civicFabric} from './geneva-civic-fabric.js';
 import {renderCivicFabric} from './geneva-civic-render.js';
@@ -21,6 +22,9 @@ const layout=production?.layout,model=production?.model;
 let selectedId=null,selectedBuilding=null,channel='both',filter='all',zoom=1,focusX=0,focusZ=0,dependencyGroup=null,sourceUI=null;
 const siteById=new Map((layout?.sites||[]).map(t=>[t.id,t])),buildingById=new Map((layout?.buildings||[]).map(t=>[t.id,t]));
 const semanticMeshes=[],subjectSprites=[],mapParts=[];
+let evidenceMode='off',evidenceMeshes=[];
+const tallest=new Map();for(const t of layout?.buildings||[])if(!tallest.has(t.complexId)||t.h>tallest.get(t.complexId).h)tallest.set(t.complexId,t);
+const evidenceById=new Map((model?.complexes||[]).map(c=>[c.id,complexEvidence(production,c)]));
 let redrawVersion=0,renderedFrames=0,quality='medium';const invalidate=()=>{redrawVersion++;};
 
 const ns='http://www.w3.org/2000/svg',el=(tag,attrs={},parent)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(parent)parent.append(e);return e;};
@@ -45,6 +49,9 @@ const roofPalette=['#b8b8b8','#b9c1c8','#87959c','#a0a0a0','#e8e8e8'];
 const massing2d=el('g',{'aria-label':'Illustrative tower massing'},svg);
 for(const t of towers){const g=el('g',{transform:'translate('+t.x+' '+t.z+') rotate('+(-t.angle*180/Math.PI)+')'},massing2d);el('rect',{x:-t.w*.5+3,y:-t.d*.5+4,width:t.w,height:t.d,fill:'#323b43',opacity:.25},g);el('rect',{x:-t.w/2,y:-t.d/2,width:t.w,height:t.d,fill:t.color||roofPalette[t.style],stroke:'#43594c','stroke-width':.6},g);el('rect',{x:-t.w*.23,y:-t.d*.24,width:t.w*.46,height:t.d*.48,fill:'#e8e8e8'},g);if(t.id){g.style.cursor='pointer';g.addEventListener('click',()=>selectComplex(t.complexId,t.id));mapParts.push({element:g,area:t.area});const title=el('title',{},g);title.textContent=t.id;}}
 for(const t of layout?.stations||[]){const g=el('rect',{x:t.x-t.w/2,y:t.z-t.d/2,width:t.w,height:t.d,fill:'#3ce4d5',stroke:'#22363a','stroke-width':.4},massing2d);g.style.cursor='pointer';g.addEventListener('click',()=>selectComplex(t.complexId,t.id));mapParts.push({element:g,area:t.area});}
+const evidenceDots=[];const evidenceLayer=el('g',{'pointer-events':'none','aria-hidden':'true'},svg);
+for(const [id,t] of tallest){const dot=el('circle',{cx:t.x,cy:t.z,r:Math.max(2,Math.min(4,t.w*.32)),stroke:'#26313a','stroke-width':.8,'data-evidence':id},evidenceLayer);evidenceDots.push({id,area:t.area,dot});}
+evidenceLayer.style.display='none';
 const labelGroup=el('g',{'font-family':'system-ui, sans-serif'},svg);
 function label(x,y,txt,sub='',water=false){const g=el('g',{transform:'translate('+x+' '+y+')'},labelGroup);const t=el('text',{'text-anchor':'middle','font-size':water?23:29,'font-weight':water?500:700,fill:water?'#f0f4f4':'#202c34','paint-order':'stroke',stroke:water?'#426f81':'#a9afb1','stroke-width':3},g);t.textContent=txt;if(sub){const s=el('text',{y:24,'text-anchor':'middle','font-size':17,fill:'#34424b','paint-order':'stroke',stroke:'#a9afb1','stroke-width':2},g);s.textContent=sub;}}
 for(const s of p.sectors)label(...s.label,s.name.toUpperCase(),s.id);
@@ -99,6 +106,12 @@ function init3D(){
  for(const t of layout?.stations||[]){part(t,boxGeo,metal,0,.65,0,t.w,1.3,t.d);part(t,boxGeo,beacon('#3ce4d5'),0,1.45,0,t.w*.65,.3,t.d*.65);}
  for(const {geo,m,matrices,ids,area} of batches.values()){const mesh=new THREE.InstancedMesh(geo,m,matrices.length);matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.instanceMatrix.needsUpdate=true;mesh.userData.ids=ids;mesh.userData.area=area;if(area)semanticMeshes.push(mesh);massGroup.add(mesh);}
  dependencyGroup=new THREE.Group();scene.add(dependencyGroup);
+ if(production){
+  const byArea=new Map();for(const [id,t] of tallest){if(!byArea.has(t.area))byArea.set(t.area,[]);byArea.get(t.area).push({id,t});}
+  const geometry=new THREE.SphereGeometry(1,8,6),material=new THREE.MeshBasicMaterial({color:'#ffffff'}),marker=new THREE.Object3D();
+  for(const [area,rows] of byArea){const mesh=new THREE.InstancedMesh(geometry,material,rows.length);rows.forEach(({t},i)=>{marker.position.copy(world(t.x,t.z,t.h*1.23+4));marker.scale.setScalar(Math.max(1.5,Math.min(3,t.w*.24)));marker.updateMatrix();mesh.setMatrixAt(i,marker.matrix);});mesh.instanceMatrix.needsUpdate=true;massGroup.add(mesh);evidenceMeshes.push({area,rows,mesh});}
+  updateEvidence();
+ }
  started=performance.now();if(!matchMedia('(prefers-reduced-motion: reduce)').matches)massGroup.scale.y=.02;
  function sprite(text,sub,x,z){const c=document.createElement('canvas');c.width=1024;c.height=200;const g=c.getContext('2d');g.textAlign='center';g.font='bold 64px sans-serif';g.fillStyle='#263640';g.fillText(text,512,80);g.font='40px sans-serif';g.fillText(sub,512,138);const o=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));o.position.copy(world(x,z,112));o.scale.set(220,43,1);o.userData.isLabel=true;scene.add(o);return o;}
  for(const s of p.sectors)sprite(s.name,s.id,...s.label);sprite('Lac Léman','',...p.anchors.lake);sprite('La Jonction','',175,505);
@@ -169,13 +182,23 @@ function drawDependencies(){
  const station=layout.stations.find(t=>t.complexId===selectedId),complex=model.complexes.find(t=>t.id===selectedId);
  if(station&&complex.mathlib.length)for(const b of selected)line([vec(b,1.5),vec(station,1.5)],'#3ce4d5');
 }
-function setFilter(value){filter=value;for(const m of semanticMeshes)m.visible=value==='all'||m.userData.area===value;for(const m of mapParts)m.element.style.display=value==='all'||m.area===value?'':'none';drawDependencies();}
+function updateEvidence(){
+ const active=evidenceMode!=='off',palette=palettes[evidenceMode];
+ evidenceLayer.style.display=active?'':'none';
+ for(const {id,area,dot} of evidenceDots){dot.style.display=filter==='all'||filter===area?'':'none';if(active)dot.setAttribute('fill',palette[evidenceById.get(id)[evidenceMode]][0]);}
+ let count=0;for(const {area,rows,mesh} of evidenceMeshes){mesh.visible=active&&(filter==='all'||filter===area);if(mesh.visible){count+=rows.length;rows.forEach(({id},i)=>mesh.setColorAt(i,new THREE.Color(palette[evidenceById.get(id)[evidenceMode]][0])));mesh.instanceColor.needsUpdate=true;}}
+ $('three').dataset.evidenceMarkers=String(count);
+ const legend=$('evidenceLegend');legend.replaceChildren();if(active){for(const [key,[color,label]] of Object.entries(palette)){const row=document.createElement('div'),swatch=document.createElement('span');swatch.style.cssText='display:inline-block;width:10px;height:10px;margin-right:5px;background:'+color;row.append(swatch,document.createTextNode(label+' · '+[...evidenceById.entries()].filter(([id,e])=>(filter==='all'||siteById.get(id)?.area===filter)&&e[evidenceMode]===key).length));legend.append(row);}const note=document.createElement('p');note.textContent=evidenceMode==='freshness'?'Newest current-path change at indexed commit; not quality.':'Recorded module marks only; fingerprint validity not checked.';legend.append(note);}
+ invalidate();
+}
+function setFilter(value){filter=value;for(const m of semanticMeshes)m.visible=value==='all'||m.userData.area===value;for(const m of mapParts)m.element.style.display=value==='all'||m.area===value?'':'none';updateEvidence();drawDependencies();}
 function setDusk(on){invalidate();if(!scene)return;scene.background.set(on?'#273849':'#b9c8ce');hemi.intensity=on?.65:1.65;sun.intensity=on?.65:2.35;renderer.toneMappingExposure=on?1.18:1;}
 mode('north');
 $('resetView').onclick=()=>{focusX=focusZ=0;zoom=1;mode('north');};
 $('dusk').onclick=()=>{const on=$('dusk').getAttribute('aria-pressed')!=='true';$('dusk').setAttribute('aria-pressed',String(on));setDusk(on);};
 if(production){
  sourceUI=createSourceInspector({production,roleNames,subjectColors,onSelect:(id,b,focus)=>selectComplex(id,b,focus),onFilter:setFilter,onChannel:v=>{channel=v;drawDependencies();}});
+ $('evidenceMode').onchange=()=>{evidenceMode=$('evidenceMode').value;updateEvidence();};
  setupResearchSearch(production,(id,b,focus)=>selectComplex(id,b,focus));
  $('historyTools').addEventListener('toggle',()=>{if($('historyTools').open&&!$('historyTools').dataset.loaded){$('historyTools').dataset.loaded='true';setupHistory(production);}});
  $('status').textContent=($('three').dataset.error?'3D unavailable; flat plan active · ':'')+layout.version+' · '+layout.sites.length+' source complexes · '+layout.buildings.length+' role buildings · '+layout.boroughs.length+' boroughs · '+model.source.revision.slice(0,12);

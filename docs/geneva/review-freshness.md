@@ -1,0 +1,11 @@
+# Geneva evidence overlays (initial integration)
+
+The default subject-colour city is unchanged. Choose **Source activity** or **Review marks** to show one marker per source complex above its tallest role building, in flat and 3D views. The subject filter applies to markers. The inspector exposes the individual source paths, commits and attributed module marks. Civic scenery and Mathlib stations do not acquire evidence identities.
+
+Activity comes from the first-parent history of the exact indexed Physlib commit, comparing merges to their first parent, with rename detection disabled. It is the most recent recorded change of any current path in the complex (commit timestamp, at the indexed commit, not at browser time). If any path is missing, the aggregate is unknown. Categories are 0–30, 31–90 and over 90 whole days. Renames appear as changes; this is not semantic change tracking or an age/quality judgement.
+
+The review reader accepts only format-3 public tracked .lean-vouch/marks/*.json at the indexed commit. It maps exact "module <id>" keys and retains attribution, status and date; notes and fingerprints are not copied into public city data. Declaration-level marks are counted as unmapped until an exact elaborated identity map exists. An explicit rejection takes visual precedence over a question, then agreement; every mapped mark remains inspectable. No mapped marks is unknown, not a claim of no review. Fingerprint freshness, soundness and coverage percentages are deliberately not inferred. The current upstream tree had no tracked marks when this work was designed.
+
+The format was inspected at lean-vouch b235856d959bdd7c20df734af35d8bad579d6a4c (0.1.1). Before extending the integration, consult maintainers on declaration identities, opt-in publication, review fingerprint semantics, and intended visibility. This is read-only; no review is created or transmitted to lean-vouch.
+
+Build: node scripts/build-geneva-evidence.mjs .physlib-source after production allocation. It checks the revision and embeds the evidence in geneva-production.json. CI runs the unit fixtures and packaged browser assertions. Full elaborated extraction and device performance remain separate workstreams.

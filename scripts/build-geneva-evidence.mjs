@@ -1,0 +1,17 @@
+import {execFileSync} from 'node:child_process';
+import {readFile,writeFile} from 'node:fs/promises';
+import {parseSourceHistory,mapReviewMarks} from '../site/geneva-evidence.js';
+const root=process.argv[2]||'.physlib-source',file='site/data/geneva-production.json';
+const git=(...args)=>execFileSync('git',['-C',root,...args],{encoding:'utf8',maxBuffer:128*1024*1024});
+const graph=JSON.parse(await readFile('site/data/graph.json','utf8')),production=JSON.parse(await readFile(file,'utf8'));
+const revision=git('rev-parse','HEAD').trim();
+if(revision!==graph.source.revision||revision!==production.model.source.revision)throw Error('Evidence/source revision mismatch');
+const asOf=git('show','-s','--format=%cI',revision).trim();
+const log=git('log','--first-parent','--full-history','--diff-merges=first-parent','--no-renames','--format=%x00@@%H %cI%x00','--name-only','-z',revision);
+const activity=parseSourceHistory(log,graph.modules);
+const paths=git('ls-tree','-r','--name-only','-z',revision,'--','.lean-vouch/marks/').split('\0').filter(p=>/^\.lean-vouch\/marks\/[^/]+\.json$/.test(p));
+const files=paths.map(path=>{try{return {path,data:JSON.parse(git('show',revision+':'+path))};}catch{return {path,data:null};}});
+const review=mapReviewMarks(files,graph.modules);
+production.evidence={version:1,revision,asOf,activity,review:{...review,trackedFiles:paths.length}};
+await writeFile(file,JSON.stringify(production));
+console.log('Geneva evidence',JSON.stringify({revision,asOf,activity:Object.keys(activity).length,total:graph.modules.length,markFiles:paths.length,mappedModules:Object.keys(review.marks).length,unmapped:review.unmapped,invalid:review.invalid}));
