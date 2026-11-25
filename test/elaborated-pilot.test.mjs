@@ -1,7 +1,19 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import {RESULT_REVISION,PILOT_ROOTS,PREFIXES,normalizePilot,summarizePilot} from '../scripts/elaborated-pilot.mjs';
+import {RESULT_REVISION,PILOT_ROOTS,FULL_ROOTS,PREFIXES,normalizePilot,summarizePilot} from '../scripts/elaborated-pilot.mjs';
 const graph={source:{revision:'p',toolchain:'t'},modules:PILOT_ROOTS.map(id=>({id}))};
 const prov={physlibRevision:'p',mathlibRevision:'m',toolchain:'t',extractorRevision:RESULT_REVISION,rawSha256:'a'.repeat(64),roots:PILOT_ROOTS,includedPrefixes:PREFIXES,flags:['--private','--auto']};
-const raw={roots:PILOT_ROOTS,nodes:[{name:'A.t',module:PILOT_ROOTS[0],kind:'thm'},{name:'B.f',module:PILOT_ROOTS[1],kind:'defn'},{name:'C.t',module:PILOT_ROOTS[2],kind:'thm'},{name:'M.x',module:'Mathlib.Analysis.Calculus.FDeriv.Basic',kind:'thm'}],edges:[{src:'M.x',tgt:'A.t',kind:'proof'},{src:'A.t',tgt:'B.f',kind:'proof'},{src:'B.f',tgt:'C.t',kind:'statement'}]};
+const raw={roots:PILOT_ROOTS,nodes:[{name:'A.t',module:PILOT_ROOTS[0],kind:'thm'},{name:'B.f',module:PILOT_ROOTS[1],kind:'def'},{name:'C.t',module:PILOT_ROOTS[2],kind:'thm'},{name:'M.x',module:'Mathlib.Analysis.Calculus.FDeriv.Basic',kind:'thm'}],edges:[{src:'M.x',tgt:'A.t',kind:'proof'},{src:'A.t',tgt:'B.f',kind:'proof'},{src:'B.f',tgt:'C.t',kind:'statement'}]};
 test('normalizes dependency direction, preserves qualified IDs, distinguishes proof from value and discloses directness',()=>{const s=normalizePilot(raw,graph,prov);assert.equal(s.declarations.length,3);assert.equal(s.externalTargets.length,1);assert.deepEqual(s.dependencies.map(x=>[x.from,x.to,x.kind,x.directness]),[['A.t','M.x','theorem-proof-or-routed','unknown-or-routed'],['B.f','A.t','value-or-routed','unknown-or-routed'],['C.t','B.f','statement','unknown-or-routed']]);assert(s.coverage.every(c=>c.status==='partial'));assert(s.declarations.every(d=>d.statement===null&&d.line===null));const r=summarizePilot(s,{declarations:[{id:'source:A:1:t',module:PILOT_ROOTS[0]}]});assert.equal(r.crossLibraryDependencies,1);assert.equal(r.roots[0].uniqueShortNameCandidates,1);});
 test('rejects revision mismatch, duplicate names, missing roots and dangling edges',()=>{assert.throws(()=>normalizePilot(raw,graph,{...prov,toolchain:'other'}));assert.throws(()=>normalizePilot({...raw,nodes:[...raw.nodes,raw.nodes[0]]},graph,prov));assert.throws(()=>normalizePilot({...raw,nodes:raw.nodes.slice(1)},graph,prov));assert.throws(()=>normalizePilot({...raw,edges:[...raw.edges,{src:'missing',tgt:'A.t',kind:'statement'}]},graph,prov));});
+
+test('accepts the actual pinned JSON enum and preserves extractor flags',()=>{
+ const variants=['axiom','opaque','rec','inductive','ctor','quot'].map((kind,i)=>({name:'A.x'+i,module:PILOT_ROOTS[0],kind,hasSorry:false,isPrivate:false,customAxioms:[],sorryTainted:true}));
+ const s=normalizePilot({...raw,nodes:[...raw.nodes,...variants]},graph,prov);
+ assert.equal(s.declarations.find(x=>x.id==='A.x0').sorryTainted,true);
+ assert.throws(()=>normalizePilot({...raw,nodes:[...raw.nodes,{name:'wrong',module:PILOT_ROOTS[0],kind:'defn'}]},graph,prov));
+});
+test('full scope spans three banks; empty modules not claimed complete',()=>{
+ const fullGraph={...graph,modules:[...graph.modules,{id:'PhyslibAlpha.A',library:'PhyslibAlpha'},{id:'QuantumInfo.B',library:'QuantumInfo'},{id:'Physlib.Empty',library:'Physlib'}]};
+ const s=normalizePilot({...raw,roots:FULL_ROOTS,nodes:[...raw.nodes,{name:'Alpha.x',module:'PhyslibAlpha.A',kind:'def'},{name:'Quantum.x',module:'QuantumInfo.B',kind:'thm'}]},fullGraph,{...prov,roots:FULL_ROOTS});
+ assert.equal(s.declarations.find(x=>x.id==='Alpha.x').library,'PhyslibAlpha');assert.equal(s.coverage.find(x=>x.module==='Physlib.Empty').status,'not-recorded');assert.equal(summarizePilot(s,{declarations:[]}).totals.declarations,5);
+});

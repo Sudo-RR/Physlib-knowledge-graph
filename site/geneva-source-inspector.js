@@ -1,6 +1,7 @@
 // Exact recorded module imports and partial declaration inventory; no proof-edge claims.
 import {contributorPanel} from './geneva-contributor-panel.js';
 import {evidencePanel} from './geneva-evidence-panel.js';
+import {setupElaboratedImport,elaboratedPanel} from './geneva-elaborated-panel.js';
 import {attachDeclarationBrowser} from './geneva-declaration-browser.js';
 export function createSourceInspector({production,roleNames,subjectColors,onSelect,onFilter,onChannel}){
  const {model,layout,modulePaths,declarationLines}=production,$=id=>document.getElementById(id),byId=new Map(model.complexes.map(c=>[c.id,c])),revision=model.source.revision;
@@ -19,6 +20,7 @@ export function createSourceInspector({production,roleNames,subjectColors,onSele
  button('Focus complex',panel,()=>onSelect(id,building,true));
  const modules=details('Source modules ('+c.moduleIds.length+')',panel);for(const m of c.moduleIds)link(m,node('div',null,modules));
  attachDeclarationBrowser(panel,production,c);
+ elaboratedPanel(panel,production,c,onSelect);
  evidencePanel(panel,production,c);
  const roles=details('Buildings ('+c.buildings.length+')',panel);roles.open=true;
  for(const b of c.buildings){const d=details(roleNames[b.role]+' · '+b.declarationIds.length+' recorded commands',roles);d.open=building===b.id;node('p',b.status==='unclassified'?'Incomplete lexical inventory; no claim of unfinished mathematics.':'Inferred functional role from recorded declaration kind; not a verified semantic classification.',d);
@@ -33,5 +35,6 @@ export function createSourceInspector({production,roleNames,subjectColors,onSele
  }
  function filter(v){area=v;subject.value=v;onFilter(v);renderList();}
  subject.onchange=()=>filter(subject.value);search.oninput=()=>{query=search.value.trim().toLowerCase();renderList();};$('channels').onchange=()=>onChannel($('channels').value);
+ setupElaboratedImport(production,()=>{if(current)inspect(current,null);});
  renderList();return {inspect,filter};
 }

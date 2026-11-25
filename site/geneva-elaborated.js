@@ -1,0 +1,12 @@
+// Separate qualified elaborated identities from lexical source-command IDs.
+export function indexElaborated(snapshot,production){
+ const source=snapshot?.source,revision=production.model.source.revision;
+ if(snapshot?.format!=='physlib-elaborated-pilot'||snapshot.schemaVersion!==1||source?.physlibRevision!==revision||source.toolchain!==production.model.source.toolchain||source.extractorRevision!=='2ee55ff6e521eabe71ecddac797e12f64448a5b6'||!Array.isArray(snapshot.declarations)||!Array.isArray(snapshot.externalTargets)||!Array.isArray(snapshot.dependencies)||!Array.isArray(snapshot.coverage))throw Error('Incompatible elaborated snapshot or source revision.');
+ const nodes=new Map(),modules=new Map(),uses=new Map(),usedBy=new Map(),coverage=new Map(),local=new Set(),allowed=new Set(['statement','theorem-proof-or-routed','value-or-routed']);
+ for(const d of snapshot.declarations){if(!Object.hasOwn(production.modulePaths,d.module))throw Error('Unknown Physlib module '+d.module);local.add(d.id);if(!modules.has(d.module))modules.set(d.module,[]);modules.get(d.module).push(d);}
+ for(const d of [...snapshot.declarations,...snapshot.externalTargets]){if(typeof d.id!=='string'||!d.id||nodes.has(d.id)||typeof d.module!=='string'||!['thm','def','inductive','ctor','axiom','opaque','rec','quot'].includes(d.kind))throw Error('Invalid declaration '+d.id);nodes.set(d.id,d);}
+ for(const c of snapshot.coverage){if(!Object.hasOwn(production.modulePaths,c.module)||coverage.has(c.module)||!['partial','not-recorded'].includes(c.status)||c.count!==(modules.get(c.module)||[]).length)throw Error('Invalid coverage');coverage.set(c.module,c);}
+ for(const module of modules.keys())if(!coverage.has(module))throw Error('Missing coverage '+module);
+ for(const e of snapshot.dependencies){if(!local.has(e.from)||!nodes.has(e.to)||!allowed.has(e.kind)||e.directness!=='unknown-or-routed')throw Error('Invalid elaborated edge');if(!uses.has(e.from))uses.set(e.from,[]);uses.get(e.from).push(e);if(!usedBy.has(e.to))usedBy.set(e.to,[]);usedBy.get(e.to).push(e);}
+ return {source,nodes,modules,coverage,uses,usedBy,local};
+}
