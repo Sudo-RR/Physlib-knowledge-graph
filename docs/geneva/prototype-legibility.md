@@ -8,3 +8,7 @@ Final pre-demo clarity work, scoped to art/presentation and the existing model. 
 - City key available while sidebar closed; no changes to dusk/full-detail/high-resolution baseline. Selected role marks bounded to one complex. No global animations or unrelated density/shadow changes in this sprint; these remain art roadmap tasks.
 
 Tests cover relationship directions, filters, caps, role codes and recorded station evidence; packaged browser checks real station/role counts, visible pipes, map marks, and hide controls. CI and visual acceptance pending.
+
+
+## Regression correction
+Run 45693024434 passed all 159 unit tests and published companion preparation but failed the browser assertion that HamiltonianMechanics must have a direct Mathlib conduit. Inspection of the actual previous Pages artifact 15056828218 confirms this complex has zero direct Mathlib imports. The regression now verifies the exact expected count including zero and exercises a real import-bearing complex selected from the same packaged snapshot. Utility beacons retain luminous core and rings with lighter planar ring geometry; source tower detail and resolution are unchanged. Actual CI and visual review remain necessary.
