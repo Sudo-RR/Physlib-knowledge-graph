@@ -48,3 +48,7 @@ Before sharing externally, verify [prototype legibility](geneva/prototype-legibi
 
 ## District lighting
 Issue #81 (A2.1/A3.1) tracks [district illumination](geneva/district-lighting.md). Separate original palette and batched accent renderer; no canonical source change. Deployment and visual acceptance require actual evidence.
+
+
+## Top-down borough map
+#83 (A2.2) tracks [geometry-derived top-down plan](geneva/topdown-boroughs.md). Shared layout and mesh silhouettes, exclusive buffered parcel envelopes, no new source ownership. CI and visual review pending.

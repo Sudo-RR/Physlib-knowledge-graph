@@ -1,0 +1,7 @@
+# Top-down architectural borough plan — #83
+
+Spec A2.2: [art roadmap](../ART-ROADMAP.md#a22--top-down-city-geometry-and-irregular-boroughs), spec commit cd61571. Baseline eb4c05b deployed successfully (45705692952). SVG uses same plan coordinates and imported model geometry as oblique city: convex horizontal mesh outlines, matching round/rectangular native forms and source base slabs. It is an architectural plan, not literal rendered roof pixels. Same road widths, civic infill footprints, stations, parks and water; strong roof colour from #81 palette. No source moves.
+
+Borough regions are bounded nearest-oriented-parcel assignments (3-unit grid, 16-unit influence buffer), with deterministic exclusive cell assignment, compressed horizontal runs, boundary strokes, bank clipping and roads/parks/water drawn above. Irregular patches can be disconnected. These are illustrative map demarcations, not exact property lines or changes to ownership. The original map navigation remains, and map-specific compact legend explains colours. Background dependency strokes are softened only in map to reveal subjects; focused links and utility identity preserved. Actual visual acceptance and CI pending. No additional GPU context.
+
+Test coverage: projection outlines, exclusive deterministic grid, bounded occupancy, actual packaged map region/roof/road counts, map legend and navigation; optional actual map screenshot alongside existing mobile capture. Shadow-removal in the 3D renderer is still #68.
