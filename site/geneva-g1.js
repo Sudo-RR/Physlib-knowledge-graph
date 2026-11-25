@@ -6,6 +6,7 @@ import {createSourceInspector} from './geneva-source-inspector.js';
 import {setupResearchSearch} from './geneva-research-search.js';
 import {setupHistory} from './geneva-history-ui.js';
 import {complexEvidence,palettes} from './geneva-evidence.js';
+import {setupApiMaps} from './geneva-api-map-panel.js';
 import {districtKey,districtBounds,detailPlan} from './geneva-lod.js';
 import {navigationKeys,navigationDelta,normalizeYaw} from './geneva-navigation.js';
 import {demoMassing} from './geneva-g1-massing.js';
@@ -24,6 +25,7 @@ const layout=production?.layout,model=production?.model;
 let selectedId=null,selectedBuilding=null,selectedDeclaration=null,channel='both',filter='all',zoom=1,focusX=0,focusZ=0,dependencyGroup=null,sourceUI=null;
 const siteById=new Map((layout?.sites||[]).map(t=>[t.id,t])),buildingById=new Map([...(layout?.buildings||[]),...(layout?.stations||[])].map(t=>[t.id,t]));
 const semanticMeshes=[],subjectSprites=[],mapParts=[],lodMeshes=[];
+let activeApiMap=null,apiMapGroup=null,apiMapUI=null;
 const geometryMode='full';
 let evidenceMode='off',evidenceMeshes=[];
 const tallest=new Map();for(const t of layout?.buildings||[])if(!tallest.has(t.complexId)||t.h>tallest.get(t.complexId).h)tallest.set(t.complexId,t);
@@ -53,6 +55,7 @@ const roofPalette=['#b8b8b8','#b9c1c8','#87959c','#a0a0a0','#e8e8e8'];
 const massing2d=el('g',{'aria-label':'Illustrative tower massing'},svg);
 for(const t of towers){const g=el('g',{transform:'translate('+t.x+' '+t.z+') rotate('+(-t.angle*180/Math.PI)+')'},massing2d);el('rect',{x:-t.w*.5+3,y:-t.d*.5+4,width:t.w,height:t.d,fill:'#323b43',opacity:.25},g);el('rect',{x:-t.w/2,y:-t.d/2,width:t.w,height:t.d,fill:t.color||roofPalette[t.style],stroke:'#43594c','stroke-width':.6},g);el('rect',{x:-t.w*.23,y:-t.d*.24,width:t.w*.46,height:t.d*.48,fill:'#e8e8e8'},g);if(t.id){g.style.cursor='pointer';g.dataset.mapBuilding=t.id;g.addEventListener('click',()=>enterFromMap(t.complexId,t.id));mapParts.push({element:g,area:t.area});const title=el('title',{},g);title.textContent=t.id;}}
 for(const t of layout?.stations||[]){const g=el('rect',{x:t.x-t.w/2,y:t.z-t.d/2,width:t.w,height:t.d,fill:'#3ce4d5',stroke:'#22363a','stroke-width':.4},massing2d);g.style.cursor='pointer';g.dataset.mapBuilding=t.id;g.addEventListener('click',()=>enterFromMap(t.complexId,t.id));mapParts.push({element:g,area:t.area});}
+const apiMapLayer=el('g',{'pointer-events':'none','data-api-overlay':'true'},svg);
 const declarationMapLayer=el('g',{'pointer-events':'none','data-declaration-links':'true'},svg);
 const selection2d=el('ellipse',{'pointer-events':'none',fill:'none',stroke:'#ff9b41','stroke-width':2.5,'data-selection':'active',visibility:'hidden'},svg);
 const evidenceDots=[];const evidenceLayer=el('g',{'pointer-events':'none','aria-hidden':'true'},svg);
@@ -78,7 +81,7 @@ function setSidebarWidth(w){const limit=Math.max(280,Math.min(760,innerWidth-24)
 function setupSidebar(){const grip=$('sidebarGrip');let drag=null;grip.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={id:e.pointerId,x:e.clientX,width:sidebarWidth};grip.setPointerCapture(e.pointerId);e.preventDefault();});grip.addEventListener('pointermove',e=>{if(drag&&drag.id===e.pointerId)setSidebarWidth(drag.width+drag.x-e.clientX);});for(const k of ['pointerup','pointercancel','lostpointercapture'])grip.addEventListener(k,()=>{drag=null;});grip.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){setSidebarWidth(sidebarWidth+(e.key==='ArrowLeft'?32:-32));e.preventDefault();e.stopPropagation();}});$('expandSidebar').onclick=()=>setSidebarWidth($('expandSidebar').getAttribute('aria-pressed')==='true'?360:Math.min(680,innerWidth-24));$('closeSidebar').onclick=()=>{toggleSidebar(false);$('toggleSidebar').focus();};window.addEventListener('resize',()=>setSidebarWidth(sidebarWidth));setSidebarWidth(sidebarWidth);}
 function updateSelection(){const t=buildingById.get(selectedBuilding)||siteById.get(selectedId);selection2d.setAttribute('visibility',t?'visible':'hidden');if(t){selection2d.setAttribute('cx',t.x);selection2d.setAttribute('cy',t.z);selection2d.setAttribute('rx',t.w*.65+1);selection2d.setAttribute('ry',t.d*.65+1);}if(selection3d){selection3d.visible=!!t;if(t){selection3d.position.set(t.x-500,.65,t.z-400);selection3d.scale.set(t.w*.65+1,t.d*.65+1,1);}}$('selectionStatus').textContent=selectedDeclaration?'Declaration · '+selectedDeclaration.origin.id+' · '+(selectedDeclaration.origin.placement==='inferred-role'?'inferred role':'owning complex'):t?(selectedBuilding===selectedId+'::mathlib-station'?'Mathlib station · ':selectedBuilding?'Building · ':'Complex · ')+selectedId:'No selection';invalidate();}
 function clearSelection(){selectedId=selectedBuilding=selectedDeclaration=null;sourceUI?.clearDeclaration();sourceUI?.clear();const url=new URL(location.href);url.searchParams.delete('complex');url.searchParams.delete('building');url.searchParams.delete('declaration');history.replaceState(null,'',url);updateSelection();drawDependencies();}
-function focusSelection(){if(selectedId)selectComplex(selectedId,selectedBuilding,true);else{zoom=4;updatePlanCamera();invalidate();}}
+function focusSelection(){if(selectedId)selectComplex(selectedId,selectedBuilding,true,selectedDeclaration);else{zoom=4;updatePlanCamera();invalidate();}}
 function resetCamera(){focusX=focusZ=0;zoom=1;if(viewMode==='oblique')yaw=.65;updatePlanCamera();invalidate();}
 function enterFromMap(id,building){selectComplex(id,building,true);mode('oblique');}
 function enterMapPoint(e){if(e.target.closest?.('[data-map-building]'))return;const matrix=svg.getScreenCTM();if(!matrix)return;const pt=new DOMPoint(e.clientX,e.clientY).matrixTransform(matrix.inverse());focusX=clamp(pt.x-500,-600,600);focusZ=clamp(pt.y-400,-500,500);zoom=Math.max(zoom,3);mode('oblique');}
@@ -168,7 +171,7 @@ function init3D(){
   civicDetail.setDetail(plan.civicDetail);
   lodStats={mode:geometryMode,detailedDistricts:plan.detail.size,detailedInstances:detailed,coarseInstances:coarse,civicDetail:plan.civicDetail,pixelsPerUnit};return lodStats;
  }
- dependencyGroup=new THREE.Group();scene.add(dependencyGroup);
+ dependencyGroup=new THREE.Group();scene.add(dependencyGroup);apiMapGroup=new THREE.Group();scene.add(apiMapGroup);drawApiMap();
  selection3d=new THREE.Mesh(new THREE.RingGeometry(.90,1,48),new THREE.MeshBasicMaterial({color:'#ff9b41',side:THREE.DoubleSide,depthTest:false}));selection3d.rotation.x=-Math.PI/2;selection3d.renderOrder=6;scene.add(selection3d);updateSelection();
  if(production){
   const byArea=new Map();for(const [id,t] of tallest){if(!byArea.has(t.area))byArea.set(t.area,[]);byArea.get(t.area).push({id,t});}
@@ -271,7 +274,16 @@ function updateEvidence(){
  const legend=$('evidenceLegend');legend.replaceChildren();if(active){for(const [key,[color,label]] of Object.entries(palette)){const row=document.createElement('div'),swatch=document.createElement('span');swatch.style.cssText='display:inline-block;width:10px;height:10px;margin-right:5px;background:'+color;row.append(swatch,document.createTextNode(label+' · '+[...evidenceById.entries()].filter(([id,e])=>(filter==='all'||siteById.get(id)?.area===filter)&&e[evidenceMode]===key).length));legend.append(row);}const note=document.createElement('p');note.textContent=evidenceMode==='freshness'?'Newest current-path change at indexed commit; not quality.':'Recorded module marks only; fingerprint validity not checked.';legend.append(note);}
  invalidate();
 }
-function setFilter(value){filter=value;for(const m of mapParts)m.element.style.display=value==='all'||m.area===value?'':'none';updateEvidence();drawDependencies();}
+function setFilter(value){filter=value;for(const m of mapParts)m.element.style.display=value==='all'||m.area===value?'':'none';updateEvidence();drawDependencies();drawApiMap();}
+function drawApiMap(){
+ apiMapLayer.replaceChildren();if(apiMapGroup)for(const o of [...apiMapGroup.children]){apiMapGroup.remove(o);o.geometry.dispose();o.material.dispose();}
+ let count=0;for(const entry of activeApiMap?.complexes||[]){const s=siteById.get(entry.id);if(!s||(filter!=='all'&&s.area!==filter))continue;count++;
+  el('ellipse',{cx:s.x,cy:s.z,rx:s.w*.66+2,ry:s.d*.66+2,fill:'none',stroke:'#d6a8ff','stroke-width':2,'stroke-dasharray':'4 2','data-api-complex':entry.id},apiMapLayer);
+  if(apiMapGroup){const mesh=new THREE.Mesh(new THREE.RingGeometry(.87,1,32),new THREE.MeshBasicMaterial({color:'#d6a8ff',side:THREE.DoubleSide,depthTest:false,transparent:true,opacity:.88}));mesh.rotation.x=-Math.PI/2;mesh.position.set(s.x-500,.85,s.z-400);mesh.scale.set(s.w*.66+2,s.d*.66+2,1);mesh.renderOrder=7;apiMapGroup.add(mesh);}
+ }
+ $('three').dataset.apiMapMarkers=String(count);invalidate();
+}
+function setApiMap(map){activeApiMap=map;const url=new URL(location.href);if(map){url.searchParams.set('apiMap',map.path);if(filter!=='all')sourceUI?.filter('all');}else url.searchParams.delete('apiMap');history.replaceState(null,'',url);drawApiMap();}
 function setDusk(){invalidate();if(!scene)return;scene.background.set('#273849');hemi.intensity=.42;sun.intensity=.65;scene.environmentIntensity=.24;for(const m of massGroup.children.map(o=>o.material).filter(m=>m?.emissiveMap))m.emissiveIntensity=.65;renderer.toneMappingExposure=1.15;}
 setupSidebar();mode('oblique');
 $('resetView').onclick=resetCamera;$('focusSelection').onclick=focusSelection;$('zoomIn').onclick=()=>changeZoom(1.25);$('zoomOut').onclick=()=>changeZoom(.8);$('toggleSidebar').onclick=()=>toggleSidebar();$('clearSelection').onclick=clearSelection;$('showSelection').onclick=()=>toggleSidebar(true);$('turnLeft').onclick=()=>turn(-Math.PI/12);$('turnRight').onclick=()=>turn(Math.PI/12);
@@ -289,14 +301,15 @@ window.addEventListener('keyup',e=>heldKeys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>heldKeys.clear());document.addEventListener('visibilitychange',()=>heldKeys.clear());
 document.addEventListener('focusin',e=>{if(e.target.closest?.('input,textarea,select,[contenteditable=true],[role=separator]'))heldKeys.clear();});
 if(production){
- sourceUI=createSourceInspector({production,roleNames,subjectColors,onSelect:(id,b,focus)=>selectComplex(id,b,focus),onFilter:setFilter,onChannel:v=>{channel=v;drawDependencies();},onTravel:n=>{if(channel==='mathlib'||channel==='off'){channel='both';$('channels').value=channel;}selectComplex(n.origin.complex,n.origin.building,true,n);toggleSidebar(true);if(viewMode==='plan')mode('oblique');},onResetDeclaration:()=>{selectedDeclaration=null;updateSelection();drawDependencies();}});
+ apiMapUI=setupApiMaps(production,setApiMap,id=>{selectComplex(id,null,true);if(viewMode==='plan')mode('oblique');});
+ sourceUI=createSourceInspector({production,roleNames,subjectColors,onApiMap:path=>apiMapUI.select(path),onSelect:(id,b,focus)=>selectComplex(id,b,focus),onFilter:setFilter,onChannel:v=>{channel=v;drawDependencies();},onTravel:n=>{if(channel==='mathlib'||channel==='off'){channel='both';$('channels').value=channel;}selectComplex(n.origin.complex,n.origin.building,true,n);toggleSidebar(true);if(viewMode==='plan')mode('oblique');},onResetDeclaration:()=>{selectedDeclaration=null;updateSelection();drawDependencies();}});
  $('evidenceMode').onchange=()=>{evidenceMode=$('evidenceMode').value;updateEvidence();};
  setupResearchSearch(production,(id,b,focus)=>selectComplex(id,b,focus));
  $('historyTools').addEventListener('toggle',()=>{if($('historyTools').open&&!$('historyTools').dataset.loaded){$('historyTools').dataset.loaded='true';setupHistory(production);}});
  $('status').textContent=($('three').dataset.error?'3D unavailable; flat plan active · ':'')+layout.version+' · '+layout.sites.length+' source complexes · '+layout.buildings.length+' role buildings · '+layout.boroughs.length+' boroughs · '+model.source.revision.slice(0,12);
  $('caption').textContent='Click a coloured source building or cyan Mathlib station. Neutral buildings are civic scenery. WASD move · ←/→ rotate · ↑/↓ zoom · drag to pan · right-drag or Shift-drag to rotate · wheel/pinch zoom · F focus · M map/city · I sidebar · / search · Esc clear.';
  const area=params.get('area');if(area&&model.areas.includes(area)){ $('subject').value=area;sourceUI.filter(area);}
- const initial=params.get('complex'),building=params.get('building'),declaration=params.get('declaration');if(initial&&siteById.has(initial)){const valid=buildingById.get(building)?.complexId===initial||building===initial+'::mathlib-station';selectComplex(initial,valid?building:null,true);}if(declaration){toggleSidebar(true);void sourceUI.restoreDeclaration(declaration);}
+ const initial=params.get('complex'),building=params.get('building'),declaration=params.get('declaration');if(initial&&siteById.has(initial)){const valid=buildingById.get(building)?.complexId===initial||building===initial+'::mathlib-station';selectComplex(initial,valid?building:null,true);}if(declaration){toggleSidebar(true);void sourceUI.restoreDeclaration(declaration);}const api=params.get('apiMap');if(api&&apiMapUI.select(api))toggleSidebar(true);
 }else{
  $('status').textContent='Architectural study · no mathematical identities';
  $('sourceControls').hidden=true;$('capacity').textContent='Illustrative skyline; return to the homepage for the live source city.';

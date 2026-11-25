@@ -1,5 +1,5 @@
 import {createContributorQueries} from './geneva-contributor.js';
-export function contributorPanel(parent,production,c,onSelect){
+export function contributorPanel(parent,production,c,onSelect,onApiMap){
  const index=production.contributor;if(!index||index.revision!==production.model.source.revision)return;
  const queries=createContributorQueries(index),rev=index.revision;
  const add=(tag,text,p)=>{const n=document.createElement(tag);if(text!==null)n.textContent=text;p.append(n);return n;};
@@ -7,7 +7,7 @@ export function contributorPanel(parent,production,c,onSelect){
  const link=(path,text,p,line)=>{const a=add('a',text,p);a.href='https://github.com/leanprover-community/physlib/blob/'+rev+'/'+path.split('/').map(encodeURIComponent).join('/')+(line?'#L'+line:'');a.target='_blank';a.rel='noopener noreferrer';return a;};
  const maps=queries.relatedMaps(c.moduleIds),md=details('API maps ('+maps.length+')',parent);
  add('p','Explicit file references in the indexed Lean References section, not declaration-level matches.',md);
- for(const m of maps){const d=details(m.title,md);link(m.path,'Read API map at indexed revision',d);
+ for(const m of maps){const d=details(m.title,md);link(m.path,'Read API map at indexed revision',d);if(onApiMap){const b=add('button','Open city planning layer',d);b.type='button';b.onclick=()=>onApiMap(m.path);}
   if(m.abstract)add('p',m.abstract,d);
   const matching=add('p','References in this complex: '+m.matchingModules.length,d);
   for(const r of m.references){const row=add('div',null,d);if(r.module){link(r.path,r.module,row);const b=add('button','Locate',row);b.onclick=()=>onSelect(index.owner[r.module],null,true);}else add('span',r.path+' — unresolved file reference',row);}

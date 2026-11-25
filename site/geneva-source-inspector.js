@@ -3,7 +3,7 @@ import {contributorPanel} from './geneva-contributor-panel.js';
 import {evidencePanel} from './geneva-evidence-panel.js';
 import {setupElaboratedImport,elaboratedPanel} from './geneva-elaborated-panel.js';
 import {attachDeclarationBrowser} from './geneva-declaration-browser.js';
-export function createSourceInspector({production,roleNames,subjectColors,onSelect,onFilter,onChannel,onTravel,onResetDeclaration}){
+export function createSourceInspector({production,roleNames,subjectColors,onSelect,onFilter,onChannel,onTravel,onResetDeclaration,onApiMap}){
  const {model,layout,modulePaths,declarationLines}=production,$=id=>document.getElementById(id),byId=new Map(model.complexes.map(c=>[c.id,c])),revision=model.source.revision;
  const node=(tag,text,parent)=>{const e=document.createElement(tag);if(text!==null)e.textContent=text;if(parent)parent.append(e);return e;};
  const link=(id,parent,line)=>{const path=modulePaths[id];if(!path){node('span',id,parent);return;}const a=node('a',id,parent);a.href='https://github.com/leanprover-community/physlib/blob/'+revision+'/'+path.split('/').map(encodeURIComponent).join('/')+(line?'#L'+line:'');a.target='_blank';a.rel='noopener noreferrer';};
@@ -31,7 +31,7 @@ export function createSourceInspector({production,roleNames,subjectColors,onSele
   for(const e of edges){const item=details(e[other]+' · '+e.count+' imports',d);button('Focus target',item,()=>onSelect(e[other],null,true));for(const imp of e.imports){const row=node('div',null,item);link(imp.from,row,imp.line);node('span',' → ',row);link(imp.to,row);}}
  }
  const station=details('Mathlib station ('+c.mathlib.length+' unique imports)',panel);station.open=building===id+'::mathlib-station';button('Focus Mathlib station',station,()=>onSelect(id,id+'::mathlib-station',true));for(const target of c.mathlib){const t=details(target.target,station);for(const m of target.sourceModules)link(m,node('div',null,t));}if(!c.mathlib.length)node('p','No recorded direct Mathlib imports.',station);
- contributorPanel(panel,production,c,onSelect);
+ contributorPanel(panel,production,c,onSelect,onApiMap);
  renderList();
  }
  function filter(v){area=v;subject.value=v;onFilter(v);renderList();}
