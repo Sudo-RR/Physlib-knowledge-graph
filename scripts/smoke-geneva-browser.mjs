@@ -13,13 +13,20 @@ assert(c,'Need a complex with recorded commands');
 const b=c.buildings.find(b=>b.declarationIds.length),record=production.declarationRecords.find(r=>b.declarationIds.includes(r.id));assert(record);
 const server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),p=path.resolve(root,'.'+(u.pathname==='/'?'/index.html':decodeURIComponent(u.pathname)));if(!p.startsWith(root+path.sep))return res.writeHead(403).end();const body=await readFile(p);res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.json':'application/json','.css':'text/css'})[path.extname(p)]||'application/octet-stream'}).end(body);}catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port+'/';
-let browser,page;const errors=[],metrics={revision:production.model.source.revision,complexes:production.layout.sites.length};
-try{
+let browser,page;const errors=[],metrics={revision:production.model.source.revision,complexes:production.layout.sites.length,phases:[]};
+async function freshBrowser(){
+ if(browser){await browser.close();browser=null;page=null;}
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
  page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});page.setDefaultTimeout(90000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',msg=>{if(msg.type()==='error'&&/shader error|VALIDATE_STATUS|WebGLProgram|GL_INVALID/i.test(msg.text()))errors.push(msg.text());});
+}
+const phase=name=>{metrics.phases.push(name);console.log('Browser phase passed: '+name);};
+async function screenshot(name){try{await page.screenshot({path:path.join(out,name),timeout:20000});}catch(e){console.warn('Optional screenshot unavailable: '+name+' '+e.message);}}
+async function waitForCity(){await page.waitForFunction(()=>document.querySelector('#status')?.textContent.includes('source complexes')&&(Number(document.querySelector('#three')?.dataset.renderedFrames)>0||document.querySelector('#three')?.dataset.error),{},{timeout:90000});assert.equal(await page.locator('#three').getAttribute('data-error'),null,'3D fallback not acceptable in smoke');assert(await page.locator('#three canvas').isVisible());}
+try{
+ await freshBrowser();
  let graphRequests=0;page.on('request',req=>{if(new URL(req.url()).pathname.endsWith('/geneva-elaborated.json'))graphRequests++;});
- await page.goto(url);await page.waitForFunction(()=>Number(document.querySelector('#three').dataset.renderedFrames)>0||document.querySelector('#three').dataset.error,{},{timeout:90000});
+ await page.goto(url,{waitUntil:'domcontentloaded'});await waitForCity();
  assert.equal(await page.locator('#three').getAttribute('data-error'),null,'3D fallback not acceptable in smoke');
  assert(await page.locator('#three canvas').isVisible());assert((await page.locator('#status').textContent()).includes('source complexes'));
  const frame=()=>page.locator('#three').getAttribute('data-rendered-frames').then(Number);
@@ -27,12 +34,12 @@ try{
  const nextFrame=async action=>{const previous=await frame();await action();await page.waitForFunction(n=>Number(document.querySelector('#three').dataset.renderedFrames)>n,previous);return renderStats();};
  const initialFull=await renderStats();assert.equal(initialFull.mode,'full');assert.equal(initialFull.coarseInstances,0);assert(initialFull.detailedInstances>0);assert(initialFull.pixelRatio>=2.8);assert.equal(initialFull.lighting,'dusk');assert.equal(initialFull.quality,'high');assert.equal(JSON.parse(await page.locator('#three').getAttribute('data-camera-pose')).viewMode,'oblique');assert(!(await page.locator('#citySidebar').isVisible()));for(const id of ['north','quality','geometryMode','dusk','rotate'])assert.equal(await page.locator('#'+id).count(),0);metrics.initial=initialFull;
  assert.equal(await page.locator('header a[href="city-v2.html"]').count(),0);assert.equal(await page.locator('header a[href="city-c4.html"]').count(),0);assert(!/Lac Léman|RHÔNE|ARVE|La Jonction|Rive Droite|Rive Gauche|Outre-Arve/i.test(await page.locator('#map svg').textContent()));
- await page.screenshot({path:path.join(out,'01-dusk-overview.png')});
+ await screenshot('01-dusk-overview.png');
  const before=await frame();await page.waitForTimeout(1200);const after=await frame();
  metrics.idleFrames=after-before;metrics.drawCalls=Number(await page.locator('#three').getAttribute('data-draw-calls'));metrics.triangles=Number(await page.locator('#three').getAttribute('data-triangles'));assert(metrics.drawCalls>0&&metrics.triangles>0);assert(metrics.idleFrames<=2,'Idle renderer is continually redrawing');
  await page.locator('#toggleSidebar').click();assert(await page.locator('#citySidebar').isVisible());const originalWidth=(await page.locator('#citySidebar').boundingBox()).width,canvasWidth=(await page.locator('#three canvas').boundingBox()).width;await page.locator('#expandSidebar').click();assert((await page.locator('#citySidebar').boundingBox()).width>originalWidth);assert.equal((await page.locator('#three canvas').boundingBox()).width,canvasWidth);await page.locator('#expandSidebar').click();await page.locator('#sidebarGrip').focus();await page.keyboard.press('ArrowLeft');assert((await page.locator('#citySidebar').boundingBox()).width>originalWidth);await page.locator('#searchSource').fill(c.id);await page.locator('#sourceList button').filter({hasText:c.id}).first().click();await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
  await page.waitForFunction(()=>JSON.parse(document.querySelector('#three').dataset.renderMetrics).detailedDistricts>0);
- metrics.focus=await renderStats();assert.equal(metrics.focus.mode,'full');assert.equal(metrics.focus.coarseInstances,0);assert.equal(metrics.focus.lighting,'dusk');await page.screenshot({path:path.join(out,'02-dusk-focus.png')});
+ metrics.focus=await renderStats();assert.equal(metrics.focus.mode,'full');assert.equal(metrics.focus.coarseInstances,0);assert.equal(metrics.focus.lighting,'dusk');await screenshot('02-dusk-focus.png');
  assert.equal(await page.locator('#map [data-selection]').getAttribute('visibility'),'visible');
  await page.locator('#closeSidebar').click();assert(!(await page.locator('#citySidebar').isVisible()));await page.locator('#toggleSidebar').click();assert(await page.locator('#citySidebar').isVisible());
  await page.locator('#declarationBrowser > summary').click();await page.locator('#declModule').selectOption(record.module);await page.locator('#declKind').selectOption(record.kind);await page.locator('#declQuery').fill(record.name);assert(await page.locator('#declResults a').filter({hasText:record.name}).count()>0);
@@ -51,10 +58,14 @@ try{
  const samples=[];for(let i=0;i<6;i++){const t=Date.now();const s=await nextFrame(()=>page.keyboard.press(i%2?'ArrowLeft':'ArrowRight'));samples.push({wallMs:Date.now()-t,cpuRenderMs:s.cpuRenderMs,triangles:s.triangles,drawCalls:s.drawCalls});}metrics.navigationSamples=samples;
  await page.locator('#closeSidebar').click();await page.locator('#plan').click();assert(await page.locator('#map svg').isVisible());assert(await page.locator('#oblique').isVisible());await page.locator('#resetView').click();const mapBefore=await page.locator('#map svg').getAttribute('viewBox');await page.locator('#map svg').evaluate(e=>e.setAttribute('tabindex','0'));await page.locator('#map svg').focus();await page.keyboard.press('ArrowRight');assert.notEqual(await page.locator('#map svg').getAttribute('viewBox'),mapBefore);assert(await page.locator('#mapCameraMarker').isVisible());// Navigation-map geometry and interaction are tested; avoid a blocking software-GL screenshot after hiding the large canvas.
  await page.locator('#map [data-map-building]').filter({has:page.locator('title')}).first().dispatchEvent('click');assert(await page.locator('#three canvas').isVisible());assert.equal(await page.locator('#map').isVisible(),false);
- await page.goto(url+'city-v2.html?complex='+encodeURIComponent(c.id)+'&building='+encodeURIComponent(b.id));await page.waitForURL(u=>u.pathname.endsWith('/index.html'));await page.locator('#toggleSidebar').click();await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
+ phase('full-detail rendering, mathematical graph traversal, API overlays, evidence and camera navigation');
+ // Isolate cold-start redirect verification from the previous long-lived software GPU and graph heap.
+ await freshBrowser();
+ await page.goto(url+'city-v2.html?complex='+encodeURIComponent(c.id)+'&building='+encodeURIComponent(b.id),{waitUntil:'commit'});await page.waitForURL(u=>u.pathname.endsWith('/index.html'),{waitUntil:'domcontentloaded'});await waitForCity();assert.equal(new URL(page.url()).searchParams.get('complex'),c.id);assert.equal(new URL(page.url()).searchParams.get('building'),b.id);await page.locator('#toggleSidebar').click();await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
  await page.locator('#researchTools > summary').click();await page.locator('#researchQuery').fill(record.module);await page.locator('#locateResearchModule').click();assert((await page.locator('#researchStatus').innerText()).includes('Exact current module ID'));
  await page.locator('#plan').click();const vb=await page.locator('#map svg').getAttribute('viewBox');await page.locator('#zoomIn').click();assert.notEqual(await page.locator('#map svg').getAttribute('viewBox'),vb);await page.locator('#clearSelection').click();assert.equal(await page.locator('#map [data-selection]').getAttribute('visibility'),'hidden');assert(await page.locator('#citySidebar').isVisible(),'Global controls remain clickable with sidebar open');
+ phase('legacy redirect, exact deep link, research and clear selection');
  await page.locator('#closeSidebar').click();await page.setViewportSize({width:390,height:844});await page.locator('#plan').click();assert(await page.locator('#map svg').isVisible());assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Mobile page overflows horizontally');await page.screenshot({path:path.join(out,'04-mobile.png'),fullPage:true,timeout:15000}).catch(e=>console.warn('Optional mobile screenshot unavailable:',e.message));
- assert.deepEqual(errors,[]);console.log('Browser regression passed',JSON.stringify(metrics));
-}catch(e){if(page)await page.screenshot({path:path.join(out,'failure.png'),fullPage:true}).catch(()=>{});throw e;}
+ phase('mobile navigation');assert.deepEqual(errors,[]);console.log('Browser regression passed',JSON.stringify(metrics));
+}catch(e){if(page)await page.screenshot({path:path.join(out,'failure.png'),fullPage:true,timeout:10000}).catch(()=>{});throw e;}
 finally{await writeFile(path.join(out,'metrics.json'),JSON.stringify({...metrics,pageErrors:errors},null,2));if(browser)await browser.close();await new Promise(r=>server.close(r));}

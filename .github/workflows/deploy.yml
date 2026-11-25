@@ -117,6 +117,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check revisions before publication
+        id: freshness
         env:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
           BUILT_PHYSLIB_SHA: ${{ needs.build.outputs.physlib_sha }}
@@ -124,9 +125,13 @@ jobs:
           set -eu
           graph_head=$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" "refs/heads/${DEFAULT_BRANCH}" | cut -f1)
           physlib_head=$(git ls-remote https://github.com/leanprover-community/physlib.git refs/heads/master | cut -f1)
+          test -n "$graph_head" && test -n "$physlib_head"
           if [ "$graph_head" != "$GITHUB_SHA" ] || [ "$physlib_head" != "$BUILT_PHYSLIB_SHA" ]; then
-            echo 'A source branch advanced since this build started; the existing site remains published.' >&2
-            exit 1
+            echo '::notice::Superseded source revision; existing site remains published. No deployment attempted.'
+            echo 'fresh=false' >> "$GITHUB_OUTPUT"
+          else
+            echo 'fresh=true' >> "$GITHUB_OUTPUT"
           fi
       - id: deployment
+        if: steps.freshness.outputs.fresh == 'true'
         uses: actions/deploy-pages@v4
