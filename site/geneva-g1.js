@@ -7,7 +7,7 @@ import {fitSkyline} from './geneva-landing-frame.js';
 import {districtColor,districtAreas,districtMotionAllowed} from './geneva-district-palette.js';
 import {createDistrictLights} from './geneva-district-lighting.js';
 import {visibleCity,excludedArea} from './geneva-city-scope.js';
-import {networkRows,createBeamNetwork,beamMotionAllowed} from './geneva-beam-network.js';
+import {networkRows,createBeamNetwork,beamMotionAllowed,beamCurve} from './geneva-beam-network.js';
 import {masterplan,validatePlan,capacity,VERSION} from './geneva-g1-geometry.js';
 import {roleNames} from './city-v2-model.js';
 import {subjectColors} from './geneva-production-layout.js';
@@ -323,11 +323,24 @@ function refreshNetwork(){
  const host=$('three');$('togglePipes').setAttribute('aria-pressed',String(channel!=='off'));$('togglePipes').textContent=channel==='off'?'Pipes off':'Pipes on';
  const key=[filter,channel,selectedId||'',!!selectedDeclaration].join('|');if(key===networkKey)return;networkKey=key;
  if(beamMesh){beamMesh.removeFromParent();beamMesh.geometry.dispose();beamMesh.material.dispose();beamMesh=null;}
- globalMapLayer.replaceChildren();const rows=networkRows(model,layout,filter,channel,selectedId);let modules=0,utility=0;
- for(const row of rows){if(row.utility)utility++;else modules++;const a=row.from,b=row.to,dx=b.x-a.x,dz=b.z-a.z;el('path',{d:`M${a.x} ${a.z} Q${(a.x+b.x)/2-dz*.045} ${(a.z+b.z)/2+dx*.045} ${b.x} ${b.z}`,fill:'none',stroke:linkColors[row.key],'stroke-width':row.focused?1.7:row.utility?.9:1.05,'vector-effect':'non-scaling-stroke',opacity:row.focused?.95:selectedId?.15:.36,'data-network-channel':row.key},globalMapLayer);}
+ globalMapLayer.replaceChildren();const rows=networkRows(model,layout,filter,channel,selectedId);let modules=0,utility=0;const counts={out:0,in:0,both:0,mathlib:0};
+ for(const row of [...rows.filter(r=>!r.utility),...rows.filter(r=>r.utility)]){
+  if(row.utility)utility++;else modules++;counts[row.key]++;
+  const group=el('g',{'data-network-channel':row.key},globalMapLayer),a=row.from,b=row.to,dx=b.x-a.x,dz=b.z-a.z;
+  const width=row.utility?(row.focused?3.8:2.6):row.focused?2.3:1.35,opacity=row.utility?.90:row.focused?.95:selectedId?.18:.48;
+  const draw=(path,color,extra={})=>el('path',{d:path,fill:'none',stroke:color,'stroke-width':width,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke',opacity,...extra},group);
+  if(row.utility){const points=beamCurve(row).getSpacedPoints(18);draw(points.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' '),linkColors.mathlib);}
+  else{const mx=(a.x+b.x)/2-dz*.045,mz=(a.z+b.z)/2+dx*.045;
+   if(row.key==='both'){
+    const ax=(a.x+mx)/2,az=(a.z+mz)/2,bx=(mx+b.x)/2,bz=(mz+b.z)/2,cx=(ax+bx)/2,cz=(az+bz)/2;
+    draw(`M${a.x} ${a.z} Q${ax} ${az} ${cx} ${cz}`,linkColors.out,{'data-pipe-end':'dependent'});
+    draw(`M${cx} ${cz} Q${bx} ${bz} ${b.x} ${b.z}`,linkColors.in,{'data-pipe-end':'prerequisite'});
+   }else draw(`M${a.x} ${a.z} Q${mx} ${mz} ${b.x} ${b.z}`,linkColors[row.key]);
+  }
+ }
  if(scene&&rows.length){beamMesh=createBeamNetwork(rows,{selected:!!selectedId});(beamRenderer?beamScene:scene).add(beamMesh);}
  $('beamOverlay').hidden=!beamRenderer||(!beamMesh&&!districtLights)||viewMode!=='oblique';
- host.dataset.networkModulePipes=String(modules);host.dataset.networkMathlibPipes=String(utility);host.dataset.beamAnimated='false';host.dataset.beamTime='0';
+ host.dataset.networkModulePipes=String(modules);host.dataset.networkMathlibPipes=String(utility);host.dataset.networkChannels=JSON.stringify(counts);host.dataset.beamAnimated='false';host.dataset.beamTime='0';
 }
 function drawDependencies(){
  refreshNetwork();invalidate();declarationMapLayer.replaceChildren();moduleMapLayer.replaceChildren();$('three').dataset.declarationArcs='0';$('three').dataset.modulePipes='0';$('three').dataset.mathlibPipes='0';updateLinkReadout(channel==='off'?'Pipes hidden':'City network · '+$('three').dataset.networkModulePipes+' directed complex imports · '+$('three').dataset.networkMathlibPipes+' utility connections');
@@ -345,7 +358,7 @@ function drawDependencies(){
  const station=layout.stations.find(t=>t.complexId===selectedId),complex=complexById.get(selectedId),evidence=stationEvidence(complex);let utilityCount=0;
  if(station&&evidence.active&&(filter==='all'||c.area===filter)){
   const buildings=stationRoleLinks(complex,layout.buildings);
-  for(const b of buildings){const start=vec(b,2.1),end=vec(station,2.8),mid=start.clone().lerp(end,.5);mid.y+=1.4;mapPipe(moduleMapLayer,b,station,'mathlib',{bend:0});utilityCount++;}
+  for(const b of buildings){const points=beamCurve({from:b,to:station,utility:true}).getSpacedPoints(18),path=points.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' ');el('path',{d:path,fill:'none',stroke:linkColors.mathlib,'stroke-width':3.2,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke','data-pipe-channel':'mathlib','marker-end':'url(#link-arrow-mathlib)'},moduleMapLayer);utilityCount++;}
  }
  $('three').dataset.modulePipes=String(count);$('three').dataset.mathlibPipes=String(utilityCount);
  updateLinkReadout('Module imports · '+links.out.length+'/'+links.totalOut+' uses · '+links.in.length+'/'+links.totalIn+' used by · '+evidence.count+' Mathlib module imports (role links by cited source modules).');
