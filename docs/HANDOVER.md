@@ -44,3 +44,7 @@ Start from master head and current CI, choose art or integration work package, i
 
 ## Pre-demo milestone
 Before sharing externally, verify [prototype legibility](geneva/prototype-legibility.md) in the real deployed city: clear role identities, directional conduits and distinctive Mathlib stations. This is a presentation pass, not full initiative or art-roadmap completion.
+
+
+## District lighting
+Issue #81 (A2.1/A3.1) tracks [district illumination](geneva/district-lighting.md). Separate original palette and batched accent renderer; no canonical source change. Deployment and visual acceptance require actual evidence.
