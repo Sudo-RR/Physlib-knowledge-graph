@@ -1,11 +1,11 @@
 // PhysLib City architectural materials. Original procedural textures and
 // sky, no remote assets. Tiles repeat in approximate world units rather than
 // stretching a fixed number of windows over every tower.
-export const QUALITY_PROFILES={low:{min:1,max:1,budget:1200000},medium:{min:1.5,max:2,budget:3200000},high:{min:2.5,max:3,budget:8500000}};
-export function renderScale(quality,dpr,width,height){
+export const QUALITY_PROFILES={low:{min:1,max:1,budget:1200000},medium:{min:1.5,max:2,budget:3200000},high:{min:3,max:4,budget:12000000}};
+export function renderScale(quality,dpr,width,height,deviceLimit=Infinity){
  const p=QUALITY_PROFILES[quality]||QUALITY_PROFILES.medium;
  const target=Math.min(p.max,Math.max(p.min,Number.isFinite(dpr)?dpr:1));
- return Math.max(.5,Math.min(target,Math.sqrt(p.budget/Math.max(1,width*height))));
+ return Math.min(Math.max(.5,Math.min(target,Math.sqrt(p.budget/Math.max(1,width*height)))),deviceLimit/Math.max(1,width,height));
 }
 const PALETTES=[
  {frame:'#c1c7c8',glass:'#526e80',bottom:'#263b49',reflect:'#b6cdd8',trim:'#8b9b9e'},
