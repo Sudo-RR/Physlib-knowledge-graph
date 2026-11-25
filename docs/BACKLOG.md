@@ -14,6 +14,7 @@ Rebaselined 25 November 2026 from verified production 5bcffd1 and handover 65e95
 | [#69](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/69) | A3 | Art | Animated beams/static roof lights | 68 |
 | [#81](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/81) | A2.1/A3.1 | Art | PaperView-inspired district lighting and façade sweeps | 68/69 shared scope; independent of remaining shadow work |
 | [#82](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/82) | A3.2 | Art | Continuous conduits, endpoint colours and Mathlib street beams | 69 shared scope |
+| [#83](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/83) | A2.2 | Art | Actual top-down city and irregular borough envelopes | 81 palette; 82 pipe legibility |
 | [#70](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/70) | A4 | Art | Visual acceptance | 67,68,69 |
 | [#71](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/71) | I1a | Integration | Initiative schema | — |
 | [#72](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/72) | I1b | Integration | Classical Integrability draft | 71 |
