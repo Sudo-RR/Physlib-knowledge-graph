@@ -53,7 +53,7 @@ await writeFile(path.join(root,'index.html'),landingHtml);
 if(!landingHtml.includes('href="city-v2.html"')||!v2Html.includes('href="city-c4.html"'))throw Error('Missing source explorer or legacy fallback navigation');
 
 // Optional declaration snapshots are included only when deliberately generated.
-for(const file of ['declarations.json','city-declarations.json']) {
+for(const file of ['declarations.json','city-declarations.json','geneva-history.json']) {
   try {await stat(path.join(workspace,'site','data',file));await cp(path.join(workspace,'site','data',file),path.join(root,'data',file));} catch(error) {if(error.code!=='ENOENT')throw error;}
 }
 console.log(`Staged city-only site at ${root}`);

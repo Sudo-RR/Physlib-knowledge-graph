@@ -3,6 +3,8 @@ import {masterplan,validatePlan,capacity,VERSION} from './geneva-g1-geometry.js'
 import {roleNames} from './city-v2-model.js';
 import {subjectColors} from './geneva-production-layout.js';
 import {createSourceInspector} from './geneva-source-inspector.js';
+import {setupResearchSearch} from './geneva-research-search.js';
+import {setupHistory} from './geneva-history-ui.js';
 import {demoMassing} from './geneva-g1-massing.js';
 import {civicFabric} from './geneva-civic-fabric.js';
 import {renderCivicFabric} from './geneva-civic-render.js';
@@ -145,6 +147,8 @@ $('resetView').onclick=()=>{focusX=focusZ=0;zoom=1;mode('north');};
 $('dusk').onclick=()=>{const on=$('dusk').getAttribute('aria-pressed')!=='true';$('dusk').setAttribute('aria-pressed',String(on));setDusk(on);};
 if(production){
  sourceUI=createSourceInspector({production,roleNames,subjectColors,onSelect:(id,b,focus)=>selectComplex(id,b,focus),onFilter:setFilter,onChannel:v=>{channel=v;drawDependencies();}});
+ setupResearchSearch(production,(id,b,focus)=>selectComplex(id,b,focus));
+ $('historyTools').addEventListener('toggle',()=>{if($('historyTools').open&&!$('historyTools').dataset.loaded){$('historyTools').dataset.loaded='true';setupHistory(production);}});
  $('status').textContent=layout.version+' · '+layout.sites.length+' source complexes · '+layout.buildings.length+' role buildings · '+layout.boroughs.length+' boroughs · '+model.source.revision.slice(0,12);
  $('caption').textContent='Click a coloured source building or cyan Mathlib station. Neutral buildings are civic scenery. Scroll to zoom; use the source inspector to focus a complex.';
  const area=params.get('area');if(area&&model.areas.includes(area)){ $('subject').value=area;sourceUI.filter(area);}
