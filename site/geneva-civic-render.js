@@ -7,6 +7,7 @@ export function renderCivicFabric(THREE,scene,civic,facades,surfaces){
  asphalt.map=surfaces.asphalt;
  const lit=new THREE.MeshStandardMaterial({color:'#ffb879',emissive:'#ff6a00',emissiveIntensity:.8});
  const box=new THREE.BoxGeometry(1,1,1),round=new THREE.CylinderGeometry(.5,.5,1,10),sphere=new THREE.IcosahedronGeometry(.5,1);
+ const simpleRound=new THREE.CylinderGeometry(.5,.5,1,6),simpleSphere=new THREE.IcosahedronGeometry(.5,0),switchable=[];
  const batches=new Map(),dummy=new THREE.Object3D();
  function part(geo,m,x,y,z,w,h,d,angle=0){
   dummy.position.set(x-500,y,z-400);dummy.rotation.set(0,angle,0);dummy.scale.set(w,h,d);dummy.updateMatrix();const k=geo.uuid+'|'+m.uuid;
@@ -34,6 +35,7 @@ export function renderCivicFabric(THREE,scene,civic,facades,surfaces){
  // Sparse amber road markers on arterial centerlines: no new real light objects.
  // These are flush road markings, not poles or obstacles within traffic lanes.
  for(let i=0;i<civic.roads.length;i+=9){const r=civic.roads[i];if(r.kind!=='arterial')continue;const x=(r.a[0]+r.b[0])/2,z=(r.a[1]+r.b[1])/2;part(round,lit,x,.24,z,.38,.1,.38);}
- for(const {geo,m,matrices} of batches.values()){const mesh=new THREE.InstancedMesh(geo,m,matrices.length);matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.instanceMatrix.needsUpdate=true;group.add(mesh);}
- return group;
+ for(const {geo,m,matrices} of batches.values()){const mesh=new THREE.InstancedMesh(geo,m,matrices.length);matrices.forEach((matrix,i)=>mesh.setMatrixAt(i,matrix));mesh.instanceMatrix.needsUpdate=true;group.add(mesh);if(geo===round||geo===sphere)switchable.push({mesh,full:geo,simple:geo===round?simpleRound:simpleSphere});}
+ let detailed=true;
+ return {group,setDetail(next){if(next===detailed)return;detailed=next;for(const {mesh,full,simple} of switchable){mesh.geometry=next?full:simple;mesh.boundingSphere=null;mesh.boundingBox=null;}}};
 }
