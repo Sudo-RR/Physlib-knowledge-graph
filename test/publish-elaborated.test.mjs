@@ -1,0 +1,8 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {createHash} from 'node:crypto';import {verifiedCompanion} from '../scripts/publish-elaborated.mjs';import {FULL_ROOTS,PREFIXES,RESULT_REVISION} from '../scripts/elaborated-pilot.mjs';
+const graph={source:{revision:'r',toolchain:'t'},modules:FULL_ROOTS.map(id=>({id,library:id}))};
+const production={model:{source:graph.source},modulePaths:Object.fromEntries(FULL_ROOTS.map(id=>[id,id+'.lean'])),mathlibRevision:'m'};
+const raw={roots:FULL_ROOTS,nodes:FULL_ROOTS.map(module=>({name:module+'.x',module,kind:'thm'})),edges:[{src:'Physlib.x',tgt:'QuantumInfo.x',kind:'statement'}]};
+const bytes=Buffer.from(JSON.stringify(raw)),hash=b=>createHash('sha256').update(b).digest('hex');
+const provenance={physlibRevision:'r',toolchain:'t',mathlibRevision:'m',extractorRevision:RESULT_REVISION,rawSha256:hash(bytes),roots:FULL_ROOTS,includedPrefixes:PREFIXES,flags:['--private','--auto']};
+test('rebuilds full companion from raw evidence and records exact hash/counts',()=>{const p=verifiedCompanion(bytes,provenance,graph,production,'123');assert.equal(p.manifest.sha256,hash(p.bytes));assert.equal(p.manifest.bytes,p.bytes.length);assert.equal(p.manifest.counts.declarations,3);assert.equal(p.manifest.counts.dependencies,1);assert.equal(p.manifest.runId,'123');});
+test('rejects stale source or wrong pin, partial scope and altered raw data',()=>{for(const q of [{physlibRevision:'old'},{mathlibRevision:'wrong'},{toolchain:'wrong'},{roots:['Physlib']},{rawSha256:'0'.repeat(64)}])assert.throws(()=>verifiedCompanion(bytes,{...provenance,...q},graph,production,'123'));assert.throws(()=>verifiedCompanion(Buffer.from('{}'),provenance,graph,production,'123'));});

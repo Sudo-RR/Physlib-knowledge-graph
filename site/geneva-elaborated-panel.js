@@ -1,16 +1,41 @@
 import {indexElaborated} from './geneva-elaborated.js';
-let index=null,version=0;
+let index=null,version=0,loadPublished=null,publication=null;
+const LIMIT=150*1024*1024;
 export function setupElaboratedImport(production,refresh){
  const input=document.getElementById('elaboratedFile'),status=document.getElementById('elaboratedStatus');
- const apply=(snapshot,label)=>{index=indexElaborated(snapshot,production);status.textContent=label+' · '+index.local.size+' PhysLib declarations · partial scope';refresh();};
- input.onchange=async()=>{const file=input.files[0];if(!file)return;const token=++version;try{if(file.size>150*1024*1024)throw Error('Snapshot exceeds 150 MiB browser import limit');const snapshot=JSON.parse(await file.text());if(token===version)apply(snapshot,'Loaded locally');}catch(e){if(token===version)status.textContent='Import rejected: '+e.message;}};
- const token=version;
- fetch('data/geneva-elaborated.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(snapshot=>{if(snapshot&&token===version)apply(snapshot,'Published companion');}).catch(e=>{if(token===version)status.textContent='Published companion unavailable: '+e.message;});
+ let pending=null;
+ const apply=(snapshot,label)=>{const next=indexElaborated(snapshot,production);index=next;status.textContent=label+' · '+index.local.size.toLocaleString()+' PhysLib declarations · '+snapshot.dependencies.length.toLocaleString()+' recorded relationships · partial scope';refresh();};
+ input.onchange=async()=>{const file=input.files[0];if(!file)return;const token=++version;try{if(file.size>LIMIT)throw Error('Snapshot exceeds 150 MiB browser import limit');const snapshot=JSON.parse(await file.text());if(token===version)apply(snapshot,'Loaded locally');}catch(e){if(token===version)status.textContent='Import rejected: '+e.message;}};
+ const manifestPromise=fetch('data/geneva-elaborated-manifest.json',{cache:'no-cache'}).then(async r=>{
+  if(!r.ok)return {status:'unavailable',reason:'No published extraction manifest.'};
+  const m=await r.json(),s=m.source,p=production.model.source;
+  if(m.schemaVersion!==1||s?.physlibRevision!==p.revision||s.toolchain!==p.toolchain||s.mathlibRevision!==production.mathlibRevision)throw Error('Published manifest does not match this city.');
+  if(m.status==='unavailable')return m;
+  if(m.status!=='available'||!Number.isInteger(m.bytes)||m.bytes<1||m.bytes>LIMIT||!/^[a-f0-9]{64}$/.test(m.sha256)||!Number.isInteger(m.counts?.declarations)||!Number.isInteger(m.counts?.dependencies))throw Error('Invalid publication manifest');
+  return m;
+ }).catch(e=>({status:'unavailable',reason:e.message})).then(m=>{publication=m;if(!index&&version===0)status.textContent=m.status==='available'?'Ready to load · '+m.counts.declarations.toLocaleString()+' declarations · '+m.counts.dependencies.toLocaleString()+' relationships · open a complex’s mathematical relationships to load.':m.reason||'No matching publication.';return m;});
+ loadPublished=()=>{
+  if(index)return Promise.resolve(true);if(pending)return pending;
+  const token=version;
+  pending=(async()=>{try{const m=await manifestPromise;if(token!==version)return false;if(m.status!=='available'){status.textContent=m.reason||'No matching publication.';return false;}
+   status.textContent='Loading revision-matched mathematical graph…';
+   const response=await fetch('data/geneva-elaborated.json?sha256='+m.sha256);if(!response.ok)throw Error('Snapshot HTTP '+response.status);
+   const bytes=await response.arrayBuffer();if(bytes.byteLength!==m.bytes||bytes.byteLength>LIMIT)throw Error('Snapshot length mismatch');
+   if(!globalThis.crypto?.subtle)throw Error('Secure context required to verify published snapshot');
+   const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),x=>x.toString(16).padStart(2,'0')).join('');
+   if(digest!==m.sha256)throw Error('Snapshot integrity mismatch');
+   const snapshot=JSON.parse(new TextDecoder().decode(bytes));
+   if(token!==version)return false;
+   if(snapshot.declarations?.length!==m.counts.declarations||snapshot.dependencies?.length!==m.counts.dependencies)throw Error('Snapshot counts mismatch');
+   apply(snapshot,'Published companion');return true;
+  }catch(e){if(token===version)status.textContent='Published companion unavailable: '+e.message;return false;}finally{pending=null;}})();return pending;
+ };
+ const tools=document.getElementById('elaboratedTools');tools.addEventListener('toggle',()=>{if(tools.open&&!index)void loadPublished();});
 }
 export function elaboratedPanel(parent,production,c,onSelect){
  const add=(tag,text,p)=>{const e=document.createElement(tag);if(text!==null)e.textContent=text;p.append(e);return e;};
  const d=add('details',null,parent);d.id='elaboratedBrowser';add('summary','Elaborated mathematical relationships',d);
- if(!index){add('p','No compatible elaborated snapshot loaded. Import snapshot.json from the extraction workflow above; the lexical inventory remains available.',d);return;}
+ if(!index){const notice=add('p',publication?.status==='unavailable'?(publication.reason||'No matching publication.'):'Open to load the revision-matched published graph. The lexical inventory remains available.',d);const load=async()=>{if(!loadPublished)return;notice.textContent='Checking and loading mathematical graph…';if(!await loadPublished())notice.textContent=document.getElementById('elaboratedStatus').textContent;};d.addEventListener('toggle',()=>{if(d.open&&!index)void load();});const retry=add('button','Load / retry published graph',d);retry.type='button';retry.onclick=load;return;}
  const covered=c.moduleIds.filter(m=>index.coverage.has(m));
  if(!covered.length){add('p','This complex is outside the indexed extraction scope.',d);return;}
  add('p','Qualified Lean names. Edges may be routed through omitted declarations. Missing edges do not establish independence. This is not proof certification.',d);

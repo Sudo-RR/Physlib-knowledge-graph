@@ -6,6 +6,7 @@ import path from 'node:path';
 const root=path.resolve('dist/site'),out=path.resolve('dist/browser-evidence');
 await mkdir(out,{recursive:true});
 const production=JSON.parse(await readFile(path.join(root,'data/geneva-production.json'),'utf8'));
+let companion=null;try{companion=JSON.parse(await readFile(path.join(root,'data/geneva-elaborated-manifest.json'),'utf8'));}catch(e){if(e.code!=='ENOENT')throw e;}
 const c=production.model.complexes.find(c=>c.id.includes('HamiltonianMechanics')&&c.buildings.some(b=>b.declarationIds.length))||production.model.complexes.find(c=>c.buildings.some(b=>b.declarationIds.length));
 assert(c,'Need a complex with recorded commands');
 const b=c.buildings.find(b=>b.declarationIds.length),record=production.declarationRecords.find(r=>b.declarationIds.includes(r.id));assert(record);
@@ -16,6 +17,7 @@ try{
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
  page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});page.setDefaultTimeout(90000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',msg=>{if(msg.type()==='error'&&/shader error|VALIDATE_STATUS|WebGLProgram|GL_INVALID/i.test(msg.text()))errors.push(msg.text());});
+ let graphRequests=0;page.on('request',req=>{if(new URL(req.url()).pathname.endsWith('/geneva-elaborated.json'))graphRequests++;});
  await page.goto(url);await page.waitForFunction(()=>Number(document.querySelector('#three').dataset.renderedFrames)>0||document.querySelector('#three').dataset.error,{},{timeout:90000});
  assert.equal(await page.locator('#three').getAttribute('data-error'),null,'3D fallback not acceptable in smoke');
  assert(await page.locator('#three canvas').isVisible());assert((await page.locator('#status').textContent()).includes('source complexes'));
@@ -33,6 +35,8 @@ try{
  assert.equal(await page.locator('#map [data-selection]').getAttribute('visibility'),'visible');
  await page.locator('#closeSidebar').click();assert(!(await page.locator('#citySidebar').isVisible()));await page.locator('#toggleSidebar').click();assert(await page.locator('#citySidebar').isVisible());
  await page.locator('#declarationBrowser > summary').click();await page.locator('#declModule').selectOption(record.module);await page.locator('#declKind').selectOption(record.kind);await page.locator('#declQuery').fill(record.name);assert(await page.locator('#declResults a').filter({hasText:record.name}).count()>0);
+ assert.equal(graphRequests,0,'Full extraction must not load before mathematical exploration');if(companion?.status==='available'){await page.locator('#elaboratedBrowser > summary').click();await page.waitForFunction(()=>document.querySelector('#elaboratedStatus')?.textContent.startsWith('Published companion'),{},{timeout:90000});assert(graphRequests>0);await page.locator('#elaboratedBrowser select').waitFor();assert((await page.locator('#elaboratedBrowser').textContent()).includes('recorded declarations'));metrics.elaborated=companion.counts;}else if(companion){assert.equal(companion.status,'unavailable');assert.equal(companion.source.physlibRevision,production.model.source.revision);}
+ if(companion?.status==='available')await page.locator('#declarationBrowser > summary').click();
  await page.locator('#declQuery').fill('___no_such_command___');assert((await page.locator('#declCount').innerText()).startsWith('0 recorded'));await page.locator('#declQuery').fill('');
  assert.equal(production.evidence.revision,production.model.source.revision);assert(Object.keys(production.evidence.activity).length>0);
  await page.locator('#evidenceDetails > summary').click();assert((await page.locator('#evidenceDetails').innerText()).includes('Source activity:'));

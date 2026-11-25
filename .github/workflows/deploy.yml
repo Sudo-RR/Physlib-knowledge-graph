@@ -5,10 +5,15 @@ on:
   schedule:
     - cron: '17 * * * *'
   workflow_dispatch:
+  workflow_run:
+    workflows: [Elaborated declaration pilot]
+    types: [completed]
+    branches: [master, main]
   repository_dispatch:
     types: [physlib-updated]
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
 concurrency:
@@ -16,6 +21,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   build:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == github.event.repository.default_branch)
     runs-on: ubuntu-24.04
     outputs:
       physlib_sha: ${{ steps.provenance.outputs.physlib_sha }}
@@ -62,6 +68,23 @@ jobs:
           ref: ${{ steps.mathlib_pin.outputs.revision }}
           path: .physlib-source/.lake/packages/mathlib
       - run: npm run build:mathlib
+      - name: Publish matching elaborated companion if available
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+          MATHLIB_PIN: ${{ steps.mathlib_pin.outputs.revision }}
+        run: |
+          set -eu
+          node scripts/publish-elaborated.mjs prepare "$MATHLIB_PIN"
+          runs=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow elaborated-pilot.yml --branch "$DEFAULT_BRANCH" --status success --limit 5 --json databaseId --jq '.[].databaseId') || runs=''
+          for id in $runs; do
+            tmp=$(mktemp -d)
+            if gh run download "$id" --repo "$GITHUB_REPOSITORY" --name elaborated-full-evidence --dir "$tmp" && node scripts/publish-elaborated.mjs publish "$tmp" "$id"; then
+              rm -rf "$tmp"
+              break
+            fi
+            rm -rf "$tmp"
+          done
       - run: npm run package:site
       - name: Install browser smoke test dependencies
         run: |
