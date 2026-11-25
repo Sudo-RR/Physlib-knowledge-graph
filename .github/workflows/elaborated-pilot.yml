@@ -1,0 +1,61 @@
+name: Elaborated declaration pilot
+on:
+  push:
+    branches: [master, main]
+    paths:
+      - 'scripts/elaborated-pilot.mjs'
+      - 'scripts/run-elaborated-pilot.mjs'
+      - 'test/elaborated-pilot.test.mjs'
+      - '.github/workflows/elaborated-pilot.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  pilot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    env:
+      LAKE_CACHE_DIR: .lake/cache
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test test/elaborated-pilot.test.mjs
+      - uses: actions/checkout@v4
+        with:
+          repository: leanprover-community/physlib
+          ref: 85bb8f5df598f6701be57a70f06e08069e30589c
+          path: .pilot-physlib
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          repository: PierreSenellart/result-graph
+          ref: 2ee55ff6e521eabe71ecddac797e12f64448a5b6
+          path: .pilot-result-graph
+          persist-credentials: false
+      - name: Install matching Lean
+        working-directory: .pilot-physlib
+        run: |
+          set -o pipefail
+          curl -fsSL https://raw.githubusercontent.com/leanprover/elan/master/elan-init.sh | sh -s -- --default-toolchain none -y
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          "$HOME/.elan/bin/lean" --version
+      - name: Restore Mathlib cache
+        working-directory: .pilot-physlib
+        run: lake exe cache get
+      - name: Restore Physlib cache (optional)
+        working-directory: .pilot-physlib
+        env:
+          LAKE_CONFIG: ${{ github.workspace }}/.pilot-physlib/lake-cache.toml
+        run: lake cache get --scope="physlib-master/$(tr '/:' '--' < lean-toolchain | tr -d '[:space:]')/physlib" || echo "Cache unavailable; build selected roots"
+      - name: Build and extract selected roots
+        run: node scripts/run-elaborated-pilot.mjs .pilot-physlib .pilot-result-graph pilot-evidence
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: elaborated-pilot-evidence
+          path: pilot-evidence/
+          if-no-files-found: warn
+          retention-days: 14
