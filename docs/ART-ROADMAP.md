@@ -52,3 +52,7 @@ See [prototype legibility](geneva/prototype-legibility.md), related #68/#70/#79.
 
 ## Pre-demo composition and network
 See [animated dependency network](geneva/animated-dependency-network.md). This is a focused A1/A3 presentation increment, not full art acceptance.
+
+
+## City scope
+SharedFoundations is an application-generated fallback category, not a recognised physics subject or literal upstream directory. Exclude its complexes, buildings, stations, borough labels and incident visible pipes from the public city and subject list. Preserve canonical source data, exact identities and evidence; source-only records remain inspectable through references. No deletion of upstream files. The projection preserves other city coordinates.
