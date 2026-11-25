@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {channels,stationRoleLinks} from './geneva-legibility.js';
-// A directionally animated, additive, camera-facing ribbon. Each graph edge
+export function beamMotionAllowed({available,paused,reduced,visible,channel}){return !!available&&!paused&&!reduced&&!!visible&&channel!=='off';}
+// A directionally animated, translucent, camera-facing ribbon. Each graph edge
 // carries its own colour, arc length and deterministic phase. No extra lights,
 // post-processing, per-edge material or animation object.
 export function networkRows(model,layout,filter='all',channel='both',selected=null){

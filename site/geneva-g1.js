@@ -4,7 +4,7 @@ import {LineGeometry} from 'three/addons/lines/LineGeometry.js';
 import {LineMaterial} from 'three/addons/lines/LineMaterial.js';
 import {roleKeys,channels as linkColors,visibleModuleLinks,stationEvidence,stationRoleLinks} from './geneva-legibility.js';
 import {fitSkyline} from './geneva-landing-frame.js';
-import {networkRows,createBeamNetwork} from './geneva-beam-network.js';
+import {networkRows,createBeamNetwork,beamMotionAllowed} from './geneva-beam-network.js';
 import {masterplan,validatePlan,capacity,VERSION} from './geneva-g1-geometry.js';
 import {roleNames} from './city-v2-model.js';
 import {subjectColors} from './geneva-production-layout.js';
@@ -33,7 +33,7 @@ const siteById=new Map((layout?.sites||[]).map(t=>[t.id,t])),buildingById=new Ma
 const semanticMeshes=[],subjectSprites=[],mapParts=[],lodMeshes=[];
 const complexById=new Map((model?.complexes||[]).map(c=>[c.id,c]));
 let roleMarkerGroup=null;const roleTextures=new Map();
-let beamMesh=null,overviewFrame=null,previousChannel='both',networkKey='';const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
+let beamMesh=null,beamScene=null,beamRenderer=null,overviewFrame=null,previousChannel='both',networkKey='',motionPaused=false;const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 let activeApiMap=null,apiMapGroup=null,apiMapUI=null;
 const geometryMode='full';
 let evidenceMode='off',evidenceMeshes=[];
@@ -199,14 +199,18 @@ function init3D(){
  function sprite(text,sub,x,z){const c=document.createElement('canvas');c.width=1024;c.height=200;const g=c.getContext('2d');g.textAlign='center';g.font='bold 64px sans-serif';g.fillStyle='#263640';g.fillText(text,512,80);g.font='40px sans-serif';g.fillText(sub,512,138);const o=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));o.position.copy(world(x,z,112));o.scale.set(220,43,1);o.userData.isLabel=true;scene.add(o);return o;}
  for(const s of p.sectors)sprite(s.id,'',...s.label);
  for(const b of layout?.boroughs||[]){const o=sprite(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),'',b.x,b.z);o.scale.set(105,21,1);o.position.y=92;o.userData.area=b.area;subjectSprites.push(o);}
- camera=new THREE.OrthographicCamera(-650,650,550,-550,1,6000);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;const disposeSky=installSkyEnvironment(THREE,renderer,scene);setDusk();for(const m of facade)m.emissiveIntensity=.65;for(const t of [surfaces.concrete,surfaces.asphalt])t.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());for(const m of facade){m.map.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());m.emissiveMap.anisotropy=m.map.anisotropy;}host.append(renderer.domElement);renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','3D city. Arrow keys pan, plus and minus zoom, Home resets. Use the mathematics sidebar for keyboard selection.');
- function resize(){if(host.hidden||!host.clientWidth||!host.clientHeight)return;const w=host.clientWidth,h=host.clientHeight;const aspect=w/h,first=!overviewFrame;overviewFrame=fitSkyline(towers,aspect);const half=overviewFrame.half;if(first){focusX=overviewFrame.x;focusZ=overviewFrame.z;updatePlanCamera();}host.dataset.skylineFit=JSON.stringify(overviewFrame);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();const gl=renderer.getContext(),limit=Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),gl.getParameter(gl.MAX_TEXTURE_SIZE));const ratio=renderScale(quality,devicePixelRatio,w,h,limit);const current=renderer.getSize(new THREE.Vector2());if(current.x!==w||current.y!==h||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);}invalidate();}
+ camera=new THREE.OrthographicCamera(-650,650,550,-550,1,6000);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;const disposeSky=installSkyEnvironment(THREE,renderer,scene);setDusk();for(const m of facade)m.emissiveIntensity=.65;for(const t of [surfaces.concrete,surfaces.asphalt])t.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());for(const m of facade){m.map.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());m.emissiveMap.anisotropy=m.map.anisotropy;}host.append(renderer.domElement);
+ // Separate transparent GPU layer: beam-only frames never redraw the high-DPR city.
+ beamScene=new THREE.Scene();try{beamRenderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});beamRenderer.setClearColor(0x000000,0);beamRenderer.outputColorSpace=THREE.SRGBColorSpace;beamRenderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));$('beamOverlay').append(beamRenderer.domElement);host.dataset.beamRenderer='overlay';}catch(e){beamRenderer=null;host.dataset.beamRenderer='static-fallback';console.warn('Animated overlay unavailable:',e.message);}
+ renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','3D city. Arrow keys pan, plus and minus zoom, Home resets. Use the mathematics sidebar for keyboard selection.');
+ function resize(){if(host.hidden||!host.clientWidth||!host.clientHeight)return;const w=host.clientWidth,h=host.clientHeight;const aspect=w/h,first=!overviewFrame;overviewFrame=fitSkyline(towers,aspect);const half=overviewFrame.half;if(first){focusX=overviewFrame.x;focusZ=overviewFrame.z;updatePlanCamera();}host.dataset.skylineFit=JSON.stringify(overviewFrame);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();const gl=renderer.getContext(),limit=Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),gl.getParameter(gl.MAX_TEXTURE_SIZE));const ratio=renderScale(quality,devicePixelRatio,w,h,limit);const current=renderer.getSize(new THREE.Vector2());if(current.x!==w||current.y!==h||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);}if(beamRenderer){const size=beamRenderer.getSize(new THREE.Vector2());if(size.x!==w||size.y!==h)beamRenderer.setSize(w,h,false);}invalidate();}
  observer=new ResizeObserver(resize);observer.observe(host);resize();
- let prev=performance.now(),lastKey='',lastVersion=-1,lastBeamFrame=-Infinity;
- const gl=renderer.getContext();let renderFence=null;
- function releaseFence(){if(renderFence){gl.deleteSync(renderFence);renderFence=null;}}
- function gpuReady(){if(!renderFence)return true;const state=gl.clientWaitSync(renderFence,0,0);if(state===gl.TIMEOUT_EXPIRED)return false;releaseFence();return true;}
- function syncMotion(){const moving=!!beamMesh&&!reducedMotion.matches&&channel!=='off'&&!host.hidden&&!document.hidden;host.dataset.beamAnimated=String(moving);if(beamMesh&&!moving){beamMesh.material.uniforms.uTime.value=0;host.dataset.beamTime='0';}invalidate();}
+ let prev=performance.now(),lastKey='',lastVersion=-1,lastBeamFrame=-Infinity,lastBeamVersion=-1,beamFrames=0;
+ const gl=renderer.getContext(),beamGL=beamRenderer?.getContext();let renderFence=null,beamFence=null;
+ function releaseFence(context,fence){if(fence)context.deleteSync(fence);}
+ function fenceReady(context,fence){return !fence||context.clientWaitSync(fence,0,0)!==context.TIMEOUT_EXPIRED;}
+ function submitFence(context){if(typeof context.fenceSync!=='function'||context.isContextLost())return null;const fence=context.fenceSync(context.SYNC_GPU_COMMANDS_COMPLETE,0);context.flush();return fence;}
+ function syncMotion(){const moving=beamMotionAllowed({available:!!beamRenderer&&!!beamMesh,paused:motionPaused,reduced:reducedMotion.matches,visible:!host.hidden&&!document.hidden,channel});host.dataset.beamAnimated=String(moving);if(beamMesh&&!moving){beamMesh.material.uniforms.uTime.value=0;host.dataset.beamTime='0';}invalidate();}
  reducedMotion.addEventListener('change',syncMotion);document.addEventListener('visibilitychange',syncMotion);
  function draw(now){
   const dt=Math.min(.12,(now-prev)/1000);prev=now;if(!document.hidden&&heldKeys.size)navigate(heldKeys,dt);
@@ -214,17 +218,30 @@ function init3D(){
    const anim=massGroup&&massGroup.scale.y<1;
    if(anim){const t=Math.min(1,(now-started)/850);massGroup.scale.y=1-Math.pow(1-t,3)*.98;}
    const key=[viewMode,yaw,focusX,focusZ,zoom,labels,filter,massGroup.scale.y,quality,geometryMode].join('|');
-   const moving=!!beamMesh&&!reducedMotion.matches&&channel!=='off';const animateBeam=moving&&now-lastBeamFrame>=1000/30;
-   if((key!==lastKey||redrawVersion!==lastVersion||animateBeam)&&gpuReady()){
-    if(beamMesh){beamMesh.material.uniforms.uTime.value=moving?now/1000:0;beamMesh.material.uniforms.uResolution.value.set(host.clientWidth,host.clientHeight);host.dataset.beamTime=String(beamMesh.material.uniforms.uTime.value);lastBeamFrame=now;}host.dataset.beamAnimated=String(moving);
+   const moving=beamMotionAllowed({available:!!beamRenderer&&!!beamMesh,paused:motionPaused,reduced:reducedMotion.matches,visible:true,channel});
+   host.dataset.beamAnimated=String(moving);
+   const cityDirty=key!==lastKey||redrawVersion!==lastVersion;
+   if(cityDirty&&fenceReady(gl,renderFence)){
+    releaseFence(gl,renderFence);renderFence=null;
     const pitch=Math.PI*.19,d=1550,a=yaw;
     camera.position.set(focusX+Math.sin(a)*d*Math.cos(pitch),d*Math.sin(pitch),focusZ+Math.cos(a)*d*Math.cos(pitch));camera.lookAt(focusX,0,focusZ);camera.zoom=zoom;camera.updateProjectionMatrix();
     for(const o of scene.children)if(o.userData.isLabel)o.visible=labels&&(!o.userData.area||filter==='all'||filter===o.userData.area);
-    const lod=updateLod(),renderStart=performance.now();renderer.render(scene,camera);if(typeof gl.fenceSync==='function'&&!gl.isContextLost()){renderFence=gl.fenceSync(gl.SYNC_GPU_COMMANDS_COMPLETE,0);gl.flush();}const cpuRenderMs=performance.now()-renderStart;renderedFrames++;
+    if(beamMesh&&!beamRenderer){beamMesh.material.uniforms.uTime.value=0;beamMesh.material.uniforms.uResolution.value.set(host.clientWidth,host.clientHeight);}
+    const lod=updateLod(),renderStart=performance.now();renderer.render(scene,camera);renderFence=submitFence(gl);const cpuRenderMs=performance.now()-renderStart;renderedFrames++;
     host.dataset.drawCalls=String(renderer.info.render.calls);host.dataset.triangles=String(renderer.info.render.triangles);
     host.dataset.renderMetrics=JSON.stringify({...lod,lighting:'dusk',quality,cpuRenderMs,pixelRatio:renderer.getPixelRatio(),geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,canvasWidth:renderer.domElement.width,canvasHeight:renderer.domElement.height,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles});
     host.dataset.cameraPose=JSON.stringify({focusX,focusZ,zoom,yaw,viewMode});host.dataset.renderedFrames=String(renderedFrames);
     lastKey=key;lastVersion=redrawVersion;
+   }
+   // During motion only the overlay is submitted. Wait for the previous
+   // overlay GPU workload without blocking DOM input or camera navigation.
+   const beamDirty=lastBeamVersion!==lastVersion||moving&&now-lastBeamFrame>=1000/30;
+   if(beamRenderer&&beamMesh&&beamDirty&&fenceReady(beamGL,beamFence)){
+    releaseFence(beamGL,beamFence);beamFence=null;
+    beamMesh.material.uniforms.uTime.value=moving?now/1000:0;beamMesh.material.uniforms.uResolution.value.set(host.clientWidth,host.clientHeight);
+    beamRenderer.render(beamScene,camera);beamFence=submitFence(beamGL);
+    host.dataset.beamTime=String(beamMesh.material.uniforms.uTime.value);host.dataset.beamFrames=String(++beamFrames);
+    lastBeamVersion=lastVersion;lastBeamFrame=now;
    }
   }
   frame=requestAnimationFrame(draw);
@@ -237,10 +254,10 @@ function init3D(){
  renderer.domElement.addEventListener('click',e=>{if(!production)return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);for(const hit of ray.intersectObjects(semanticMeshes.filter(m=>m.visible),false)){const id=hit.object.userData.ids[hit.instanceId];if(id){selectComplex(id.complexId,id.id);break;}}});
  renderer.domElement.addEventListener('dblclick',()=>{if(selectedId)focusSelection();});
  renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();changeZoom(Math.exp(-e.deltaY*.001));},{passive:false});
- window.addEventListener('pagehide',e=>{if(e.persisted)return;cancelAnimationFrame(frame);observer.disconnect();releaseFence();reducedMotion.removeEventListener('change',syncMotion);document.removeEventListener('visibilitychange',syncMotion);renderer.dispose();renderer.forceContextLoss();});
+ window.addEventListener('pagehide',e=>{if(e.persisted)return;cancelAnimationFrame(frame);observer.disconnect();releaseFence(gl,renderFence);if(beamRenderer){releaseFence(beamGL,beamFence);beamRenderer.dispose();beamRenderer.forceContextLoss();}reducedMotion.removeEventListener('change',syncMotion);document.removeEventListener('visibilitychange',syncMotion);renderer.dispose();renderer.forceContextLoss();});
  window.addEventListener('pageshow',e=>{if(e.persisted){resize();invalidate();}});
 }
-function mode(next){if(next!=='plan'&&next!=='oblique')return;invalidate();viewMode=next;updatePlanCamera();const three=next==='oblique';$('map').hidden=three;$('mapHint').hidden=three;$('three').hidden=!three;$('three').dataset.beamAnimated=String(three&&!!beamMesh&&!reducedMotion.matches&&channel!=='off'&&!document.hidden);for(const k of ['plan','oblique'])$(k).setAttribute('aria-pressed',String(k===next));heldKeys.clear();$('turnLeft').hidden=!three;$('turnRight').hidden=!three;if(three){try{init3D();if(!beamMesh){networkKey='';refreshNetwork();}}catch(e){viewMode='plan';$('three').hidden=true;$('map').hidden=false;$('mapHint').hidden=false;$('plan').setAttribute('aria-pressed','true');$('oblique').setAttribute('aria-pressed','false');$('three').dataset.error=e.message;$('status').textContent='3D unavailable: '+e.message+' — navigation map remains available.';}}}
+function mode(next){if(next!=='plan'&&next!=='oblique')return;invalidate();viewMode=next;updatePlanCamera();const three=next==='oblique';$('map').hidden=three;$('mapHint').hidden=three;$('three').hidden=!three;$('beamOverlay').hidden=!three||!beamRenderer||!beamMesh;$('three').dataset.beamAnimated=String(beamMotionAllowed({available:!!beamRenderer&&!!beamMesh,paused:motionPaused,reduced:reducedMotion.matches,visible:three&&!document.hidden,channel}));for(const k of ['plan','oblique'])$(k).setAttribute('aria-pressed',String(k===next));heldKeys.clear();$('turnLeft').hidden=!three;$('turnRight').hidden=!three;if(three){try{init3D();if(!beamMesh){networkKey='';refreshNetwork();}}catch(e){viewMode='plan';$('three').hidden=true;$('map').hidden=false;$('mapHint').hidden=false;$('plan').setAttribute('aria-pressed','true');$('oblique').setAttribute('aria-pressed','false');$('three').dataset.error=e.message;$('status').textContent='3D unavailable: '+e.message+' — navigation map remains available.';}}}
 $('plan').onclick=()=>mode('plan');$('oblique').onclick=()=>mode('oblique');$('labels').onclick=()=>{labels=!labels;labelGroup.style.display=labels?'':'none';$('labels').setAttribute('aria-pressed',String(labels));drawRoleMarkers();invalidate();};
 function selectComplex(id,building=null,focus=false,declaration=null){
  if(!production||!siteById.has(id))return;
@@ -298,10 +315,11 @@ function updateLinkReadout(text){$('linkReadout').textContent=text;}
 function refreshNetwork(){
  const host=$('three');$('togglePipes').setAttribute('aria-pressed',String(channel!=='off'));$('togglePipes').textContent=channel==='off'?'Pipes off':'Pipes on';
  const key=[filter,channel,selectedId||'',!!selectedDeclaration].join('|');if(key===networkKey)return;networkKey=key;
- if(beamMesh){scene?.remove(beamMesh);beamMesh.geometry.dispose();beamMesh.material.dispose();beamMesh=null;}
+ if(beamMesh){beamMesh.removeFromParent();beamMesh.geometry.dispose();beamMesh.material.dispose();beamMesh=null;}
  globalMapLayer.replaceChildren();const rows=networkRows(model,layout,filter,channel,selectedId);let modules=0,utility=0;
  for(const row of rows){if(row.utility)utility++;else modules++;const a=row.from,b=row.to,dx=b.x-a.x,dz=b.z-a.z;el('path',{d:`M${a.x} ${a.z} Q${(a.x+b.x)/2-dz*.045} ${(a.z+b.z)/2+dx*.045} ${b.x} ${b.z}`,fill:'none',stroke:linkColors[row.key],'stroke-width':row.focused?1.7:row.utility?.9:1.05,'vector-effect':'non-scaling-stroke',opacity:row.focused?.95:selectedId?.15:.36,'data-network-channel':row.key},globalMapLayer);}
- if(scene&&rows.length){beamMesh=createBeamNetwork(rows,{selected:!!selectedId});scene.add(beamMesh);}
+ if(scene&&rows.length){beamMesh=createBeamNetwork(rows,{selected:!!selectedId});(beamRenderer?beamScene:scene).add(beamMesh);}
+ $('beamOverlay').hidden=!beamRenderer||!beamMesh||viewMode!=='oblique';
  host.dataset.networkModulePipes=String(modules);host.dataset.networkMathlibPipes=String(utility);host.dataset.beamAnimated='false';host.dataset.beamTime='0';
 }
 function drawDependencies(){
@@ -363,6 +381,7 @@ function setApiMap(map){activeApiMap=map;const url=new URL(location.href);if(map
 function setDusk(){invalidate();if(!scene)return;scene.background.set('#273849');hemi.intensity=.42;sun.intensity=.65;scene.environmentIntensity=.24;for(const m of massGroup.children.map(o=>o.material).filter(m=>m?.emissiveMap))m.emissiveIntensity=.65;renderer.toneMappingExposure=1.15;}
 setupSidebar();mode('oblique');drawDependencies();
 $('togglePipes').onclick=()=>{if(channel==='off'){channel=previousChannel==='off'?'both':previousChannel;}else{previousChannel=channel;channel='off';}$('channels').value=channel;drawDependencies();};
+$('pauseBeams').onclick=()=>{motionPaused=!motionPaused;$('pauseBeams').setAttribute('aria-pressed',String(motionPaused));$('pauseBeams').textContent=motionPaused?'Resume motion':'Pause motion';$('three').dataset.beamAnimated=String(beamMotionAllowed({available:!!beamRenderer&&!!beamMesh,paused:motionPaused,reduced:reducedMotion.matches,visible:!$('three').hidden&&!document.hidden,channel}));if(motionPaused&&beamMesh){beamMesh.material.uniforms.uTime.value=0;$('three').dataset.beamTime='0';}invalidate();};
 $('resetView').onclick=resetCamera;$('focusSelection').onclick=focusSelection;$('zoomIn').onclick=()=>changeZoom(1.25);$('zoomOut').onclick=()=>changeZoom(.8);$('toggleSidebar').onclick=()=>toggleSidebar();$('clearSelection').onclick=clearSelection;$('showSelection').onclick=()=>toggleSidebar(true);$('turnLeft').onclick=()=>turn(-Math.PI/12);$('turnRight').onclick=()=>turn(Math.PI/12);
 window.addEventListener('keydown',e=>{
  if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase(),editing=e.target.closest?.('input,textarea,select,button,a,summary,[contenteditable=true],[role=separator]');

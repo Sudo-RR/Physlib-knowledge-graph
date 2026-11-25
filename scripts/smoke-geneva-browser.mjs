@@ -18,10 +18,10 @@ const b=c.buildings.find(b=>b.declarationIds.length),record=production.declarati
 const server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),p=path.resolve(root,'.'+(u.pathname==='/'?'/index.html':decodeURIComponent(u.pathname)));if(!p.startsWith(root+path.sep))return res.writeHead(403).end();const body=await readFile(p);res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.json':'application/json','.css':'text/css'})[path.extname(p)]||'application/octet-stream'}).end(body);}catch{res.writeHead(404).end();}});
 await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port+'/';
 let browser,page;const errors=[],metrics={revision:production.model.source.revision,complexes:production.layout.sites.length,phases:[]};
-async function freshBrowser(){
+async function freshBrowser(reducedMotion='reduce'){
  if(browser){await browser.close();browser=null;page=null;}
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
- page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});page.setDefaultTimeout(90000);
+ page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion});page.setDefaultTimeout(90000);
  page.on('pageerror',e=>errors.push(e.message));page.on('console',msg=>{if(msg.type()==='error'&&/shader error|VALIDATE_STATUS|WebGLProgram|GL_INVALID/i.test(msg.text()))errors.push(msg.text());});
 }
 const phase=name=>{metrics.phases.push(name);console.log('Browser phase passed: '+name);};
@@ -42,17 +42,11 @@ try{
  const before=await frame();await page.waitForTimeout(1200);const after=await frame();
  metrics.idleFrames=after-before;metrics.drawCalls=Number(await page.locator('#three').getAttribute('data-draw-calls'));metrics.triangles=Number(await page.locator('#three').getAttribute('data-triangles'));assert(metrics.drawCalls>0&&metrics.triangles>0);assert(metrics.idleFrames<=2,'Reduced-motion renderer is continually redrawing');
  await page.locator('#togglePipes').click();assert.equal(await page.locator('#three').getAttribute('data-network-module-pipes'),'0');assert.equal(await page.locator('#map [data-network-channel]').count(),0);await page.locator('#togglePipes').click();assert(Number(await page.locator('#three').getAttribute('data-network-module-pipes'))>0);
- // Exercise both transitions and verify actual rendered frames, not just the media query.
- await page.emulateMedia({reducedMotion:'no-preference'});
- await page.waitForFunction(()=>document.querySelector('#three').dataset.beamAnimated==='true'&&Number(document.querySelector('#three').dataset.beamTime)>0);
- const beamTime=Number(await page.locator('#three').getAttribute('data-beam-time'));
- await page.waitForFunction(t=>Number(document.querySelector('#three').dataset.beamTime)>t,beamTime);
- const animatedFrame=await frame();
- await page.emulateMedia({reducedMotion:'reduce'});
- await page.waitForFunction(()=>matchMedia('(prefers-reduced-motion: reduce)').matches&&document.querySelector('#three').dataset.beamAnimated==='false'&&document.querySelector('#three').dataset.beamTime==='0');
- await page.waitForFunction(n=>Number(document.querySelector('#three').dataset.renderedFrames)>n,animatedFrame);
- const stoppedFrame=await frame();await page.waitForTimeout(1200);assert((await frame())-stoppedFrame<=2,'Reduced-motion did not stop beam animation');
- metrics.beamAnimation='verified advancing shader time, reset, static frame and idle';phase('default-on dependency network and reduced-motion transition');
+ // Static OS-reduced session verifies default network and zero animation.
+ assert.equal(await page.locator('#three').getAttribute('data-beam-renderer'),'overlay');
+ assert(await page.locator('#beamOverlay canvas').isVisible());assert.equal(await page.locator('#three').getAttribute('data-beam-animated'),'false');
+ await page.waitForFunction(()=>Number(document.querySelector('#three').dataset.beamFrames)>0);
+ phase('default-on network with reduced motion');
  await page.locator('#toggleSidebar').click();assert(await page.locator('#citySidebar').isVisible());const originalWidth=(await page.locator('#citySidebar').boundingBox()).width,canvasWidth=(await page.locator('#three canvas').boundingBox()).width;await page.locator('#expandSidebar').click();assert((await page.locator('#citySidebar').boundingBox()).width>originalWidth);assert.equal((await page.locator('#three canvas').boundingBox()).width,canvasWidth);await page.locator('#expandSidebar').click();await page.locator('#sidebarGrip').focus();await page.keyboard.press('ArrowLeft');assert((await page.locator('#citySidebar').boundingBox()).width>originalWidth);await page.locator('#searchSource').fill(c.id);await page.locator('#sourceList button').filter({hasText:c.id}).first().click();await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
  await page.waitForFunction(()=>JSON.parse(document.querySelector('#three').dataset.renderMetrics).detailedDistricts>0);
  assert.equal(Number(await page.locator('#three').getAttribute('data-role-markers')),c.buildings.length);assert.equal(await page.locator('#complexKey [data-role-target]').count(),c.buildings.length+1);assert(Number(await page.locator('#three').getAttribute('data-module-pipes'))>0);assert.equal(Number(await page.locator('#three').getAttribute('data-mathlib-pipes')),expectedUtility,'Selected complex utility links must match recorded direct imports, including zero');assert(await page.locator('#map [data-mathlib-station="active"]').count()>0);metrics.focus=await renderStats();assert.equal(metrics.focus.mode,'full');assert.equal(metrics.focus.coarseInstances,0);assert.equal(metrics.focus.lighting,'dusk');await screenshot('02-dusk-focus.png');
@@ -86,6 +80,22 @@ try{
  await page.locator('#plan').click();const vb=await page.locator('#map svg').getAttribute('viewBox');await page.locator('#zoomIn').click();assert.notEqual(await page.locator('#map svg').getAttribute('viewBox'),vb);await page.locator('#clearSelection').click();assert.equal(await page.locator('#map [data-selection]').getAttribute('visibility'),'hidden');assert(await page.locator('#citySidebar').isVisible(),'Global controls remain clickable with sidebar open');
  phase('legacy redirect, exact deep link, research and clear selection');
  await page.locator('#closeSidebar').click();await page.setViewportSize({width:390,height:844});await page.locator('#plan').click();assert(await page.locator('#map svg').isVisible());assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Mobile page overflows horizontally');await page.screenshot({path:path.join(out,'04-mobile.png'),fullPage:true,timeout:15000}).catch(e=>console.warn('Optional mobile screenshot unavailable:',e.message));
- phase('mobile navigation');assert.deepEqual(errors,[]);console.log('Browser regression passed',JSON.stringify(metrics));
+ phase('mobile navigation');
+ // Separate fresh motion-enabled context avoids changing CDP media settings
+ // mid-flight on a saturated software-WebGL browser. Exercise real controls.
+ await freshBrowser('no-preference');await page.goto(url,{waitUntil:'domcontentloaded'});await waitForCity();
+ await page.waitForFunction(()=>document.querySelector('#three').dataset.beamAnimated==='true'&&Number(document.querySelector('#three').dataset.beamFrames)>1);
+ const cityFrame=Number(await page.locator('#three').getAttribute('data-rendered-frames')),beamFrame=Number(await page.locator('#three').getAttribute('data-beam-frames')),beamTime=Number(await page.locator('#three').getAttribute('data-beam-time'));
+ await page.waitForFunction(({frame,time})=>Number(document.querySelector('#three').dataset.beamFrames)>frame&&Number(document.querySelector('#three').dataset.beamTime)>time,{frame:beamFrame,time:beamTime});
+ // City launch growth may still be finishing; wait for its idle baseline.
+ await page.waitForTimeout(1500);const staticCity=Number(await page.locator('#three').getAttribute('data-rendered-frames')),movingOverlay=Number(await page.locator('#three').getAttribute('data-beam-frames'));
+ await page.waitForFunction(n=>Number(document.querySelector('#three').dataset.beamFrames)>n,movingOverlay);
+ assert(Number(await page.locator('#three').getAttribute('data-rendered-frames'))-staticCity<=2,'Beam animation must not redraw city');
+ await page.locator('#pauseBeams').click();await page.waitForFunction(()=>document.querySelector('#three').dataset.beamAnimated==='false'&&document.querySelector('#three').dataset.beamTime==='0');
+ const paused=Number(await page.locator('#three').getAttribute('data-beam-frames'));await page.waitForTimeout(1500);assert(Number(await page.locator('#three').getAttribute('data-beam-frames'))-paused<=2,'Paused beam overlay must become idle');
+ await page.locator('#pauseBeams').click();await page.waitForFunction(n=>document.querySelector('#three').dataset.beamAnimated==='true'&&Number(document.querySelector('#three').dataset.beamFrames)>n,paused);
+ await page.locator('#togglePipes').click();assert(!(await page.locator('#beamOverlay').isVisible()));assert.equal(await page.locator('#three').getAttribute('data-network-module-pipes'),'0');
+ metrics.beamAnimation={initialCityFrame:cityFrame,initialBeamFrame:beamFrame,staticCityFrame:staticCity,movingOverlayFrame:movingOverlay,verified:'separate live overlay, pause/resume, toggle, static reduced-motion launch'};phase('isolated animated beam renderer and motion controls');
+ assert.deepEqual(errors,[]);console.log('Browser regression passed',JSON.stringify(metrics));
 }catch(e){if(page)await page.screenshot({path:path.join(out,'failure.png'),fullPage:true,timeout:10000}).catch(()=>{});throw e;}
 finally{await writeFile(path.join(out,'metrics.json'),JSON.stringify({...metrics,pageErrors:errors},null,2));if(browser)await browser.close();await new Promise(r=>server.close(r));}
