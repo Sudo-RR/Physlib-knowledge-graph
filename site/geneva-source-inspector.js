@@ -1,4 +1,5 @@
 // Exact recorded module imports and partial declaration inventory; no proof-edge claims.
+import {contributorPanel} from './geneva-contributor-panel.js';
 export function createSourceInspector({production,roleNames,subjectColors,onSelect,onFilter,onChannel}){
  const {model,layout,modulePaths,declarationLines}=production,$=id=>document.getElementById(id),byId=new Map(model.complexes.map(c=>[c.id,c])),revision=model.source.revision;
  const node=(tag,text,parent)=>{const e=document.createElement(tag);if(text!==null)e.textContent=text;if(parent)parent.append(e);return e;};
@@ -23,6 +24,7 @@ export function createSourceInspector({production,roleNames,subjectColors,onSele
   for(const e of edges){const item=details(e[other]+' · '+e.count+' imports',d);button('Focus target',item,()=>onSelect(e[other],null,true));for(const imp of e.imports){const row=node('div',null,item);link(imp.from,row,imp.line);node('span',' → ',row);link(imp.to,row);}}
  }
  const station=details('Mathlib station ('+c.mathlib.length+' unique imports)',panel);station.open=building===id+'::mathlib-station';for(const target of c.mathlib){const t=details(target.target,station);for(const m of target.sourceModules)link(m,node('div',null,t));}if(!c.mathlib.length)node('p','No recorded direct Mathlib imports.',station);
+ contributorPanel(panel,production,c,onSelect);
  renderList();
  }
  function filter(v){area=v;subject.value=v;onFilter(v);renderList();}
