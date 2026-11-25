@@ -23,6 +23,7 @@ try{
  const renderStats=()=>page.locator('#three').getAttribute('data-render-metrics').then(JSON.parse);
  const nextFrame=async action=>{const previous=await frame();await action();await page.waitForFunction(n=>Number(document.querySelector('#three').dataset.renderedFrames)>n,previous);return renderStats();};
  const adaptive=await renderStats();assert.equal(adaptive.mode,'auto');assert.equal(adaptive.detailedDistricts,0);assert(adaptive.coarseInstances>0);
+ assert.equal(await page.locator('header a[href="city-v2.html"]').count(),0);assert.equal(await page.locator('header a[href="city-c4.html"]').count(),0);assert(!/Lac Léman|RHÔNE|ARVE|La Jonction|Rive Droite|Rive Gauche|Outre-Arve/i.test(await page.locator('#map svg').textContent()));
  await page.screenshot({path:path.join(out,'01-overview.png')});
  const full=await nextFrame(()=>page.locator('#geometryMode').selectOption('full'));assert.equal(full.mode,'full');assert(full.detailedInstances>0);assert.equal(full.coarseInstances,0);
  await page.screenshot({path:path.join(out,'05-overview-full.png')});
@@ -35,6 +36,8 @@ try{
  await page.waitForFunction(()=>JSON.parse(document.querySelector('#three').dataset.renderMetrics).detailedDistricts>0);
  metrics.lod.focus=await renderStats();assert(metrics.lod.focus.detailedInstances>0);assert(metrics.lod.focus.coarseInstances>0,'Focused view should retain simplified distant districts');
  await page.screenshot({path:path.join(out,'06-focus-adaptive.png')});
+ assert.equal(await page.locator('#map [data-selection]').getAttribute('visibility'),'visible');
+ await page.locator('#toggleInspector').click();assert(!(await page.locator('#cityInspector').isVisible()));await page.locator('#toggleInspector').click();assert(await page.locator('#cityInspector').isVisible());
  await page.locator('#declarationBrowser > summary').click();await page.locator('#declModule').selectOption(record.module);await page.locator('#declKind').selectOption(record.kind);await page.locator('#declQuery').fill(record.name);assert(await page.locator('#declResults a').filter({hasText:record.name}).count()>0);
  await page.locator('#declQuery').fill('___no_such_command___');assert((await page.locator('#declCount').innerText()).startsWith('0 recorded'));await page.locator('#declQuery').fill('');
  assert.equal(production.evidence.revision,production.model.source.revision);assert(Object.keys(production.evidence.activity).length>0);
@@ -48,8 +51,9 @@ try{
  const samples=[];for(let i=0;i<6;i++){const t=Date.now();const s=await nextFrame(()=>page.keyboard.press(i%2?'ArrowLeft':'ArrowRight'));samples.push({wallMs:Date.now()-t,cpuRenderMs:s.cpuRenderMs,triangles:s.triangles,drawCalls:s.drawCalls});}metrics.lod.navigationSamples=samples;
  await page.locator('#dusk').click();await page.screenshot({path:path.join(out,'02-focus-dusk.png')});
  await page.locator('#plan').click();assert(await page.locator('#map svg').isVisible());await page.screenshot({path:path.join(out,'03-flat-plan.png')});await page.locator('#north').click();
- await page.goto(url+'?complex='+encodeURIComponent(c.id)+'&building='+encodeURIComponent(b.id));await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
+ await page.goto(url+'city-v2.html?complex='+encodeURIComponent(c.id)+'&building='+encodeURIComponent(b.id));await page.waitForURL(u=>u.pathname.endsWith('/index.html'));await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
  await page.locator('#researchTools > summary').click();await page.locator('#researchQuery').fill(record.module);await page.locator('#locateResearchModule').click();assert((await page.locator('#researchStatus').innerText()).includes('Exact current module ID'));
+ await page.locator('#plan').click();const vb=await page.locator('#map svg').getAttribute('viewBox');await page.locator('#zoomIn').click();assert.notEqual(await page.locator('#map svg').getAttribute('viewBox'),vb);await page.locator('#clearSelection').click();assert.equal(await page.locator('#map [data-selection]').getAttribute('visibility'),'hidden');
  await page.setViewportSize({width:390,height:844});await page.locator('#plan').click();assert(await page.locator('#map svg').isVisible());assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Mobile page overflows horizontally');await page.screenshot({path:path.join(out,'04-mobile.png'),fullPage:true});
  assert.deepEqual(errors,[]);console.log('Browser regression passed',JSON.stringify(metrics));
 }catch(e){if(page)await page.screenshot({path:path.join(out,'failure.png'),fullPage:true}).catch(()=>{});throw e;}

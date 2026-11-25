@@ -31,15 +31,8 @@ for(const file of ['style.css','city.css']){
   await writeFile(path.join(root,name),data);
 }
 await writeFile(path.join(root,'city-c4.html'),html.replaceAll('href="index.html"','href="city-c4.html"'));
- // Retain the source-backed City v2 as a separate explorer.
- const v2Bundle=await readFile(path.join(workspace,'site','assets','city-v2-bundle.js'));
- const v2Hash=createHash('sha256').update(v2Bundle).digest('hex').slice(0,12);
- const v2Name=`city-v2-bundle.${v2Hash}.js`;
- await writeFile(path.join(root,'assets',v2Name),v2Bundle);
- let v2Html=await readFile(path.join(workspace,'site','city-v2.html'),'utf8');
- if(!v2Html.includes('assets/city-v2-bundle.js'))throw Error('City v2 bundle reference missing');
- v2Html=v2Html.replace('assets/city-v2-bundle.js',`assets/${v2Name}`);
- await writeFile(path.join(root,'city-v2.html'),v2Html);
+// The old v2 route is a compatibility redirect, not a second UI.
+await writeFile(path.join(root,'city-v2.html'),'<!doctype html><meta charset="utf-8"><title>PhysLib City</title><script>location.replace("index.html"+location.search+location.hash)</script><a href="index.html">Open PhysLib City</a>');
 
 // User-approved G1 landing page; retain its explicit URL as an alias.
 const g1Bundle=await readFile(path.join(workspace,'site','assets','geneva-g1-bundle.js'));
@@ -50,7 +43,7 @@ if(!g1Html.includes('assets/geneva-g1-bundle.js'))throw Error('G1 bundle referen
 const landingHtml=g1Html.replace('assets/geneva-g1-bundle.js','assets/'+g1Name);
 await writeFile(path.join(root,'geneva-g1.html'),landingHtml);
 await writeFile(path.join(root,'index.html'),landingHtml);
-if(!landingHtml.includes('href="city-v2.html"')||!v2Html.includes('href="city-c4.html"'))throw Error('Missing source explorer or legacy fallback navigation');
+if(landingHtml.includes('href="city-v2.html"')||landingHtml.includes('href="city-c4.html"'))throw Error('Obsolete explorer exposed in primary navigation');
 
 // Optional declaration snapshots are included only when deliberately generated.
 for(const file of ['declarations.json','city-declarations.json','geneva-history.json','geneva-elaborated.json']) {

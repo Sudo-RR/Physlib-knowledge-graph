@@ -17,11 +17,11 @@ const $=id=>document.getElementById(id),p=masterplan(),metrics=validatePlan(p),p
 let production=null;
 if(!study){
  try{const r=await fetch('data/geneva-production.json',{cache:'no-cache'});if(!r.ok)throw Error('Snapshot HTTP '+r.status);production=await r.json();if(production.layout?.version!=='geneva-source-1'||production.model?.source?.revision!==production.layout?.source?.revision||!production.layout.sites.length)throw Error('Invalid source layout snapshot');}
- catch(e){$('status').textContent='Source city unavailable: '+e.message+'. Open the source explorer or the architectural study.';throw e;}
+ catch(e){$('status').textContent='Source city unavailable: '+e.message+'. Reload the indexed city or open the architectural study.';throw e;}
 }
 const layout=production?.layout,model=production?.model;
 let selectedId=null,selectedBuilding=null,channel='both',filter='all',zoom=1,focusX=0,focusZ=0,dependencyGroup=null,sourceUI=null;
-const siteById=new Map((layout?.sites||[]).map(t=>[t.id,t])),buildingById=new Map((layout?.buildings||[]).map(t=>[t.id,t]));
+const siteById=new Map((layout?.sites||[]).map(t=>[t.id,t])),buildingById=new Map([...(layout?.buildings||[]),...(layout?.stations||[])].map(t=>[t.id,t]));
 const semanticMeshes=[],subjectSprites=[],mapParts=[],lodMeshes=[];
 let geometryMode=study?'full':'auto';
 $('geometryMode').value=geometryMode;
@@ -32,7 +32,7 @@ let redrawVersion=0,renderedFrames=0,quality='medium';const invalidate=()=>{redr
 
 const ns='http://www.w3.org/2000/svg',el=(tag,attrs={},parent)=>{const e=document.createElementNS(ns,tag);for(const [k,v] of Object.entries(attrs))e.setAttribute(k,v);if(parent)parent.append(e);return e;};
 const pts=p=>p.map(v=>v.join(',')).join(' ');
-const svg=el('svg',{viewBox:'-30 -30 1060 860',role:'img','aria-label':'Geneva masterplan with lake, Rhône, Arve and three library banks'},$('map'));
+const svg=el('svg',{viewBox:'-30 -30 1060 860',role:'img','aria-label':'PhysLib city plan with three library districts'},$('map'));
 el('rect',{x:-30,y:-30,width:1060,height:860,fill:'#788582'},svg);
 for(const s of p.sectors)el('polygon',{points:pts(s.polygon),fill:'#a9afb1'},svg);
 el('polygon',{points:pts(p.water),fill:'#426f81'},svg);
@@ -53,18 +53,29 @@ const roofPalette=['#b8b8b8','#b9c1c8','#87959c','#a0a0a0','#e8e8e8'];
 const massing2d=el('g',{'aria-label':'Illustrative tower massing'},svg);
 for(const t of towers){const g=el('g',{transform:'translate('+t.x+' '+t.z+') rotate('+(-t.angle*180/Math.PI)+')'},massing2d);el('rect',{x:-t.w*.5+3,y:-t.d*.5+4,width:t.w,height:t.d,fill:'#323b43',opacity:.25},g);el('rect',{x:-t.w/2,y:-t.d/2,width:t.w,height:t.d,fill:t.color||roofPalette[t.style],stroke:'#43594c','stroke-width':.6},g);el('rect',{x:-t.w*.23,y:-t.d*.24,width:t.w*.46,height:t.d*.48,fill:'#e8e8e8'},g);if(t.id){g.style.cursor='pointer';g.addEventListener('click',()=>selectComplex(t.complexId,t.id));mapParts.push({element:g,area:t.area});const title=el('title',{},g);title.textContent=t.id;}}
 for(const t of layout?.stations||[]){const g=el('rect',{x:t.x-t.w/2,y:t.z-t.d/2,width:t.w,height:t.d,fill:'#3ce4d5',stroke:'#22363a','stroke-width':.4},massing2d);g.style.cursor='pointer';g.addEventListener('click',()=>selectComplex(t.complexId,t.id));mapParts.push({element:g,area:t.area});}
+const selection2d=el('ellipse',{'pointer-events':'none',fill:'none',stroke:'#ff9b41','stroke-width':2.5,'data-selection':'active',visibility:'hidden'},svg);
 const evidenceDots=[];const evidenceLayer=el('g',{'pointer-events':'none','aria-hidden':'true'},svg);
 for(const [id,t] of tallest){const dot=el('circle',{cx:t.x,cy:t.z,r:Math.max(2,Math.min(4,t.w*.32)),stroke:'#26313a','stroke-width':.8,'data-evidence':id},evidenceLayer);evidenceDots.push({id,area:t.area,dot});}
 evidenceLayer.style.display='none';
 const labelGroup=el('g',{'font-family':'system-ui, sans-serif'},svg);
 function label(x,y,txt,sub='',water=false){const g=el('g',{transform:'translate('+x+' '+y+')'},labelGroup);const t=el('text',{'text-anchor':'middle','font-size':water?23:29,'font-weight':water?500:700,fill:water?'#f0f4f4':'#202c34','paint-order':'stroke',stroke:water?'#426f81':'#a9afb1','stroke-width':3},g);t.textContent=txt;if(sub){const s=el('text',{y:24,'text-anchor':'middle','font-size':17,fill:'#34424b','paint-order':'stroke',stroke:'#a9afb1','stroke-width':2},g);s.textContent=sub;}}
-for(const s of p.sectors)label(...s.label,s.name.toUpperCase(),s.id);
-label(...p.anchors.lake,'Lac Léman','',true);
-for(const b of layout?.boroughs||[]){const t=el('text',{x:b.x,y:b.z,'text-anchor':'middle','font-size':10,'font-weight':700,fill:b.color,stroke:'#19232b','stroke-width':2.5,'paint-order':'stroke'},labelGroup);t.textContent=b.area.replace(/([a-z])([A-Z])/g,'$1 $2');mapParts.push({element:t,area:b.area});}label(424,374,'RHÔNE','',true);label(747,632,'ARVE','',true);
-el('path',{d:'M130 552 L220 446',stroke:'#34424b','stroke-width':1.6,fill:'none'},labelGroup);label(105,572,'La Jonction');
+for(const s of p.sectors)label(...s.label,s.id);
+for(const b of layout?.boroughs||[]){const t=el('text',{x:b.x,y:b.z,'text-anchor':'middle','font-size':10,'font-weight':700,fill:b.color,stroke:'#19232b','stroke-width':2.5,'paint-order':'stroke'},labelGroup);t.textContent=b.area.replace(/([a-z])([A-Z])/g,'$1 $2');mapParts.push({element:t,area:b.area});}
 el('path',{d:'M953 746V704L944 720M953 704L962 720',fill:'none',stroke:'#202c34','stroke-width':3},labelGroup);const north=el('text',{x:953,y:692,'text-anchor':'middle','font-size':18,fill:'#202c34'},labelGroup);north.textContent='N';
 $('status').textContent=VERSION+' · '+(metrics.waterShare*100).toFixed(1)+'% water · '+metrics.bridges+' bridges · '+civic.infill.length+' civic buildings · '+civic.trees.length+' trees';
-let scene,camera,renderer,hemi,sun,rotating=false,yaw=0,labels=true,observer,frame,viewMode='north',massGroup,started=0;
+let scene,camera,renderer,hemi,sun,rotating=false,yaw=0,labels=true,observer,frame,viewMode='north',massGroup,selection3d,started=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function pan(dx,dz){focusX=clamp(focusX+dx,-600,600);focusZ=clamp(focusZ+dz,-500,500);updatePlanCamera();invalidate();}
+function changeZoom(factor){zoom=clamp(zoom*factor,.75,9);updatePlanCamera();invalidate();}
+function updatePlanCamera(){const w=1060/zoom,h=860/zoom;svg.setAttribute('viewBox',`${500+focusX-w/2} ${400+focusZ-h/2} ${w} ${h}`);}
+function toggleInspector(show){const aside=$('cityInspector');const next=show??aside.hidden;aside.hidden=!next;document.body.classList.toggle('hide-inspector',!next);$('toggleInspector').setAttribute('aria-expanded',String(next));invalidate();}
+function updateSelection(){const t=buildingById.get(selectedBuilding)||siteById.get(selectedId);selection2d.setAttribute('visibility',t?'visible':'hidden');if(t){selection2d.setAttribute('cx',t.x);selection2d.setAttribute('cy',t.z);selection2d.setAttribute('rx',t.w*.65+1);selection2d.setAttribute('ry',t.d*.65+1);}if(selection3d){selection3d.visible=!!t;if(t){selection3d.position.set(t.x-500,.65,t.z-400);selection3d.scale.set(t.w*.65+1,t.d*.65+1,1);}}$('selectionStatus').textContent=t?(selectedBuilding===selectedId+'::mathlib-station'?'Mathlib station · ':selectedBuilding?'Building · ':'Complex · ')+selectedId:'No selection';invalidate();}
+function clearSelection(){selectedId=selectedBuilding=null;sourceUI?.clear();const url=new URL(location.href);url.searchParams.delete('complex');url.searchParams.delete('building');history.replaceState(null,'',url);updateSelection();drawDependencies();}
+function focusSelection(){if(selectedId)selectComplex(selectedId,selectedBuilding,true);else{zoom=4;updatePlanCamera();invalidate();}}
+function resetCamera(){focusX=focusZ=0;zoom=1;updatePlanCamera();mode('north');}
+function installDrag(target,move){let start=null,dragged=false;target.style.touchAction='none';target.addEventListener('pointerdown',e=>{if(e.button!==0||!e.isPrimary)return;start={id:e.pointerId,x:e.clientX,y:e.clientY,originX:e.clientX,originY:e.clientY};dragged=false;});target.addEventListener('pointermove',e=>{if(!start||start.id!==e.pointerId)return;if(!dragged&&Math.hypot(e.clientX-start.originX,e.clientY-start.originY)<6)return;if(!dragged){dragged=true;target.setPointerCapture(e.pointerId);target.style.cursor='grabbing';}move(e.clientX-start.x,e.clientY-start.y);start.x=e.clientX;start.y=e.clientY;});const finish=()=>{start=null;target.style.cursor='grab';};target.addEventListener('pointerup',finish);target.addEventListener('pointercancel',finish);target.addEventListener('click',e=>{if(dragged){dragged=false;e.preventDefault();e.stopImmediatePropagation();}},true);target.style.cursor='grab';}
+installDrag(svg,(dx,dy)=>{const rect=svg.getBoundingClientRect(),scale=Math.min(rect.width/1060,rect.height/860)*zoom;pan(-dx/scale,-dy/scale);});
+svg.addEventListener('wheel',e=>{e.preventDefault();changeZoom(Math.exp(-e.deltaY*.001));},{passive:false});
 function init3D(){
  if(renderer)return;
  const host=$('three');scene=new THREE.Scene();scene.background=new THREE.Color('#b9c8ce');
@@ -132,6 +143,7 @@ function init3D(){
   lodStats={mode:geometryMode,detailedDistricts:plan.detail.size,detailedInstances:detailed,coarseInstances:coarse,civicDetail:plan.civicDetail,pixelsPerUnit};return lodStats;
  }
  dependencyGroup=new THREE.Group();scene.add(dependencyGroup);
+ selection3d=new THREE.Mesh(new THREE.RingGeometry(.90,1,48),new THREE.MeshBasicMaterial({color:'#ff9b41',side:THREE.DoubleSide,depthTest:false}));selection3d.rotation.x=-Math.PI/2;selection3d.renderOrder=6;scene.add(selection3d);updateSelection();
  if(production){
   const byArea=new Map();for(const [id,t] of tallest){if(!byArea.has(t.area))byArea.set(t.area,[]);byArea.get(t.area).push({id,t});}
   const geometry=new THREE.SphereGeometry(1,8,6),material=new THREE.MeshBasicMaterial({color:'#ffffff'}),marker=new THREE.Object3D();
@@ -140,7 +152,7 @@ function init3D(){
  }
  started=performance.now();if(!matchMedia('(prefers-reduced-motion: reduce)').matches)massGroup.scale.y=.02;
  function sprite(text,sub,x,z){const c=document.createElement('canvas');c.width=1024;c.height=200;const g=c.getContext('2d');g.textAlign='center';g.font='bold 64px sans-serif';g.fillStyle='#263640';g.fillText(text,512,80);g.font='40px sans-serif';g.fillText(sub,512,138);const o=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));o.position.copy(world(x,z,112));o.scale.set(220,43,1);o.userData.isLabel=true;scene.add(o);return o;}
- for(const s of p.sectors)sprite(s.name,s.id,...s.label);sprite('Lac Léman','',...p.anchors.lake);sprite('La Jonction','',175,505);
+ for(const s of p.sectors)sprite(s.id,'',...s.label);
  for(const b of layout?.boroughs||[]){const o=sprite(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),'',b.x,b.z);o.scale.set(105,21,1);o.position.y=92;o.userData.area=b.area;subjectSprites.push(o);}
  camera=new THREE.OrthographicCamera(-650,650,550,-550,1,6000);renderer=new THREE.WebGLRenderer({antialias:true});renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1;host.append(renderer.domElement);renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','3D city. Arrow keys pan, plus and minus zoom, Home resets. Use source explorer for keyboard selection.');
  function resize(){const w=Math.max(1,host.clientWidth),h=Math.max(1,host.clientHeight);const aspect=w/h,half=Math.max(520,570/aspect);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();renderer.setSize(w,h,false);invalidate();}
@@ -160,7 +172,7 @@ function init3D(){
     const lod=updateLod(),renderStart=performance.now();renderer.render(scene,camera);const cpuRenderMs=performance.now()-renderStart;renderedFrames++;
     host.dataset.drawCalls=String(renderer.info.render.calls);host.dataset.triangles=String(renderer.info.render.triangles);
     host.dataset.renderMetrics=JSON.stringify({...lod,cpuRenderMs,pixelRatio:renderer.getPixelRatio(),geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures,canvasWidth:renderer.domElement.width,canvasHeight:renderer.domElement.height,drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles});
-    host.dataset.renderedFrames=String(renderedFrames);
+    host.dataset.cameraPose=JSON.stringify({focusX,focusZ,zoom,viewMode});host.dataset.renderedFrames=String(renderedFrames);
     lastKey=key;lastVersion=redrawVersion;
    }
   }
@@ -168,29 +180,25 @@ function init3D(){
  }
  frame=requestAnimationFrame(draw);
  document.addEventListener('visibilitychange',invalidate);
- renderer.domElement.addEventListener('keydown',e=>{
-  const step=35/zoom,a=viewMode==='north'?0:yaw,dx=Math.cos(a),dz=-Math.sin(a);let handled=true;
-  switch(e.key){case 'ArrowLeft':focusX-=step*dx;focusZ-=step*dz;break;case 'ArrowRight':focusX+=step*dx;focusZ+=step*dz;break;case 'ArrowUp':focusX-=step*Math.sin(a);focusZ-=step*Math.cos(a);break;case 'ArrowDown':focusX+=step*Math.sin(a);focusZ+=step*Math.cos(a);break;case '+':case '=':zoom=Math.min(9,zoom*1.2);break;case '-':zoom=Math.max(.75,zoom/1.2);break;case 'Home':focusX=focusZ=0;zoom=1;break;default:handled=false;}
-  if(handled){e.preventDefault();focusX=Math.max(-600,Math.min(600,focusX));focusZ=Math.max(-500,Math.min(500,focusZ));invalidate();}
- });
+ installDrag(renderer.domElement,(dx,dy)=>{const scale=(camera.top-camera.bottom)/Math.max(1,host.clientHeight)/zoom,a=viewMode==='north'?0:yaw,pitch=viewMode==='north'?Math.PI*.35:Math.PI*.19;pan(-dx*scale*Math.cos(a)-dy*scale*Math.sin(a)/Math.sin(pitch),dx*scale*Math.sin(a)-dy*scale*Math.cos(a)/Math.sin(pitch));});
  $('quality').onchange=()=>{quality=$('quality').value;renderer.setPixelRatio(Math.min(devicePixelRatio,{low:1,medium:1.5,high:2}[quality]||1.5));resize();};
  $('geometryMode').onchange=()=>{geometryMode=$('geometryMode').value;invalidate();};
 
  const ray=new THREE.Raycaster(),pointer=new THREE.Vector2();
  renderer.domElement.addEventListener('click',e=>{if(!production)return;const r=renderer.domElement.getBoundingClientRect();pointer.set((e.clientX-r.left)/r.width*2-1,-(e.clientY-r.top)/r.height*2+1);ray.setFromCamera(pointer,camera);for(const hit of ray.intersectObjects(semanticMeshes.filter(m=>m.visible),false)){const id=hit.object.userData.ids[hit.instanceId];if(id){selectComplex(id.complexId,id.id);break;}}});
- renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();zoom=Math.max(.75,Math.min(9,zoom*Math.exp(-e.deltaY*.001)));},{passive:false});
+ renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();changeZoom(Math.exp(-e.deltaY*.001));},{passive:false});
  window.addEventListener('pagehide',()=>{cancelAnimationFrame(frame);observer.disconnect();surfaces.concrete.dispose();surfaces.asphalt.dispose();renderer.dispose();},{once:true});
 }
-function mode(next){invalidate();viewMode=next;const three=next!=='plan';$('map').hidden=three;$('three').hidden=!three;for(const k of ['north','plan','oblique'])$(k).setAttribute('aria-pressed',String(k===next));$('rotate').hidden=next!=='oblique';rotating=false;$('rotate').setAttribute('aria-pressed','false');if(next==='oblique')yaw=.65;if(three){try{init3D();}catch(e){viewMode='plan';$('three').hidden=true;$('map').hidden=false;$('north').setAttribute('aria-pressed','false');$('plan').setAttribute('aria-pressed','true');$('oblique').setAttribute('aria-pressed','false');$('rotate').hidden=true;$('three').dataset.error=e.message;$('status').textContent='3D unavailable: '+e.message+' — north-up plan remains available.';}}}
+function mode(next){invalidate();viewMode=next;updatePlanCamera();const three=next!=='plan';$('map').hidden=three;$('three').hidden=!three;for(const k of ['north','plan','oblique'])$(k).setAttribute('aria-pressed',String(k===next));$('rotate').hidden=next!=='oblique';rotating=false;$('rotate').setAttribute('aria-pressed','false');if(next==='oblique')yaw=.65;if(three){try{init3D();}catch(e){viewMode='plan';$('three').hidden=true;$('map').hidden=false;$('north').setAttribute('aria-pressed','false');$('plan').setAttribute('aria-pressed','true');$('oblique').setAttribute('aria-pressed','false');$('rotate').hidden=true;$('three').dataset.error=e.message;$('status').textContent='3D unavailable: '+e.message+' — north-up plan remains available.';}}}
 $('north').onclick=()=>mode('north');$('plan').onclick=()=>mode('plan');$('oblique').onclick=()=>mode('oblique');$('labels').onclick=()=>{labels=!labels;labelGroup.style.display=labels?'':'none';$('labels').setAttribute('aria-pressed',String(labels));};$('rotate').onclick=()=>{rotating=!rotating;$('rotate').setAttribute('aria-pressed',String(rotating));};
 function selectComplex(id,building=null,focus=false){
  if(!production||!siteById.has(id))return;
  const site=siteById.get(id);
  if(filter!=='all'&&filter!==site.area)sourceUI?.filter('all');
- selectedId=id;selectedBuilding=building;sourceUI?.inspect(id,building);
+ selectedId=id;selectedBuilding=buildingById.get(building)?.complexId===id?building:null;building=selectedBuilding;toggleInspector(true);sourceUI?.inspect(id,building);updateSelection();
  const url=new URL(location.href);url.searchParams.set('complex',id);if(building)url.searchParams.set('building',building);else url.searchParams.delete('building');
  if(url.href!==location.href)history.replaceState(null,'',url);
- if(focus){const t=siteById.get(id);focusX=t.x-500;focusZ=t.z-400;zoom=4;mode('north');}
+ if(focus){const t=buildingById.get(building)||siteById.get(id);focusX=t.x-500;focusZ=t.z-400;zoom=building?6:4;updatePlanCamera();invalidate();}
  drawDependencies();
 }
 function drawDependencies(){
@@ -223,7 +231,8 @@ function updateEvidence(){
 function setFilter(value){filter=value;for(const m of mapParts)m.element.style.display=value==='all'||m.area===value?'':'none';updateEvidence();drawDependencies();}
 function setDusk(on){invalidate();if(!scene)return;scene.background.set(on?'#273849':'#b9c8ce');hemi.intensity=on?.65:1.65;sun.intensity=on?.65:2.35;renderer.toneMappingExposure=on?1.18:1;}
 mode('north');
-$('resetView').onclick=()=>{focusX=focusZ=0;zoom=1;mode('north');};
+$('resetView').onclick=resetCamera;$('focusSelection').onclick=focusSelection;$('zoomIn').onclick=()=>changeZoom(1.25);$('zoomOut').onclick=()=>changeZoom(.8);$('toggleInspector').onclick=()=>toggleInspector();$('clearSelection').onclick=clearSelection;
+window.addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase(),editing=e.target.matches?.('input,textarea,select,button,a,summary,[contenteditable=true]');if(editing&&k!=='escape')return;const step=35/zoom,a=viewMode==='oblique'?yaw:0;let used=true;switch(k){case 'a':case 'arrowleft':pan(-step*Math.cos(a),step*Math.sin(a));break;case 'd':case 'arrowright':pan(step*Math.cos(a),-step*Math.sin(a));break;case 'w':case 'arrowup':pan(-step*Math.sin(a),-step*Math.cos(a));break;case 's':case 'arrowdown':pan(step*Math.sin(a),step*Math.cos(a));break;case '+':case '=':changeZoom(1.2);break;case '-':changeZoom(1/1.2);break;case 'm':case 'home':resetCamera();break;case 'f':focusSelection();break;case 'i':toggleInspector();break;case '/':if(production){toggleInspector(true);$('searchSource').focus();}break;case 'escape':clearSelection();document.activeElement?.blur();break;case '1':case '2':case '3':if(production){const v=k==='1'?'out':k==='2'?'in':'mathlib';$('channels').value=v;channel=v;if(k==='3'&&selectedId)selectComplex(selectedId,selectedId+'::mathlib-station',true);drawDependencies();}break;default:used=false;}if(used)e.preventDefault();});
 $('dusk').onclick=()=>{const on=$('dusk').getAttribute('aria-pressed')!=='true';$('dusk').setAttribute('aria-pressed',String(on));setDusk(on);};
 if(production){
  sourceUI=createSourceInspector({production,roleNames,subjectColors,onSelect:(id,b,focus)=>selectComplex(id,b,focus),onFilter:setFilter,onChannel:v=>{channel=v;drawDependencies();}});
@@ -231,7 +240,7 @@ if(production){
  setupResearchSearch(production,(id,b,focus)=>selectComplex(id,b,focus));
  $('historyTools').addEventListener('toggle',()=>{if($('historyTools').open&&!$('historyTools').dataset.loaded){$('historyTools').dataset.loaded='true';setupHistory(production);}});
  $('status').textContent=($('three').dataset.error?'3D unavailable; flat plan active · ':'')+layout.version+' · '+layout.sites.length+' source complexes · '+layout.buildings.length+' role buildings · '+layout.boroughs.length+' boroughs · '+model.source.revision.slice(0,12);
- $('caption').textContent='Click a coloured source building or cyan Mathlib station. Neutral buildings are civic scenery. Scroll to zoom; focus the canvas and use arrows / + / − / Home. Source inspector supports keyboard selection.';
+ $('caption').textContent='Click a coloured source building or cyan Mathlib station. Neutral buildings are civic scenery. Drag to pan · wheel or +/− to zoom · WASD/arrows to move · F focus · I inspector · / search · 1/2/3 dependency channels · Esc clear.';
  const area=params.get('area');if(area&&model.areas.includes(area)){ $('subject').value=area;sourceUI.filter(area);}
  const initial=params.get('complex'),building=params.get('building');if(initial&&siteById.has(initial)){const valid=buildingById.get(building)?.complexId===initial||building===initial+'::mathlib-station';selectComplex(initial,valid?building:null,true);}
 }else{
