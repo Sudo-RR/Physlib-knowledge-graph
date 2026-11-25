@@ -40,14 +40,14 @@ export function createBeamNetwork(rows,{selected=false}={}){
   const curve=beamCurve(row),points=curve.getSpacedPoints(segments),length=curve.getLength(),p=seed(row.id),color=new THREE.Color(channels[row.key]),base=position.length/3;
   for(let i=0;i<=segments;i++){
    const direction=points[Math.min(segments,i+1)].clone().sub(points[Math.max(0,i-1)]).normalize();
-   for(const sign of [-1,1]){position.push(...points[i].toArray());tangent.push(...direction.toArray());side.push(sign);distance.push(i/segments*length);phase.push(p);tint.push(color.r,color.g,color.b);strength.push(row.focused?1:selected?.27:row.utility?.56:.43);width.push(row.focused?8:row.utility?5.5:6.2);}
+   for(const sign of [-1,1]){position.push(...points[i].toArray());tangent.push(...direction.toArray());side.push(sign);distance.push(i/segments*length);phase.push(p);tint.push(color.r,color.g,color.b);strength.push(row.focused?.95:selected?.10:row.utility?.48:.24);width.push(row.focused?6.5:row.utility?3.8:3.4);}
    if(i<segments){const a=base+i*2;indices.push(a,a+1,a+2,a+1,a+3,a+2);}
   }
  }
  const geo=new THREE.BufferGeometry();
  for(const [name,values,size] of [['position',position,3],['beamTangent',tangent,3],['beamSide',side,1],['beamDistance',distance,1],['beamPhase',phase,1],['beamTint',tint,3],['beamStrength',strength,1],['beamWidth',width,1]])geo.setAttribute(name,new THREE.Float32BufferAttribute(values,size));
  geo.setIndex(indices);geo.computeBoundingSphere();
- const mat=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},uResolution:{value:new THREE.Vector2(1,1)}},transparent:true,blending:THREE.AdditiveBlending,depthWrite:false,depthTest:true,side:THREE.DoubleSide,toneMapped:false,
+ const mat=new THREE.ShaderMaterial({uniforms:{uTime:{value:0},uResolution:{value:new THREE.Vector2(1,1)}},transparent:true,blending:THREE.NormalBlending,depthWrite:false,depthTest:true,side:THREE.DoubleSide,toneMapped:false,
  vertexShader:`
  attribute vec3 beamTangent;attribute float beamSide,beamDistance,beamPhase,beamStrength,beamWidth;attribute vec3 beamTint;
  uniform vec2 uResolution;
@@ -66,12 +66,12 @@ export function createBeamNetwork(rows,{selected=false}={}){
   float across=abs(vSide);
   float pulse=fract(vDistance/78.0-uTime*0.68+vPhase);
   float head=exp(-pow((pulse-.72)*12.0,2.0));
-  float tail=exp(-pow((pulse-.57)*3.6,2.0))*smoothstep(.05,.3,pulse);
+  float tail=exp(-pow((pulse-.57)*7.0,2.0))*smoothstep(.05,.3,pulse);
   float signal=clamp(head+tail*.50,0.0,1.0);
   float core=exp(-across*across*45.0);
   float halo=exp(-across*across*5.5)*(1.0-smoothstep(.72,1.0,across));
   vec3 rgb=mix(vTint,vec3(1.0,.98,.95),core*(.32+.68*signal));
-  float alpha=(core*(.24+.76*signal)+halo*(.13+.53*signal))*vStrength;
+  float alpha=(core*(.19+.81*signal)+halo*(.045+.28*signal))*vStrength;
   gl_FragColor=vec4(rgb,clamp(alpha,0.0,1.0));
   #include <colorspace_fragment>
  }`});
