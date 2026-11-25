@@ -21,7 +21,7 @@ if(!study){
  catch(e){$('status').textContent='Source city unavailable: '+e.message+'. Reload the indexed city or open the architectural study.';throw e;}
 }
 const layout=production?.layout,model=production?.model;
-let selectedId=null,selectedBuilding=null,channel='both',filter='all',zoom=1,focusX=0,focusZ=0,dependencyGroup=null,sourceUI=null;
+let selectedId=null,selectedBuilding=null,selectedDeclaration=null,channel='both',filter='all',zoom=1,focusX=0,focusZ=0,dependencyGroup=null,sourceUI=null;
 const siteById=new Map((layout?.sites||[]).map(t=>[t.id,t])),buildingById=new Map([...(layout?.buildings||[]),...(layout?.stations||[])].map(t=>[t.id,t]));
 const semanticMeshes=[],subjectSprites=[],mapParts=[],lodMeshes=[];
 const geometryMode='full';
@@ -53,6 +53,7 @@ const roofPalette=['#b8b8b8','#b9c1c8','#87959c','#a0a0a0','#e8e8e8'];
 const massing2d=el('g',{'aria-label':'Illustrative tower massing'},svg);
 for(const t of towers){const g=el('g',{transform:'translate('+t.x+' '+t.z+') rotate('+(-t.angle*180/Math.PI)+')'},massing2d);el('rect',{x:-t.w*.5+3,y:-t.d*.5+4,width:t.w,height:t.d,fill:'#323b43',opacity:.25},g);el('rect',{x:-t.w/2,y:-t.d/2,width:t.w,height:t.d,fill:t.color||roofPalette[t.style],stroke:'#43594c','stroke-width':.6},g);el('rect',{x:-t.w*.23,y:-t.d*.24,width:t.w*.46,height:t.d*.48,fill:'#e8e8e8'},g);if(t.id){g.style.cursor='pointer';g.dataset.mapBuilding=t.id;g.addEventListener('click',()=>enterFromMap(t.complexId,t.id));mapParts.push({element:g,area:t.area});const title=el('title',{},g);title.textContent=t.id;}}
 for(const t of layout?.stations||[]){const g=el('rect',{x:t.x-t.w/2,y:t.z-t.d/2,width:t.w,height:t.d,fill:'#3ce4d5',stroke:'#22363a','stroke-width':.4},massing2d);g.style.cursor='pointer';g.dataset.mapBuilding=t.id;g.addEventListener('click',()=>enterFromMap(t.complexId,t.id));mapParts.push({element:g,area:t.area});}
+const declarationMapLayer=el('g',{'pointer-events':'none','data-declaration-links':'true'},svg);
 const selection2d=el('ellipse',{'pointer-events':'none',fill:'none',stroke:'#ff9b41','stroke-width':2.5,'data-selection':'active',visibility:'hidden'},svg);
 const evidenceDots=[];const evidenceLayer=el('g',{'pointer-events':'none','aria-hidden':'true'},svg);
 for(const [id,t] of tallest){const dot=el('circle',{cx:t.x,cy:t.z,r:Math.max(2,Math.min(4,t.w*.32)),stroke:'#26313a','stroke-width':.8,'data-evidence':id},evidenceLayer);evidenceDots.push({id,area:t.area,dot});}
@@ -75,8 +76,8 @@ let sidebarWidth=360;
 function toggleSidebar(show){const aside=$('citySidebar'),next=show??aside.hidden;aside.hidden=!next;$('toggleSidebar').setAttribute('aria-expanded',String(next));$('toggleSidebar').textContent=next?'Explore ‹':'Explore ›';}
 function setSidebarWidth(w){const limit=Math.max(280,Math.min(760,innerWidth-24));sidebarWidth=clamp(w,280,limit);document.documentElement.style.setProperty('--sidebar-width',sidebarWidth+'px');const grip=$('sidebarGrip');grip.setAttribute('aria-valuemax',String(limit));grip.setAttribute('aria-valuenow',String(Math.round(sidebarWidth)));const expanded=sidebarWidth>=Math.min(620,limit);$('expandSidebar').setAttribute('aria-pressed',String(expanded));$('expandSidebar').textContent=expanded?'Reduce':'Enlarge';}
 function setupSidebar(){const grip=$('sidebarGrip');let drag=null;grip.addEventListener('pointerdown',e=>{if(e.button!==0)return;drag={id:e.pointerId,x:e.clientX,width:sidebarWidth};grip.setPointerCapture(e.pointerId);e.preventDefault();});grip.addEventListener('pointermove',e=>{if(drag&&drag.id===e.pointerId)setSidebarWidth(drag.width+drag.x-e.clientX);});for(const k of ['pointerup','pointercancel','lostpointercapture'])grip.addEventListener(k,()=>{drag=null;});grip.addEventListener('keydown',e=>{if(e.key==='ArrowLeft'||e.key==='ArrowRight'){setSidebarWidth(sidebarWidth+(e.key==='ArrowLeft'?32:-32));e.preventDefault();e.stopPropagation();}});$('expandSidebar').onclick=()=>setSidebarWidth($('expandSidebar').getAttribute('aria-pressed')==='true'?360:Math.min(680,innerWidth-24));$('closeSidebar').onclick=()=>{toggleSidebar(false);$('toggleSidebar').focus();};window.addEventListener('resize',()=>setSidebarWidth(sidebarWidth));setSidebarWidth(sidebarWidth);}
-function updateSelection(){const t=buildingById.get(selectedBuilding)||siteById.get(selectedId);selection2d.setAttribute('visibility',t?'visible':'hidden');if(t){selection2d.setAttribute('cx',t.x);selection2d.setAttribute('cy',t.z);selection2d.setAttribute('rx',t.w*.65+1);selection2d.setAttribute('ry',t.d*.65+1);}if(selection3d){selection3d.visible=!!t;if(t){selection3d.position.set(t.x-500,.65,t.z-400);selection3d.scale.set(t.w*.65+1,t.d*.65+1,1);}}$('selectionStatus').textContent=t?(selectedBuilding===selectedId+'::mathlib-station'?'Mathlib station · ':selectedBuilding?'Building · ':'Complex · ')+selectedId:'No selection';invalidate();}
-function clearSelection(){selectedId=selectedBuilding=null;sourceUI?.clear();const url=new URL(location.href);url.searchParams.delete('complex');url.searchParams.delete('building');history.replaceState(null,'',url);updateSelection();drawDependencies();}
+function updateSelection(){const t=buildingById.get(selectedBuilding)||siteById.get(selectedId);selection2d.setAttribute('visibility',t?'visible':'hidden');if(t){selection2d.setAttribute('cx',t.x);selection2d.setAttribute('cy',t.z);selection2d.setAttribute('rx',t.w*.65+1);selection2d.setAttribute('ry',t.d*.65+1);}if(selection3d){selection3d.visible=!!t;if(t){selection3d.position.set(t.x-500,.65,t.z-400);selection3d.scale.set(t.w*.65+1,t.d*.65+1,1);}}$('selectionStatus').textContent=selectedDeclaration?'Declaration · '+selectedDeclaration.origin.id+' · '+(selectedDeclaration.origin.placement==='inferred-role'?'inferred role':'owning complex'):t?(selectedBuilding===selectedId+'::mathlib-station'?'Mathlib station · ':selectedBuilding?'Building · ':'Complex · ')+selectedId:'No selection';invalidate();}
+function clearSelection(){selectedId=selectedBuilding=selectedDeclaration=null;sourceUI?.clearDeclaration();sourceUI?.clear();const url=new URL(location.href);url.searchParams.delete('complex');url.searchParams.delete('building');url.searchParams.delete('declaration');history.replaceState(null,'',url);updateSelection();drawDependencies();}
 function focusSelection(){if(selectedId)selectComplex(selectedId,selectedBuilding,true);else{zoom=4;updatePlanCamera();invalidate();}}
 function resetCamera(){focusX=focusZ=0;zoom=1;if(viewMode==='oblique')yaw=.65;updatePlanCamera();invalidate();}
 function enterFromMap(id,building){selectComplex(id,building,true);mode('oblique');}
@@ -214,21 +215,22 @@ function init3D(){
 }
 function mode(next){if(next!=='plan'&&next!=='oblique')return;invalidate();viewMode=next;updatePlanCamera();const three=next==='oblique';$('map').hidden=three;$('mapHint').hidden=three;$('three').hidden=!three;for(const k of ['plan','oblique'])$(k).setAttribute('aria-pressed',String(k===next));heldKeys.clear();$('turnLeft').hidden=!three;$('turnRight').hidden=!three;if(three){try{init3D();}catch(e){viewMode='plan';$('three').hidden=true;$('map').hidden=false;$('mapHint').hidden=false;$('plan').setAttribute('aria-pressed','true');$('oblique').setAttribute('aria-pressed','false');$('three').dataset.error=e.message;$('status').textContent='3D unavailable: '+e.message+' — navigation map remains available.';}}}
 $('plan').onclick=()=>mode('plan');$('oblique').onclick=()=>mode('oblique');$('labels').onclick=()=>{labels=!labels;labelGroup.style.display=labels?'':'none';$('labels').setAttribute('aria-pressed',String(labels));invalidate();};
-function selectComplex(id,building=null,focus=false){
+function selectComplex(id,building=null,focus=false,declaration=null){
  if(!production||!siteById.has(id))return;
- const site=siteById.get(id);
+ const site=siteById.get(id);selectedDeclaration=declaration;if(!declaration)sourceUI?.clearDeclaration();
  if(filter!=='all'&&filter!==site.area)sourceUI?.filter('all');
  selectedId=id;selectedBuilding=buildingById.get(building)?.complexId===id?building:null;building=selectedBuilding;sourceUI?.inspect(id,building);updateSelection();
- const url=new URL(location.href);url.searchParams.set('complex',id);if(building)url.searchParams.set('building',building);else url.searchParams.delete('building');
+ const url=new URL(location.href);url.searchParams.set('complex',id);if(building)url.searchParams.set('building',building);else url.searchParams.delete('building');if(declaration)url.searchParams.set('declaration',declaration.origin.id);else url.searchParams.delete('declaration');
  if(url.href!==location.href)history.replaceState(null,'',url);
  if(focus){const t=buildingById.get(building)||siteById.get(id);focusX=t.x-500;focusZ=t.z-400;zoom=building?6:4;updatePlanCamera();invalidate();}
  drawDependencies();
 }
 function drawDependencies(){
- invalidate();
- if(!dependencyGroup||!production)return;
- for(const o of [...dependencyGroup.children]){dependencyGroup.remove(o);o.geometry?.dispose();o.material?.dispose();}
- if(!selectedId||channel==='off')return;
+ invalidate();declarationMapLayer.replaceChildren();$('three').dataset.declarationArcs='0';
+ if(dependencyGroup)for(const o of [...dependencyGroup.children]){dependencyGroup.remove(o);o.geometry?.dispose();o.material?.dispose();}
+ if(!production||!selectedId||channel==='off')return;
+ if(selectedDeclaration){drawDeclarationDependencies();return;}
+ if(!dependencyGroup)return;
  const c=siteById.get(selectedId),vec=(t,y)=>new THREE.Vector3(t.x-500,y,t.z-400);
  function line(points,color){const geom=new THREE.BufferGeometry().setFromPoints(points),mat=new THREE.LineBasicMaterial({color,transparent:true,opacity:.9,depthTest:false});const l=new THREE.Line(geom,mat);l.renderOrder=5;dependencyGroup.add(l);}
  const selected=layout.buildings.filter(b=>b.complexId===selectedId),top=Math.max(8,...selected.map(b=>b.h))+6;
@@ -241,6 +243,24 @@ function drawDependencies(){
  }}
  const station=layout.stations.find(t=>t.complexId===selectedId),complex=model.complexes.find(t=>t.id===selectedId);
  if(station&&complex.mathlib.length)for(const b of selected)line([vec(b,1.5),vec(station,1.5)],'#3ce4d5');
+}
+function drawDeclarationDependencies(){
+ if(channel==='mathlib')return;
+ const n=selectedDeclaration,origin=buildingById.get(n.origin.building)||siteById.get(n.origin.complex);if(!origin)return;
+ let drawn=0;
+ for(const direction of ['out','in']){if(channel!=='both'&&channel!==direction)continue;
+  const color=direction==='out'?'#80deff':'#b4f28b';
+  for(const entry of n.groups.filter(x=>x.direction===direction&&(filter==='all'||siteById.get(x.complex)?.area===filter)).slice(0,14)){
+   const target=siteById.get(entry.complex);if(!target)continue;
+   const dx=target.x-origin.x,dz=target.z-origin.z,bend=direction==='out'?.12:-.12;
+   el('path',{d:`M${origin.x} ${origin.z} Q${(origin.x+target.x)/2-dz*bend} ${(origin.z+target.z)/2+dx*bend} ${target.x} ${target.z}`,fill:'none',stroke:color,'stroke-width':1.6,'stroke-dasharray':'5 3',opacity:.95},declarationMapLayer);
+   el('circle',{cx:target.x,cy:target.z,r:3,fill:color,stroke:'#263640','stroke-width':.7},declarationMapLayer);
+   if(dependencyGroup){
+    const from=new THREE.Vector3(origin.x-500,Math.max(10,origin.h||tallest.get(n.origin.complex)?.h||10)+5,origin.z-400),to=new THREE.Vector3(target.x-500,Math.max(10,tallest.get(entry.complex)?.h||10)+5,target.z-400),mid=from.clone().lerp(to,.5);mid.y+=Math.min(100,18+from.distanceTo(to)*.13);mid.x-=dz*bend;mid.z+=dx*bend;
+    const geom=new THREE.BufferGeometry().setFromPoints(new THREE.QuadraticBezierCurve3(from,mid,to).getPoints(32)),mat=new THREE.LineDashedMaterial({color,dashSize:4,gapSize:2,transparent:true,opacity:.95,depthTest:false});const l=new THREE.Line(geom,mat);l.computeLineDistances();l.renderOrder=5;dependencyGroup.add(l);
+   }drawn++;
+  }
+ }$('three').dataset.declarationArcs=String(drawn);
 }
 function updateEvidence(){
  const active=evidenceMode!=='off',palette=palettes[evidenceMode];
@@ -269,14 +289,14 @@ window.addEventListener('keyup',e=>heldKeys.delete(e.key.toLowerCase()));
 window.addEventListener('blur',()=>heldKeys.clear());document.addEventListener('visibilitychange',()=>heldKeys.clear());
 document.addEventListener('focusin',e=>{if(e.target.closest?.('input,textarea,select,[contenteditable=true],[role=separator]'))heldKeys.clear();});
 if(production){
- sourceUI=createSourceInspector({production,roleNames,subjectColors,onSelect:(id,b,focus)=>selectComplex(id,b,focus),onFilter:setFilter,onChannel:v=>{channel=v;drawDependencies();}});
+ sourceUI=createSourceInspector({production,roleNames,subjectColors,onSelect:(id,b,focus)=>selectComplex(id,b,focus),onFilter:setFilter,onChannel:v=>{channel=v;drawDependencies();},onTravel:n=>{if(channel==='mathlib'||channel==='off'){channel='both';$('channels').value=channel;}selectComplex(n.origin.complex,n.origin.building,true,n);toggleSidebar(true);if(viewMode==='plan')mode('oblique');},onResetDeclaration:()=>{selectedDeclaration=null;updateSelection();drawDependencies();}});
  $('evidenceMode').onchange=()=>{evidenceMode=$('evidenceMode').value;updateEvidence();};
  setupResearchSearch(production,(id,b,focus)=>selectComplex(id,b,focus));
  $('historyTools').addEventListener('toggle',()=>{if($('historyTools').open&&!$('historyTools').dataset.loaded){$('historyTools').dataset.loaded='true';setupHistory(production);}});
  $('status').textContent=($('three').dataset.error?'3D unavailable; flat plan active · ':'')+layout.version+' · '+layout.sites.length+' source complexes · '+layout.buildings.length+' role buildings · '+layout.boroughs.length+' boroughs · '+model.source.revision.slice(0,12);
  $('caption').textContent='Click a coloured source building or cyan Mathlib station. Neutral buildings are civic scenery. WASD move · ←/→ rotate · ↑/↓ zoom · drag to pan · right-drag or Shift-drag to rotate · wheel/pinch zoom · F focus · M map/city · I sidebar · / search · Esc clear.';
  const area=params.get('area');if(area&&model.areas.includes(area)){ $('subject').value=area;sourceUI.filter(area);}
- const initial=params.get('complex'),building=params.get('building');if(initial&&siteById.has(initial)){const valid=buildingById.get(building)?.complexId===initial||building===initial+'::mathlib-station';selectComplex(initial,valid?building:null,true);}
+ const initial=params.get('complex'),building=params.get('building'),declaration=params.get('declaration');if(initial&&siteById.has(initial)){const valid=buildingById.get(building)?.complexId===initial||building===initial+'::mathlib-station';selectComplex(initial,valid?building:null,true);}if(declaration){toggleSidebar(true);void sourceUI.restoreDeclaration(declaration);}
 }else{
  $('status').textContent='Architectural study · no mathematical identities';
  $('sourceControls').hidden=true;$('capacity').textContent='Illustrative skyline; return to the homepage for the live source city.';

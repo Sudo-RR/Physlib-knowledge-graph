@@ -3,7 +3,7 @@ import {contributorPanel} from './geneva-contributor-panel.js';
 import {evidencePanel} from './geneva-evidence-panel.js';
 import {setupElaboratedImport,elaboratedPanel} from './geneva-elaborated-panel.js';
 import {attachDeclarationBrowser} from './geneva-declaration-browser.js';
-export function createSourceInspector({production,roleNames,subjectColors,onSelect,onFilter,onChannel}){
+export function createSourceInspector({production,roleNames,subjectColors,onSelect,onFilter,onChannel,onTravel,onResetDeclaration}){
  const {model,layout,modulePaths,declarationLines}=production,$=id=>document.getElementById(id),byId=new Map(model.complexes.map(c=>[c.id,c])),revision=model.source.revision;
  const node=(tag,text,parent)=>{const e=document.createElement(tag);if(text!==null)e.textContent=text;if(parent)parent.append(e);return e;};
  const link=(id,parent,line)=>{const path=modulePaths[id];if(!path){node('span',id,parent);return;}const a=node('a',id,parent);a.href='https://github.com/leanprover-community/physlib/blob/'+revision+'/'+path.split('/').map(encodeURIComponent).join('/')+(line?'#L'+line:'');a.target='_blank';a.rel='noopener noreferrer';};
@@ -36,7 +36,7 @@ export function createSourceInspector({production,roleNames,subjectColors,onSele
  }
  function filter(v){area=v;subject.value=v;onFilter(v);renderList();}
  subject.onchange=()=>filter(subject.value);search.oninput=()=>{query=search.value.trim().toLowerCase();renderList();};$('channels').onchange=()=>onChannel($('channels').value);
- setupElaboratedImport(production,()=>{if(current)inspect(current,currentBuilding);});
+ const travel=setupElaboratedImport(production,()=>{if(current)inspect(current,currentBuilding);},onTravel,onResetDeclaration);
  function clear(){current=null;currentBuilding=null;panel.replaceChildren();node('p','Select a building, station or complex.',panel);renderList();}
- renderList();return {inspect,filter,clear};
+ renderList();return {inspect,filter,clear,clearDeclaration:travel.clear,restoreDeclaration:travel.restore};
 }
