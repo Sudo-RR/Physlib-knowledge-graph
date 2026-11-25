@@ -5,6 +5,9 @@ As of 25 November 2026, baseline commit [5bcffd1](https://github.com/Sudo-RR/Phy
 ## Start here
 Read [AGENTS.md](../AGENTS.md), [Integration roadmap](INTEGRATION-ROADMAP.md), [Art roadmap](ART-ROADMAP.md) and [Development runbook](DEVELOPMENT.md). These documents supersede stale instructions in earlier milestone specifications for current operation. There are two parallel next tasks: I1 initiative schema and construction sites; A0–A3 art composition, shadow removal, district lighting, beams and static roof signals. Coordinate shared renderer glue, do not conflate milestones.
 
+## Active issue tracker
+The new [production backlog](BACKLOG.md) maps 17 active issues (two epics, 14 work packages and one shared operations issue) to these specs. All 32 previously open historical issues were retired with replacement links; no discussion was erased. The [branch audit](BRANCH-AUDIT-20261125.md) records exact obsolete branch tips and conditional preservation/deletion; consult actual workflow results before reporting cleanup complete.
+
 ## Verified production baseline
 [Deployment 45680479487](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45680479487), build job 139439385099 and deploy 139442153927 both successful. [Previous deployment 45679274759](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45679274759) also successful. 157/157 unit tests; actual packaged Chromium browser regression passed (full-detail/dusk, declaration traversal, native metadata loading, API overlays, evidence, camera navigation, legacy redirect/deep links, research, mobile map). Native extraction [45677319974](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45677319974) completed successfully, native full artifact 15053014189.
 - PhysLib 7910f51f9129ee4c5829216251c25a3a82042f1e; Mathlib fc4f59e577feb1a4956671bc04ac18aaaf8cd842; Lean leanprover/lean4:v4.36.0; result-graph 2ee55ff6e521eabe71ecddac797e12f64448a5b6.

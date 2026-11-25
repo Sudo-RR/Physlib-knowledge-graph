@@ -2,6 +2,8 @@
 
 Status: approved direction, implementation pending. 25 November 2026. This roadmap is independent of the [PhysLib integration roadmap](INTEGRATION-ROADMAP.md). Art determines how the city looks and feels; integration determines what the city knows. The current renderer is the source-linked Geneva G1 city, not the historical C.4 or terrain-only study.
 
+Execution tracker: [Art epic #64](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/64) · [Issue-to-spec mapping](BACKLOG.md). A0 #66, A1 #67, A2 #68, A3 #69, A4 #70.
+
 ## Art brief
 A large, visually strong retro-futuristic metropolis at dusk. The landing view should look expansive and densely built, with little negative space. Preserve the sharp architectural treatment accepted after rollback of the unsuccessful massing redesign (bedda3d). Architecture should remain coherent, not become uniform coloured boxes, needle towers or an empty geography diorama. Colour and light should make neighbourhoods recognisable and the city visibly alive.
 

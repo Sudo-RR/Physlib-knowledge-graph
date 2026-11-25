@@ -2,6 +2,8 @@
 
 Status: 25 November 2026. Independent of [Art roadmap](ART-ROADMAP.md). The mission is an evidence-backed, non-invasive contributor interface that progresses from existing mathematical infrastructure to reviewable formalisation initiatives. It does not replace PhysLib's existing review or API-map culture.
 
+Execution tracker: [Integration epic #65](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/65) · [Issue-to-spec mapping](BACKLOG.md). I1a #71, I1b #72, I1c #73; I2 #74, I3 #75, I4 #76. Cross-cutting #77–#80.
+
 ## Delivered foundation (I0)
 Verified production 5bcffd1: source-linked city, module-import graph, lexical command inventory, exact qualified elaborated graph and declaration travel, native signatures/ranges/direct references, Mathlib station/source links, contributor paths, activity/review evidence, research lookup/history and API-map planning overlay. See [handover](HANDOVER.md) for exact snapshot and CI evidence. Retain these features and provenance guarantees.
 

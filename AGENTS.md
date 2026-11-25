@@ -5,6 +5,7 @@
 2. [PhysLib integration roadmap](docs/INTEGRATION-ROADMAP.md).
 3. [Art specification and roadmap](docs/ART-ROADMAP.md).
 4. [Developer and release runbook](docs/DEVELOPMENT.md).
+5. [Production backlog](docs/BACKLOG.md) — start from an open mapped issue; link it in the PR. Do not use the historical issue plan.
 
 These are the current operational documents. Older milestone, Geneva and City v2 specifications are historical design/evidence records; preserve their useful invariants but do not resurrect superseded UI or layouts. Explicit current maintainer direction takes precedence. The repository is Sudo-RR/Physlib-knowledge-graph, default branch master. This is an independent contributor tool, not an official upstream PhysLib workflow.
 

@@ -15,6 +15,7 @@ Explore subject boroughs and mathematical complexes, module imports, exact quali
 | [Art specification and roadmap](docs/ART-ROADMAP.md) | Separate visual direction: dense skyline, district lighting, animated beams, static roof lights, no shadows |
 | [PhysLib integration roadmap](docs/INTEGRATION-ROADMAP.md) | Mathematical data, construction sites, reviewable initiatives and future PaperView interoperability |
 | [Development runbook](docs/DEVELOPMENT.md) | Setup, testing, deployment and diagnostics |
+| [Production backlog](docs/BACKLOG.md) | GitHub issue-to-spec mapping, dependencies and ready work |
 
 The two roadmaps are independent. The art layer consumes the integration model without redefining it. Integration does not wait for visual polish. Next: **I1 — formalisation initiative schema and construction sites** and **A0–A3 — approved art direction**.
 
