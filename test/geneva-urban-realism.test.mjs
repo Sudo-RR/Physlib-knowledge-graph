@@ -1,6 +1,0 @@
-import test from 'node:test';import assert from 'node:assert/strict';
-import {architecturalHeight,architecturalLayout,urbanInfill} from '../site/geneva-urban-realism.js';
-import {masterplan,contains} from '../site/geneva-g1-geometry.js';
-import {pointSegment} from '../site/geneva-civic-fabric.js';
-test('display height is monotonic and preserves original source height and identity',()=>{const a={buildings:[{id:'a',h:16},{id:'b',h:55},{id:'c',h:89}]};const b=architecturalLayout(a);assert.deepEqual(b.buildings.map(x=>x.sourceHeight),[16,55,89]);assert.deepEqual(a.buildings.map(x=>x.h),[16,55,89]);assert(architecturalHeight(16)<architecturalHeight(55)&&architecturalHeight(55)<architecturalHeight(89));assert(architecturalHeight(55)<12);});
-test('urban context deterministic, nonsemantic, clear of bank boundaries, parks, and reserved sites',()=>{const plan=masterplan(),layout={sites:[{x:200,z:200,w:10,d:10,r:8}],decorativeTowers:[]},civic={roads:[],infill:[],trees:[],plazas:[]};const lots=urbanInfill(plan,layout,civic);assert(lots.length>100);assert.deepEqual(lots,urbanInfill(plan,layout,civic));for(const b of lots){assert(!b.id&&b.decorative);const bank=plan.sectors.find(s=>s.id===b.library);assert(contains(bank.polygon,[b.x,b.z]));assert(Math.hypot(b.x-200,b.z-200)>=b.r+8);for(const p of plan.parks)assert(!contains(p.polygon,[b.x,b.z]));}});

@@ -12,7 +12,7 @@ export function urbanSurfaceTextures(THREE){
   }
   ctx.putImageData(im,0,0);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t;
  }
- const c=document.createElement('canvas');c.width=c.height=256;const ctx=c.getContext('2d'),im=ctx.createImageData(256,256);for(let y=0;y<256;y++)for(let x=0;x<256;x++){const a=2*Math.PI*x/256,b=2*Math.PI*y/256,v=128+22*Math.sin(a*5+b*8+1.1*Math.sin(a*3-b*2))+13*Math.sin(a*13-b*7);const i=(y*256+x)*4;im.data[i]=im.data[i+1]=im.data[i+2]=v;im.data[i+3]=255;}ctx.putImageData(im,0,0);const water=new THREE.CanvasTexture(c);water.wrapS=water.wrapT=THREE.RepeatWrapping;water.anisotropy=4;return {concrete:texture(true),asphalt:texture(false),water};
+ return {concrete:texture(true),asphalt:texture(false)};
 }
 export function worldPlanarUV(THREE,geo,scale){
  const p=geo.getAttribute('position'),uv=new Float32Array(p.count*2);

@@ -1,7 +1,7 @@
 // PhysLib City architectural materials. Original procedural textures and
 // sky, no remote assets. Tiles repeat in approximate world units rather than
 // stretching a fixed number of windows over every tower.
-export const QUALITY_PROFILES={low:{min:1,max:1,budget:1200000},medium:{min:1.4,max:1.75,budget:2400000},high:{min:1.8,max:2.5,budget:4200000}};
+export const QUALITY_PROFILES={low:{min:1,max:1,budget:1200000},medium:{min:1.5,max:2,budget:3200000},high:{min:2.5,max:3,budget:8500000}};
 export function renderScale(quality,dpr,width,height){
  const p=QUALITY_PROFILES[quality]||QUALITY_PROFILES.medium;
  const target=Math.min(p.max,Math.max(p.min,Number.isFinite(dpr)?dpr:1));
@@ -14,11 +14,11 @@ const PALETTES=[
  {frame:'#d3cec2',glass:'#61788a',bottom:'#2c404d',reflect:'#cfdee6',trim:'#a7a49d'},
  {frame:'#aab8b5',glass:'#4e716f',bottom:'#263d42',reflect:'#bddbd6',trim:'#758c8a'}
 ];
-const SIZE=1024;
+const SIZE=2048;
 function makeCanvas(w=SIZE,h=SIZE){const c=document.createElement('canvas');c.width=w;c.height=h;return c;}
 function texture(THREE,c,anisotropy=8){const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.minFilter=THREE.LinearMipmapLinearFilter;t.magFilter=THREE.LinearFilter;t.anisotropy=anisotropy;return t;}
 function facadeTile(THREE,p,style){
- const c=makeCanvas(),e=makeCanvas(),g=c.getContext('2d'),light=e.getContext('2d');
+ const c=makeCanvas(),e=makeCanvas(),g=c.getContext('2d'),light=e.getContext('2d');g.scale(2,2);light.scale(2,2);const SIZE=1024;
  g.fillStyle=p.frame;g.fillRect(0,0,SIZE,SIZE);light.fillStyle='#000';light.fillRect(0,0,SIZE,SIZE);
  const cols=style===2?5:4,rows=4,cw=SIZE/cols,ch=SIZE/rows;
  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
@@ -34,7 +34,7 @@ function facadeTile(THREE,p,style){
   const seed=(x*19+y*11+style*13)%17;
   if(seed<3){light.fillStyle=seed===0?'#bfbfbf':'#707070';light.fillRect(xx+7,yy+7,w*.47-10,h-14);}
  }
- const base=texture(THREE,c),emissive=texture(THREE,e);emissive.colorSpace=THREE.NoColorSpace;
+ const base=texture(THREE,c,16),emissive=texture(THREE,e,16);emissive.colorSpace=THREE.NoColorSpace;
  return {base,emissive};
 }
 // Installed on each clone too: Three.Material.clone does not preserve callbacks.
@@ -46,7 +46,7 @@ export function applyFacadeProjection(material){
    #ifdef USE_INSTANCING
      vec3 dims=vec3(length(instanceMatrix[0].xyz),length(instanceMatrix[1].xyz),length(instanceMatrix[2].xyz));
      float span=mix(dims.x,dims.z,step(abs(normal.z),abs(normal.x)));
-     vec2 repetitions=max(vec2(1.0),floor(vec2(span/4.0,dims.y/5.0)+0.5));
+     vec2 repetitions=max(vec2(1.0),floor(vec2(span/10.0,dims.y/12.0)+0.5));
      #ifdef USE_MAP
        vMapUv*=repetitions;
      #endif
