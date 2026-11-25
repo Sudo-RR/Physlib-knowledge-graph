@@ -44,3 +44,7 @@ Likely art-only implementation modules: site/geneva-architectural-materials.js, 
 
 ## Definition of done
 Dense cinematic landing view; less empty space; recognisable coloured neighbourhoods; attractive scan/beam motion in oblique view; static rooftop lights in top view; shadow-free scene; preserved high-resolution full-detail dusk baseline; accessible and functional navigation; no changed mathematical identity or evidence semantics. No task marked done until real rendered evidence and maintainer acceptance. A1–A3 are independent of integration I1, and neither workstream may hold the other hostage.
+
+
+## Pre-demo clarity pass
+See [prototype legibility](geneva/prototype-legibility.md), related #68/#70/#79. This narrowly scoped pass is separate from the full A1–A4 artistic programme; do not mark those issues completed from this pass alone.

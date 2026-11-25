@@ -30,7 +30,7 @@ export function createSourceInspector({production,roleNames,subjectColors,onSele
   const d=details(title+' ('+edges.length+' complexes)',panel);node('small','Direct recorded module imports, not theorem proof dependencies. Up to 14 arcs shown per direction.',d);
   for(const e of edges){const item=details(e[other]+' · '+e.count+' imports',d);button('Focus target',item,()=>onSelect(e[other],null,true));for(const imp of e.imports){const row=node('div',null,item);link(imp.from,row,imp.line);node('span',' → ',row);link(imp.to,row);}}
  }
- const station=details('Mathlib station ('+c.mathlib.length+' unique imports)',panel);station.open=building===id+'::mathlib-station';button('Focus Mathlib station',station,()=>onSelect(id,id+'::mathlib-station',true));for(const target of c.mathlib){const t=details(target.target,station);for(const m of target.sourceModules)link(m,node('div',null,t));}if(!c.mathlib.length)node('p','No recorded direct Mathlib imports.',station);
+ const station=details('Mathlib power station ('+c.mathlib.length+' unique direct module imports)',panel);station.open=building===id+'::mathlib-station';button('Focus Mathlib power station',station,()=>onSelect(id,id+'::mathlib-station',true));node('small','Utility beacon represents direct Mathlib module imports, not declaration-level proof dependencies.',station);for(const target of c.mathlib){const t=details(target.target,station);for(const m of target.sourceModules)link(m,node('div',null,t));}if(!c.mathlib.length)node('p','No recorded direct Mathlib imports.',station);
  contributorPanel(panel,production,c,onSelect,onApiMap);
  renderList();
  }

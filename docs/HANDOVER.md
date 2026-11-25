@@ -40,3 +40,7 @@ Pages is static, generated from clean revision-pinned sources; GitHub Actions bu
 
 ## Handoff checklist
 Start from master head and current CI, choose art or integration work package, inspect relevant files, build/test branch, capture evidence, submit a scoped commit, verify actual deployment and update handover. Do not make successive speculative production pushes. Record limitations, approvals and open questions. No future initiative is approved just because included in this roadmap.
+
+
+## Pre-demo milestone
+Before sharing externally, verify [prototype legibility](geneva/prototype-legibility.md) in the real deployed city: clear role identities, directional conduits and distinctive Mathlib stations. This is a presentation pass, not full initiative or art-roadmap completion.
