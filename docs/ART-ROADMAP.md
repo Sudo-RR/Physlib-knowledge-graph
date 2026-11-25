@@ -48,3 +48,7 @@ Dense cinematic landing view; less empty space; recognisable coloured neighbourh
 
 ## Pre-demo clarity pass
 See [prototype legibility](geneva/prototype-legibility.md), related #68/#70/#79. This narrowly scoped pass is separate from the full A1–A4 artistic programme; do not mark those issues completed from this pass alone.
+
+
+## Pre-demo composition and network
+See [animated dependency network](geneva/animated-dependency-network.md). This is a focused A1/A3 presentation increment, not full art acceptance.

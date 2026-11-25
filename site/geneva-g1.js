@@ -3,6 +3,8 @@ import {Line2} from 'three/addons/lines/Line2.js';
 import {LineGeometry} from 'three/addons/lines/LineGeometry.js';
 import {LineMaterial} from 'three/addons/lines/LineMaterial.js';
 import {roleKeys,channels as linkColors,visibleModuleLinks,stationEvidence,stationRoleLinks} from './geneva-legibility.js';
+import {fitSkyline} from './geneva-landing-frame.js';
+import {networkRows,createBeamNetwork} from './geneva-beam-network.js';
 import {masterplan,validatePlan,capacity,VERSION} from './geneva-g1-geometry.js';
 import {roleNames} from './city-v2-model.js';
 import {subjectColors} from './geneva-production-layout.js';
@@ -31,6 +33,7 @@ const siteById=new Map((layout?.sites||[]).map(t=>[t.id,t])),buildingById=new Ma
 const semanticMeshes=[],subjectSprites=[],mapParts=[],lodMeshes=[];
 const complexById=new Map((model?.complexes||[]).map(c=>[c.id,c]));
 let roleMarkerGroup=null;const roleTextures=new Map();
+let beamMesh=null,overviewFrame=null,previousChannel='both',networkKey='';const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)');
 let activeApiMap=null,apiMapGroup=null,apiMapUI=null;
 const geometryMode='full';
 let evidenceMode='off',evidenceMeshes=[];
@@ -63,6 +66,7 @@ for(const t of towers){const g=el('g',{transform:'translate('+t.x+' '+t.z+') rot
 for(const t of layout?.stations||[]){const evidence=stationEvidence(complexById.get(t.complexId)),g=el('g',{transform:'translate('+t.x+' '+t.z+') rotate('+(-t.angle*180/Math.PI)+')','data-mathlib-station':evidence.active?'active':'empty'},massing2d);const r=Math.max(t.w,t.d)*.55;el('circle',{r:r*1.35,fill:evidence.active?'#3ce4d5':'#aab3bf',opacity:.18,'pointer-events':'none'},g);el('rect',{x:-t.w/2,y:-t.d/2,width:t.w,height:t.d,rx:.4,fill:'#183b40',stroke:evidence.active?'#3ce4d5':'#87959c','stroke-width':.55},g);el('path',{d:'M0 '+(-r)+' L'+r+' 0 L0 '+r+' L'+(-r)+' 0 Z',fill:evidence.active?'#a4fff3':'#aab3bf',stroke:'#19363a','stroke-width':.55},g);const title=el('title',{},g);title.textContent='Mathlib power station · '+evidence.count+' unique direct module imports · '+t.complexId;g.style.cursor='pointer';g.dataset.mapBuilding=t.id;g.addEventListener('click',()=>enterFromMap(t.complexId,t.id));mapParts.push({element:g,area:t.area});}
 const apiMapLayer=el('g',{'pointer-events':'none','data-api-overlay':'true'},svg);
 const declarationMapLayer=el('g',{'pointer-events':'none','data-declaration-links':'true'},svg);
+const globalMapLayer=el('g',{'pointer-events':'none','data-global-network':'true'},svg);
 const moduleMapLayer=el('g',{'pointer-events':'none','data-module-links':'true'},svg);
 const roleMapLayer=el('g',{'pointer-events':'none','data-role-markers':'true'},svg);
 const defs=el('defs',{},svg);for(const [key,color] of Object.entries(linkColors)){const marker=el('marker',{id:'link-arrow-'+key,markerWidth:8,markerHeight:8,refX:7,refY:4,orient:'auto',markerUnits:'userSpaceOnUse',viewBox:'0 0 8 8'},defs);el('path',{d:'M0 0 L8 4 L0 8 L2 4 Z',fill:color,stroke:'#24353d','stroke-width':.6},marker);}
@@ -91,7 +95,7 @@ function setupSidebar(){const grip=$('sidebarGrip');let drag=null;grip.addEventL
 function updateSelection(){const t=buildingById.get(selectedBuilding)||siteById.get(selectedId);selection2d.setAttribute('visibility',t?'visible':'hidden');if(t){selection2d.setAttribute('cx',t.x);selection2d.setAttribute('cy',t.z);selection2d.setAttribute('rx',t.w*.65+1);selection2d.setAttribute('ry',t.d*.65+1);}if(selection3d){selection3d.visible=!!t;if(t){selection3d.position.set(t.x-500,.65,t.z-400);selection3d.scale.set(t.w*.65+1,t.d*.65+1,1);}}$('selectionStatus').textContent=selectedDeclaration?'Declaration · '+selectedDeclaration.origin.id+' · '+(selectedDeclaration.origin.placement==='inferred-role'?'inferred role':'owning complex'):t?(selectedBuilding===selectedId+'::mathlib-station'?'Mathlib power station · ':selectedBuilding?(roleNames[t.role]||'Building')+' · ':'Complex · ')+selectedId:'No selection';drawRoleMarkers();invalidate();}
 function clearSelection(){selectedId=selectedBuilding=selectedDeclaration=null;sourceUI?.clearDeclaration();sourceUI?.clear();const url=new URL(location.href);url.searchParams.delete('complex');url.searchParams.delete('building');url.searchParams.delete('declaration');history.replaceState(null,'',url);updateSelection();drawDependencies();}
 function focusSelection(){if(selectedId)selectComplex(selectedId,selectedBuilding,true,selectedDeclaration);else{zoom=4;updatePlanCamera();invalidate();}}
-function resetCamera(){focusX=focusZ=0;zoom=1;if(viewMode==='oblique')yaw=.65;updatePlanCamera();invalidate();}
+function resetCamera(){focusX=focusZ=0;zoom=1;if(viewMode==='oblique'){yaw=.65;if(overviewFrame){focusX=overviewFrame.x;focusZ=overviewFrame.z;}}updatePlanCamera();invalidate();}
 function enterFromMap(id,building){selectComplex(id,building,true);mode('oblique');}
 function enterMapPoint(e){if(e.target.closest?.('[data-map-building]'))return;const matrix=svg.getScreenCTM();if(!matrix)return;const pt=new DOMPoint(e.clientX,e.clientY).matrixTransform(matrix.inverse());focusX=clamp(pt.x-500,-600,600);focusZ=clamp(pt.y-400,-500,500);zoom=Math.max(zoom,3);mode('oblique');}
 function installDrag(target,move,orbit=null){
@@ -196,16 +200,19 @@ function init3D(){
  for(const s of p.sectors)sprite(s.id,'',...s.label);
  for(const b of layout?.boroughs||[]){const o=sprite(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),'',b.x,b.z);o.scale.set(105,21,1);o.position.y=92;o.userData.area=b.area;subjectSprites.push(o);}
  camera=new THREE.OrthographicCamera(-650,650,550,-550,1,6000);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;const disposeSky=installSkyEnvironment(THREE,renderer,scene);setDusk();for(const m of facade)m.emissiveIntensity=.65;for(const t of [surfaces.concrete,surfaces.asphalt])t.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());for(const m of facade){m.map.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());m.emissiveMap.anisotropy=m.map.anisotropy;}host.append(renderer.domElement);renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','3D city. Arrow keys pan, plus and minus zoom, Home resets. Use the mathematics sidebar for keyboard selection.');
- function resize(){if(host.hidden||!host.clientWidth||!host.clientHeight)return;const w=host.clientWidth,h=host.clientHeight;const aspect=w/h,half=Math.max(520,570/aspect);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();const gl=renderer.getContext(),limit=Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),gl.getParameter(gl.MAX_TEXTURE_SIZE));const ratio=renderScale(quality,devicePixelRatio,w,h,limit);const current=renderer.getSize(new THREE.Vector2());if(current.x!==w||current.y!==h||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);}invalidate();}
+ function resize(){if(host.hidden||!host.clientWidth||!host.clientHeight)return;const w=host.clientWidth,h=host.clientHeight;const aspect=w/h,first=!overviewFrame;overviewFrame=fitSkyline(towers,aspect);const half=overviewFrame.half;if(first){focusX=overviewFrame.x;focusZ=overviewFrame.z;updatePlanCamera();}host.dataset.skylineFit=JSON.stringify(overviewFrame);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();const gl=renderer.getContext(),limit=Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),gl.getParameter(gl.MAX_TEXTURE_SIZE));const ratio=renderScale(quality,devicePixelRatio,w,h,limit);const current=renderer.getSize(new THREE.Vector2());if(current.x!==w||current.y!==h||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);}invalidate();}
  observer=new ResizeObserver(resize);observer.observe(host);resize();
- let prev=performance.now(),lastKey='',lastVersion=-1;
+ let prev=performance.now(),lastKey='',lastVersion=-1,lastBeamFrame=-Infinity;
+ reducedMotion.addEventListener('change',invalidate);
  function draw(now){
   const dt=Math.min(.12,(now-prev)/1000);prev=now;if(!document.hidden&&heldKeys.size)navigate(heldKeys,dt);
   if(!document.hidden&&!host.hidden){
    const anim=massGroup&&massGroup.scale.y<1;
    if(anim){const t=Math.min(1,(now-started)/850);massGroup.scale.y=1-Math.pow(1-t,3)*.98;}
    const key=[viewMode,yaw,focusX,focusZ,zoom,labels,filter,massGroup.scale.y,quality,geometryMode].join('|');
-   if(key!==lastKey||redrawVersion!==lastVersion){
+   const moving=!!beamMesh&&!reducedMotion.matches&&channel!=='off';const animateBeam=moving&&now-lastBeamFrame>=1000/30;
+   if(key!==lastKey||redrawVersion!==lastVersion||animateBeam){
+    if(beamMesh){beamMesh.material.uniforms.uTime.value=moving?now/1000:0;beamMesh.material.uniforms.uResolution.value.set(host.clientWidth,host.clientHeight);host.dataset.beamTime=String(beamMesh.material.uniforms.uTime.value);lastBeamFrame=now;}host.dataset.beamAnimated=String(moving);
     const pitch=Math.PI*.19,d=1550,a=yaw;
     camera.position.set(focusX+Math.sin(a)*d*Math.cos(pitch),d*Math.sin(pitch),focusZ+Math.cos(a)*d*Math.cos(pitch));camera.lookAt(focusX,0,focusZ);camera.zoom=zoom;camera.updateProjectionMatrix();
     for(const o of scene.children)if(o.userData.isLabel)o.visible=labels&&(!o.userData.area||filter==='all'||filter===o.userData.area);
@@ -229,7 +236,7 @@ function init3D(){
  window.addEventListener('pagehide',e=>{if(e.persisted)return;cancelAnimationFrame(frame);observer.disconnect();renderer.dispose();renderer.forceContextLoss();});
  window.addEventListener('pageshow',e=>{if(e.persisted){resize();invalidate();}});
 }
-function mode(next){if(next!=='plan'&&next!=='oblique')return;invalidate();viewMode=next;updatePlanCamera();const three=next==='oblique';$('map').hidden=three;$('mapHint').hidden=three;$('three').hidden=!three;for(const k of ['plan','oblique'])$(k).setAttribute('aria-pressed',String(k===next));heldKeys.clear();$('turnLeft').hidden=!three;$('turnRight').hidden=!three;if(three){try{init3D();}catch(e){viewMode='plan';$('three').hidden=true;$('map').hidden=false;$('mapHint').hidden=false;$('plan').setAttribute('aria-pressed','true');$('oblique').setAttribute('aria-pressed','false');$('three').dataset.error=e.message;$('status').textContent='3D unavailable: '+e.message+' — navigation map remains available.';}}}
+function mode(next){if(next!=='plan'&&next!=='oblique')return;invalidate();viewMode=next;updatePlanCamera();const three=next==='oblique';$('map').hidden=three;$('mapHint').hidden=three;$('three').hidden=!three;for(const k of ['plan','oblique'])$(k).setAttribute('aria-pressed',String(k===next));heldKeys.clear();$('turnLeft').hidden=!three;$('turnRight').hidden=!three;if(three){try{init3D();if(!beamMesh){networkKey='';refreshNetwork();}}catch(e){viewMode='plan';$('three').hidden=true;$('map').hidden=false;$('mapHint').hidden=false;$('plan').setAttribute('aria-pressed','true');$('oblique').setAttribute('aria-pressed','false');$('three').dataset.error=e.message;$('status').textContent='3D unavailable: '+e.message+' — navigation map remains available.';}}}
 $('plan').onclick=()=>mode('plan');$('oblique').onclick=()=>mode('oblique');$('labels').onclick=()=>{labels=!labels;labelGroup.style.display=labels?'':'none';$('labels').setAttribute('aria-pressed',String(labels));drawRoleMarkers();invalidate();};
 function selectComplex(id,building=null,focus=false,declaration=null){
  if(!production||!siteById.has(id))return;
@@ -284,8 +291,17 @@ function mapPipe(layer,a,b,key,{dashed=false,bend=.12}={}){
  el('path',{d:path,fill:'none',stroke:linkColors[key],'stroke-width':2.2,'vector-effect':'non-scaling-stroke','stroke-dasharray':dashed?'5 3':'none','marker-end':'url(#link-arrow-'+key+')','data-pipe-channel':key},layer);
 }
 function updateLinkReadout(text){$('linkReadout').textContent=text;}
+function refreshNetwork(){
+ const host=$('three');$('togglePipes').setAttribute('aria-pressed',String(channel!=='off'));$('togglePipes').textContent=channel==='off'?'Pipes off':'Pipes on';
+ const key=[filter,channel,selectedId||'',!!selectedDeclaration].join('|');if(key===networkKey)return;networkKey=key;
+ if(beamMesh){scene?.remove(beamMesh);beamMesh.geometry.dispose();beamMesh.material.dispose();beamMesh=null;}
+ globalMapLayer.replaceChildren();const rows=networkRows(model,layout,filter,channel,selectedId);let modules=0,utility=0;
+ for(const row of rows){if(row.utility)utility++;else modules++;const a=row.from,b=row.to,dx=b.x-a.x,dz=b.z-a.z;el('path',{d:`M${a.x} ${a.z} Q${(a.x+b.x)/2-dz*.045} ${(a.z+b.z)/2+dx*.045} ${b.x} ${b.z}`,fill:'none',stroke:linkColors[row.key],'stroke-width':row.focused?1.7:row.utility?.9:1.05,'vector-effect':'non-scaling-stroke',opacity:row.focused?.95:selectedId?.15:.36,'data-network-channel':row.key},globalMapLayer);}
+ if(scene&&rows.length){beamMesh=createBeamNetwork(rows,{selected:!!selectedId});scene.add(beamMesh);}
+ host.dataset.networkModulePipes=String(modules);host.dataset.networkMathlibPipes=String(utility);host.dataset.beamAnimated='false';host.dataset.beamTime='0';
+}
 function drawDependencies(){
- invalidate();declarationMapLayer.replaceChildren();moduleMapLayer.replaceChildren();$('three').dataset.declarationArcs='0';$('three').dataset.modulePipes='0';$('three').dataset.mathlibPipes='0';updateLinkReadout('');
+ refreshNetwork();invalidate();declarationMapLayer.replaceChildren();moduleMapLayer.replaceChildren();$('three').dataset.declarationArcs='0';$('three').dataset.modulePipes='0';$('three').dataset.mathlibPipes='0';updateLinkReadout(channel==='off'?'Pipes hidden':'City network · '+$('three').dataset.networkModulePipes+' directed complex imports · '+$('three').dataset.networkMathlibPipes+' utility connections');
  if(dependencyGroup)for(const o of [...dependencyGroup.children]){dependencyGroup.remove(o);o.geometry?.dispose();o.material?.dispose();}
  if(!production||!selectedId||channel==='off')return;
  if(selectedDeclaration){drawDeclarationDependencies();return;}
@@ -295,12 +311,12 @@ function drawDependencies(){
  for(const direction of ['out','in'])for(const e of links[direction]){
   const a=siteById.get(e.from),b=siteById.get(e.to),start=vec(a,top(a)),end=vec(b,top(b)),mid=start.clone().lerp(end,.5),dx=b.x-a.x,dz=b.z-a.z;
   mid.y+=Math.min(125,25+start.distanceTo(end)*.15);mid.x-=dz*.08;mid.z+=dx*.08;
-  drawSolidPipe(new THREE.QuadraticBezierCurve3(start,mid,end),linkColors[direction]);mapPipe(moduleMapLayer,a,b,direction,{bend:.10});count++;
+  mapPipe(moduleMapLayer,a,b,direction,{bend:.045});count++;
  }
  const station=layout.stations.find(t=>t.complexId===selectedId),complex=complexById.get(selectedId),evidence=stationEvidence(complex);let utilityCount=0;
  if(station&&evidence.active&&(filter==='all'||c.area===filter)){
   const buildings=stationRoleLinks(complex,layout.buildings);
-  for(const b of buildings){const start=vec(b,2.1),end=vec(station,2.8),mid=start.clone().lerp(end,.5);mid.y+=1.4;drawSolidPipe(new THREE.QuadraticBezierCurve3(start,mid,end),linkColors.mathlib,.55,false);mapPipe(moduleMapLayer,b,station,'mathlib',{bend:0});utilityCount++;}
+  for(const b of buildings){const start=vec(b,2.1),end=vec(station,2.8),mid=start.clone().lerp(end,.5);mid.y+=1.4;mapPipe(moduleMapLayer,b,station,'mathlib',{bend:0});utilityCount++;}
  }
  $('three').dataset.modulePipes=String(count);$('three').dataset.mathlibPipes=String(utilityCount);
  updateLinkReadout('Module imports · '+links.out.length+'/'+links.totalOut+' uses · '+links.in.length+'/'+links.totalIn+' used by · '+evidence.count+' Mathlib module imports (role links by cited source modules).');
@@ -341,7 +357,8 @@ function drawApiMap(){
 }
 function setApiMap(map){activeApiMap=map;const url=new URL(location.href);if(map){url.searchParams.set('apiMap',map.path);if(filter!=='all')sourceUI?.filter('all');}else url.searchParams.delete('apiMap');history.replaceState(null,'',url);drawApiMap();}
 function setDusk(){invalidate();if(!scene)return;scene.background.set('#273849');hemi.intensity=.42;sun.intensity=.65;scene.environmentIntensity=.24;for(const m of massGroup.children.map(o=>o.material).filter(m=>m?.emissiveMap))m.emissiveIntensity=.65;renderer.toneMappingExposure=1.15;}
-setupSidebar();mode('oblique');
+setupSidebar();mode('oblique');drawDependencies();
+$('togglePipes').onclick=()=>{if(channel==='off'){channel=previousChannel==='off'?'both':previousChannel;}else{previousChannel=channel;channel='off';}$('channels').value=channel;drawDependencies();};
 $('resetView').onclick=resetCamera;$('focusSelection').onclick=focusSelection;$('zoomIn').onclick=()=>changeZoom(1.25);$('zoomOut').onclick=()=>changeZoom(.8);$('toggleSidebar').onclick=()=>toggleSidebar();$('clearSelection').onclick=clearSelection;$('showSelection').onclick=()=>toggleSidebar(true);$('turnLeft').onclick=()=>turn(-Math.PI/12);$('turnRight').onclick=()=>turn(Math.PI/12);
 window.addEventListener('keydown',e=>{
  if(e.ctrlKey||e.metaKey||e.altKey)return;const k=e.key.toLowerCase(),editing=e.target.closest?.('input,textarea,select,button,a,summary,[contenteditable=true],[role=separator]');
@@ -363,7 +380,7 @@ if(production){
  setupResearchSearch(production,(id,b,focus)=>selectComplex(id,b,focus));
  $('historyTools').addEventListener('toggle',()=>{if($('historyTools').open&&!$('historyTools').dataset.loaded){$('historyTools').dataset.loaded='true';setupHistory(production);}});
  $('status').textContent=($('three').dataset.error?'3D unavailable; flat plan active · ':'')+layout.version+' · '+layout.sites.length+' source complexes · '+layout.buildings.length+' role buildings · '+layout.boroughs.length+' boroughs · '+model.source.revision.slice(0,12);
- $('caption').textContent='Click a source building for role markers and directed pipes. Glowing cyan diamond beacons identify Mathlib stations; neutral buildings are scenery. WASD move · ←/→ rotate · ↑/↓ zoom · drag to pan · right-drag or Shift-drag to rotate · wheel/pinch zoom · F focus · M map/city · I sidebar · / search · Esc clear.';
+ $('caption').textContent='Animated dependency pipes are on by default. Select a complex to emphasise its real links and role markers; use Pipes to hide the network. Cyan diamond beacons identify Mathlib stations; neutral buildings are scenery. WASD move · ←/→ rotate · ↑/↓ zoom · drag to pan · right-drag or Shift-drag to rotate · wheel/pinch zoom · F focus · M map/city · I sidebar · / search · Esc clear.';
  const area=params.get('area');if(area&&model.areas.includes(area)){ $('subject').value=area;sourceUI.filter(area);}
  const initial=params.get('complex'),building=params.get('building'),declaration=params.get('declaration');if(initial&&siteById.has(initial)){const valid=buildingById.get(building)?.complexId===initial||building===initial+'::mathlib-station';selectComplex(initial,valid?building:null,true);}if(declaration){toggleSidebar(true);void sourceUI.restoreDeclaration(declaration);}const api=params.get('apiMap');if(api&&apiMapUI.select(api))toggleSidebar(true);
 }else{
