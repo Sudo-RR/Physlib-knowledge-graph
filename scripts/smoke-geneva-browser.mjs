@@ -1,0 +1,38 @@
+import { chromium } from 'playwright';
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { readFile,mkdir,writeFile } from 'node:fs/promises';
+import path from 'node:path';
+const root=path.resolve('dist/site'),out=path.resolve('dist/browser-evidence');
+await mkdir(out,{recursive:true});
+const production=JSON.parse(await readFile(path.join(root,'data/geneva-production.json'),'utf8'));
+const c=production.model.complexes.find(c=>c.id.includes('HamiltonianMechanics')&&c.buildings.some(b=>b.declarationIds.length))||production.model.complexes.find(c=>c.buildings.some(b=>b.declarationIds.length));
+assert(c,'Need a complex with recorded commands');
+const b=c.buildings.find(b=>b.declarationIds.length),record=production.declarationRecords.find(r=>b.declarationIds.includes(r.id));assert(record);
+const server=createServer(async(req,res)=>{try{const u=new URL(req.url,'http://localhost'),p=path.resolve(root,'.'+(u.pathname==='/'?'/index.html':decodeURIComponent(u.pathname)));if(!p.startsWith(root+path.sep))return res.writeHead(403).end();const body=await readFile(p);res.writeHead(200,{'Content-Type':({'.html':'text/html','.js':'text/javascript','.json':'application/json','.css':'text/css'})[path.extname(p)]||'application/octet-stream'}).end(body);}catch{res.writeHead(404).end();}});
+await new Promise(r=>server.listen(0,'127.0.0.1',r));const url='http://127.0.0.1:'+server.address().port+'/';
+let browser,page;const errors=[],metrics={revision:production.model.source.revision,complexes:production.layout.sites.length};
+try{
+ browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
+ page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});page.setDefaultTimeout(90000);
+ page.on('pageerror',e=>errors.push(e.message));
+ await page.goto(url);await page.waitForFunction(()=>Number(document.querySelector('#three').dataset.renderedFrames)>0||document.querySelector('#three').dataset.error,{},{timeout:90000});
+ assert.equal(await page.locator('#three').getAttribute('data-error'),null,'3D fallback not acceptable in smoke');
+ assert(await page.locator('#three canvas').isVisible());assert((await page.locator('#status').innerText()).includes('source complexes'));
+ await page.screenshot({path:path.join(out,'01-overview.png')});
+ const frame=()=>page.locator('#three').getAttribute('data-rendered-frames').then(Number);
+ const before=await frame();await page.waitForTimeout(1200);const after=await frame();
+ metrics.idleFrames=after-before;metrics.drawCalls=Number(await page.locator('#three').getAttribute('data-draw-calls'));metrics.triangles=Number(await page.locator('#three').getAttribute('data-triangles'));assert(metrics.drawCalls>0&&metrics.triangles>0);assert(metrics.idleFrames<=2,'Idle renderer is continually redrawing');
+ await page.locator('#searchSource').fill(c.id);await page.locator('#sourceList button').filter({hasText:c.id}).first().click();await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
+ await page.locator('#declarationBrowser > summary').click();await page.locator('#declModule').selectOption(record.module);await page.locator('#declKind').selectOption(record.kind);await page.locator('#declQuery').fill(record.name);assert(await page.locator('#declResults a').filter({hasText:record.name}).count()>0);
+ await page.locator('#declQuery').fill('___no_such_command___');assert((await page.locator('#declCount').innerText()).startsWith('0 recorded'));await page.locator('#declQuery').fill('');
+ await page.locator('#channels').selectOption('off');await page.locator('#channels').selectOption('both');
+ await page.locator('#quality').selectOption('low');let f=await frame();await page.locator('#three canvas').focus();await page.keyboard.press('ArrowRight');await page.waitForFunction(n=>Number(document.querySelector('#three').dataset.renderedFrames)>n,f);
+ await page.locator('#dusk').click();await page.screenshot({path:path.join(out,'02-focus-dusk.png')});
+ await page.locator('#plan').click();assert(await page.locator('#map svg').isVisible());await page.screenshot({path:path.join(out,'03-flat-plan.png')});await page.locator('#north').click();
+ await page.goto(url+'?complex='+encodeURIComponent(c.id)+'&building='+encodeURIComponent(b.id));await page.locator('#sourceDetails h3').waitFor();assert.equal(await page.locator('#sourceDetails h3').innerText(),c.id);
+ await page.locator('#researchTools > summary').click();await page.locator('#researchQuery').fill(record.module);await page.locator('#locateResearchModule').click();assert((await page.locator('#researchStatus').innerText()).includes('Exact current module ID'));
+ await page.setViewportSize({width:390,height:844});await page.locator('#plan').click();assert(await page.locator('#map svg').isVisible());assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'Mobile page overflows horizontally');await page.screenshot({path:path.join(out,'04-mobile.png'),fullPage:true});
+ assert.deepEqual(errors,[]);console.log('Browser regression passed',JSON.stringify(metrics));
+}catch(e){if(page)await page.screenshot({path:path.join(out,'failure.png'),fullPage:true}).catch(()=>{});throw e;}
+finally{await writeFile(path.join(out,'metrics.json'),JSON.stringify({...metrics,pageErrors:errors},null,2));if(browser)await browser.close();await new Promise(r=>server.close(r));}

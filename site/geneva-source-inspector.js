@@ -1,5 +1,6 @@
 // Exact recorded module imports and partial declaration inventory; no proof-edge claims.
 import {contributorPanel} from './geneva-contributor-panel.js';
+import {attachDeclarationBrowser} from './geneva-declaration-browser.js';
 export function createSourceInspector({production,roleNames,subjectColors,onSelect,onFilter,onChannel}){
  const {model,layout,modulePaths,declarationLines}=production,$=id=>document.getElementById(id),byId=new Map(model.complexes.map(c=>[c.id,c])),revision=model.source.revision;
  const node=(tag,text,parent)=>{const e=document.createElement(tag);if(text!==null)e.textContent=text;if(parent)parent.append(e);return e;};
@@ -16,6 +17,7 @@ export function createSourceInspector({production,roleNames,subjectColors,onSele
  function inspect(id,building){const c=byId.get(id);if(!c)return;current=id;panel.replaceChildren();node('h3',c.id,panel);node('p',c.library+' · '+c.area+' · '+c.moduleIds.length+' modules · '+c.sourceLines+' source lines',panel);
  button('Focus complex',panel,()=>onSelect(id,building,true));
  const modules=details('Source modules ('+c.moduleIds.length+')',panel);for(const m of c.moduleIds)link(m,node('div',null,modules));
+ attachDeclarationBrowser(panel,production,c);
  const roles=details('Buildings ('+c.buildings.length+')',panel);roles.open=true;
  for(const b of c.buildings){const d=details(roleNames[b.role]+' · '+b.declarationIds.length+' recorded commands',roles);d.open=building===b.id;node('p',b.status==='unclassified'?'Incomplete lexical inventory; no claim of unfinished mathematics.':'Inferred functional role from recorded declaration kind; not a verified semantic classification.',d);
  for(const m of b.moduleIds)link(m,node('div',null,d));for(const decl of b.declarationIds.slice(0,100)){const rec=declarationLines[decl];if(!rec)continue;const div=node('div',null,d);link(rec[0],div,rec[1]);node('small',' — '+decl.split(':').at(-1),div);}if(b.declarationIds.length>100)node('small','First 100 commands; see linked source for the full file.',d);}

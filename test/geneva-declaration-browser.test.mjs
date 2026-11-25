@@ -1,0 +1,3 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {declarationRows} from '../site/geneva-declaration-browser.js';
+test('filters only recorded commands in selected module and kind, sorted by source line',()=>{const r=[{id:'1',module:'A',kind:'lemma',name:'energy_eq',line:9},{id:'2',module:'A',kind:'lemma',name:'energy_zero',line:2},{id:'3',module:'A',kind:'definition',name:'energy',line:1},{id:'4',module:'B',kind:'lemma',name:'energy_eq',line:1}];assert.deepEqual(declarationRows(r,'A','lemma','ENERGY').map(x=>x.id),['2','1']);assert.deepEqual(declarationRows(r,'A','all','zero').map(x=>x.id),['2']);assert.deepEqual(declarationRows(r,'B','definition'),[]);});
