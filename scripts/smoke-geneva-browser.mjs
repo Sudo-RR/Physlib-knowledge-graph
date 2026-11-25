@@ -15,14 +15,14 @@ let browser,page;const errors=[],metrics={revision:production.model.source.revis
 try{
  browser=await chromium.launch({headless:true,args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--disable-dev-shm-usage']});
  page=await browser.newPage({viewport:{width:1440,height:900},reducedMotion:'reduce'});page.setDefaultTimeout(90000);
- page.on('pageerror',e=>errors.push(e.message));
+ page.on('pageerror',e=>errors.push(e.message));page.on('console',msg=>{if(msg.type()==='error'&&/shader error|VALIDATE_STATUS|WebGLProgram|GL_INVALID/i.test(msg.text()))errors.push(msg.text());});
  await page.goto(url);await page.waitForFunction(()=>Number(document.querySelector('#three').dataset.renderedFrames)>0||document.querySelector('#three').dataset.error,{},{timeout:90000});
  assert.equal(await page.locator('#three').getAttribute('data-error'),null,'3D fallback not acceptable in smoke');
  assert(await page.locator('#three canvas').isVisible());assert((await page.locator('#status').innerText()).includes('source complexes'));
  const frame=()=>page.locator('#three').getAttribute('data-rendered-frames').then(Number);
  const renderStats=()=>page.locator('#three').getAttribute('data-render-metrics').then(JSON.parse);
  const nextFrame=async action=>{const previous=await frame();await action();await page.waitForFunction(n=>Number(document.querySelector('#three').dataset.renderedFrames)>n,previous);return renderStats();};
- const adaptive=await renderStats();assert.equal(adaptive.mode,'auto');assert.equal(adaptive.detailedDistricts,0);assert(adaptive.coarseInstances>0);
+ const adaptive=await renderStats();assert(adaptive.pixelRatio>=1.3,'Default desktop render should supersample');assert.equal(adaptive.mode,'auto');assert.equal(adaptive.detailedDistricts,0);assert(adaptive.coarseInstances>0);
  assert.equal(await page.locator('header a[href="city-v2.html"]').count(),0);assert.equal(await page.locator('header a[href="city-c4.html"]').count(),0);assert(!/Lac Léman|RHÔNE|ARVE|La Jonction|Rive Droite|Rive Gauche|Outre-Arve/i.test(await page.locator('#map svg').textContent()));
  await page.screenshot({path:path.join(out,'01-overview.png')});
  const full=await nextFrame(()=>page.locator('#geometryMode').selectOption('full'));assert.equal(full.mode,'full');assert(full.detailedInstances>0);assert.equal(full.coarseInstances,0);
@@ -36,6 +36,7 @@ try{
  await page.waitForFunction(()=>JSON.parse(document.querySelector('#three').dataset.renderMetrics).detailedDistricts>0);
  metrics.lod.focus=await renderStats();assert(metrics.lod.focus.detailedInstances>0);assert(metrics.lod.focus.coarseInstances>0,'Focused view should retain simplified distant districts');
  await page.screenshot({path:path.join(out,'06-focus-adaptive.png')});
+ const crisp=await nextFrame(()=>page.locator('#quality').selectOption('high'));assert(crisp.pixelRatio>adaptive.pixelRatio);await page.screenshot({path:path.join(out,'07-focus-high.png')});await nextFrame(()=>page.locator('#quality').selectOption('medium'));
  assert.equal(await page.locator('#map [data-selection]').getAttribute('visibility'),'visible');
  await page.locator('#toggleInspector').click();assert(!(await page.locator('#cityInspector').isVisible()));await page.locator('#toggleInspector').click();assert(await page.locator('#cityInspector').isVisible());
  await page.locator('#declarationBrowser > summary').click();await page.locator('#declModule').selectOption(record.module);await page.locator('#declKind').selectOption(record.kind);await page.locator('#declQuery').fill(record.name);assert(await page.locator('#declResults a').filter({hasText:record.name}).count()>0);
