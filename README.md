@@ -1,18 +1,27 @@
-# Physlib Knowledge Graph
+# PhysLib City
 
-Milestone A's optional imported-building smoke test is available at
-`city-c4.html?assetFixture=kenney-tower&node=Physlib.Units.ISQDimensionBase&metrics=1`.
-The current default is the source-linked Geneva city; the earlier Milestone C geographic surface is retained at `city-c4.html`. See [the implementation and QA report](docs/city-milestone-a.md)
-and [asset provenance](THIRD_PARTY_ASSETS.md).
+A source-linked, interactive city for exploring formalised physics and planning future formalisation in [PhysLib](https://github.com/leanprover-community/physlib). Independent contributor tooling; not an official upstream replacement.
 
-Milestone B's opt-in Units district is available at
-`city-c4.html?district=units&node=Physlib.Units.ISQDimensionBase&metrics=1`.
-Use `district=procedural` for the matched procedural control. The preview
-preserves all source placements; selecting an outside file restores surrounding
-context. [Milestone B report and comparisons](docs/city-milestone-b.md).
+**[Open the live city](https://sudo-rr.github.io/Physlib-knowledge-graph/)** · [GitHub Actions](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions)
 
-An experimental descriptive browser for [Physlib](https://github.com/leanprover-community/physlib): find modules, explore direct imports and importers, and follow links from API maps to the files they reference. The generated snapshot records the exact source commit and timestamp.
+Explore subject boroughs and mathematical complexes, module imports, exact qualified Lean declarations, native signatures and direct references, API maps and contributor evidence. The default Geneva-inspired city is dusk-only, full-detail oblique 3D with a top-down navigation map and collapsible resizable sidebar. Mathematical identities and evidence are tied to source revisions; civic scenery has no Lean identity.
 
-Open the [live Geneva city](https://sudo-rr.github.io/Physlib-knowledge-graph/) (source-linked complexes, subject boroughs and inferred role buildings; decorative civic scenery remains separate). The [source explorer](https://sudo-rr.github.io/Physlib-knowledge-graph/city-v2.html) remains available from the homepage. The [legacy C.4 explorer](https://sudo-rr.github.io/Physlib-knowledge-graph/city-c4.html) includes `Physlib`, `PhyslibAlpha` and `QuantumInfo`, and the Mathlib modules they directly import. Search or browse the folder tree to focus a file and select a floor to inspect the available information. Drag or use two fingers on a trackpad to pan; pinch or use the zoom buttons to zoom. A mouse wheel can zoom, and right-drag rotates the view within a limited range. W/A/S/D and the directional controls also move the camera. Use **Overview** to return to the surface geography and **Explore Mathlib below** to enter the underground layer. Selecting a Mathlib file also opens that layer. Hover over a building to identify it. The back and forward controls retrace file selections; **Return to start** restores the initial view. Press `/` to search and Enter to open the first match. The 3D city requires a WebGL-capable browser.
+## Start here for contributors and agents
 
-The historical C.4 overview shows three repository-derived boroughs separated by two rivers. Actual source directories form spacious wedge-inspired districts, with recursive parcels, connected civic streets and reserved infrastructure corridors. The geographic map uses the same placement manifest. The former radial layout is available at `?layout=legacy`.
+| Document | Purpose |
+|---|---|
+| [AGENTS.md](AGENTS.md) | Binding repository instructions and workstream boundaries |
+| [Handover](docs/HANDOVER.md) | Current architecture, validated baseline, limitations and next tasks |
+| [Art specification and roadmap](docs/ART-ROADMAP.md) | Separate visual direction: dense skyline, district lighting, animated beams, static roof lights, no shadows |
+| [PhysLib integration roadmap](docs/INTEGRATION-ROADMAP.md) | Mathematical data, construction sites, reviewable initiatives and future PaperView interoperability |
+| [Development runbook](docs/DEVELOPMENT.md) | Setup, testing, deployment and diagnostics |
+
+The two roadmaps are independent. The art layer consumes the integration model without redefining it. Integration does not wait for visual polish. Next: **I1 — formalisation initiative schema and construction sites** and **A0–A3 — approved art direction**.
+
+## Use the city
+WASD moves; arrow keys rotate/zoom in 3D and pan in the map. Drag pans, right/Shift-drag rotates, scroll/pinch zooms. M switches views, I toggles the sidebar, / searches, F focuses, Home resets and Esc clears. Select a coloured building or cyan Mathlib station; neutral scenery is decorative. In the map, click a source building to enter the oblique city. Search qualified declarations and travel through recorded relationships; open native metadata on demand. API-map overlays show cited complexes and explicit TODO passages, not verified completion.
+
+## Development and provenance
+Node 22, npm, Git, Three.js and esbuild. Run npm ci, npm test and npm run build:city; follow the [runbook](docs/DEVELOPMENT.md) for actual source snapshots and Chromium tests. The Pages deployment uses exact revision checks and hash-verified lazy mathematical companions. Result-graph relationships can be routed and Mathlib coverage is scoped; native ranges/values may be unavailable. No proof certification is implied by the visualisation.
+
+[Historical Geneva programme](docs/geneva/README.md) and [asset provenance](THIRD_PARTY_ASSETS.md) remain available. city-v2.html redirects to the current city; city-c4.html is a historical fallback/asset fixture, not a second public explorer. Historical milestone documents preserve design decisions but the current handover and roadmaps govern new work.

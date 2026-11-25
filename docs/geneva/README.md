@@ -1,3 +1,5 @@
+> **Historical programme record.** For current production status and agent handover, see [Handover](../HANDOVER.md), [Art roadmap](../ART-ROADMAP.md), [Integration roadmap](../INTEGRATION-ROADMAP.md) and [AGENTS.md](../../AGENTS.md). The source-linked G1 homepage has superseded the terrain-only study; city-v2.html is now a redirect. Earlier roadmap statuses below are retained as historical evidence, not current instructions.
+
 # PhysLib City — Geneva programme
 Status: G1 architectural landing page approved for default publication 24 November 2026; G2–G5 pending. Parent #55. Baseline: 325a974, published City v2; 433 complexes at the recorded source snapshot, not a permanent count.
 

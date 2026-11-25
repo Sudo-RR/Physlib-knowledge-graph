@@ -1,0 +1,39 @@
+# PhysLib City — maintainer handover
+
+As of 25 November 2026, baseline commit [5bcffd1](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/5bcffd14b359790642e8a1d991039459eda204f7). Repository Sudo-RR/Physlib-knowledge-graph, default branch master. [Live city](https://sudo-rr.github.io/Physlib-knowledge-graph/). Project is an independent open-source-facing contributor interface, not an upstream PhysLib replacement.
+
+## Start here
+Read [AGENTS.md](../AGENTS.md), [Integration roadmap](INTEGRATION-ROADMAP.md), [Art roadmap](ART-ROADMAP.md) and [Development runbook](DEVELOPMENT.md). These documents supersede stale instructions in earlier milestone specifications for current operation. There are two parallel next tasks: I1 initiative schema and construction sites; A0–A3 art composition, shadow removal, district lighting, beams and static roof signals. Coordinate shared renderer glue, do not conflate milestones.
+
+## Verified production baseline
+[Deployment 45680479487](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45680479487), build job 139439385099 and deploy 139442153927 both successful. [Previous deployment 45679274759](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45679274759) also successful. 157/157 unit tests; actual packaged Chromium browser regression passed (full-detail/dusk, declaration traversal, native metadata loading, API overlays, evidence, camera navigation, legacy redirect/deep links, research, mobile map). Native extraction [45677319974](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45677319974) completed successfully, native full artifact 15053014189.
+- PhysLib 7910f51f9129ee4c5829216251c25a3a82042f1e; Mathlib fc4f59e577feb1a4956671bc04ac18aaaf8cd842; Lean leanprover/lean4:v4.36.0; result-graph 2ee55ff6e521eabe71ecddac797e12f64448a5b6.
+- 1,634 modules, 434 complexes, 1,478 role buildings, 434 stations, 30 boroughs, 43 API maps; snapshot-specific counts.
+- 34,959 elaborated local declarations, 304,781 scoped edges, 589 external Mathlib targets, 1,603 modules with records. Graph 67,292,872 bytes (lazy).
+- 34,959 native signatures, 30,926 exact ranges, 33,801 available values, 1,162,808 type references and 2,433,150 value references (reference records, not unique edges); 1,603 module shards, 60,811,582 bytes total, loaded on demand. Native raw graph hash 3281aaa7f132387556181852e4a51701f3daf87af04f85e641e9474f6ee982b0.
+- Chromium at 1440x900 viewport: 4242x2079 render buffer, DPR 3, full detail, 1,061,469 overview triangles and 734 draw calls, 0 idle redraws in measured interval. Software renderer results, not physical GPU frame-rate benchmarks.
+- Latest user art feedback is specified, not implemented. Current contact/plan shadows may remain. Formalisation initiative schema/editor, construction sites and PaperView integration are not implemented.
+
+## Architecture map
+| Layer | Key entry points |
+|---|---|
+| Source scan | scripts/extract.mjs, scripts/extract-mathlib.mjs, scripts/city-v2-inventory.mjs |
+| Canonical grouping and placement | site/city-v2-model.js, site/geneva-production-layout.js, scripts/build-geneva-production.mjs |
+| Published mathematical graph | scripts/elaborated-pilot.mjs, scripts/run-elaborated-pilot.mjs, scripts/publish-elaborated.mjs, site/geneva-elaborated.js |
+| Native metadata | scripts/native-lean-metadata.lean, scripts/pack-native-metadata.mjs, site/geneva-native-metadata.js |
+| Declaration exploration | site/geneva-elaborated-panel.js, site/geneva-declaration-navigation.js, site/geneva-source-inspector.js, site/geneva-declaration-browser.js |
+| Contributor and planning | site/geneva-contributor.js, site/geneva-contributor-panel.js, site/geneva-api-maps.js, site/geneva-api-map-panel.js |
+| Presentation | site/geneva-g1.js, site/geneva-g1.html, site/geneva-architectural-materials.js, site/geneva-urban-materials.js, site/geneva-civic-render.js, site/geneva-navigation.js |
+| Publication | .github/workflows/deploy.yml, .github/workflows/elaborated-pilot.yml, .github/workflows/native-metadata.yml, scripts/package-site.mjs, scripts/smoke-geneva-browser.mjs |
+
+## Data and semantics
+Graph JSON contains source imports and API file references; lexical commands are not elaborated identities. Exact module ownership maps to complexes; functional role buildings are inferred, not proof-level joins. PhyslibAlpha, Physlib and QuantumInfo occupy three distinct geographic regions; no public river labels or underground explorer. Decorative towers and infill are not mathematical entities. Source imports and declaration relationships use distinct visual channels; Mathlib stations are surface utility representations. Native references are constants directly present in Lean expressions, not automatically certified proof usage. Scoped result-graph edges may be contracted/routed; absence is not independence. Review/freshness data is evidence, not quality or proof certification. API map parser extracts explicit passages and citations, not inferred completion status.
+
+## Deployment and risks
+Pages is static, generated from clean revision-pinned sources; GitHub Actions builds source snapshots and bundles, selects matching successful extraction artifacts, verifies hashes and publishes only fresh revisions. Extraction and website build are decoupled. A new source revision may temporarily have no compatible mathematical companion; explicitly show unavailable. Full graph/metadata are lazy-loaded. Artifact retention is 14 days; scheduled extraction refreshes evidence. Keep no secrets in the browser. A previous stale deployment was correctly blocked when newer commits arrived, and Chromium timeouts were fixed by isolating browser phases; see [deployment reliability](geneva/deployment-reliability.md). No confirmed GPU/mobile touch hardware performance acceptance. Browser smoke is not subjective visual approval.
+
+## Historical references
+[Geneva programme](geneva/README.md), [sharp rendering](geneva/sharp-rendering.md), [dusk navigation](geneva/dusk-navigation.md), [city navigation](geneva/city-navigation.md), [declaration navigation](geneva/declaration-navigation.md), [native metadata](geneva/full-native-metadata.md), [API planning](geneva/api-map-planning.md), [published graph](geneva/published-elaborated.md). Older C.4 and G1 studies are reference evidence, not current feature mandates.
+
+## Handoff checklist
+Start from master head and current CI, choose art or integration work package, inspect relevant files, build/test branch, capture evidence, submit a scoped commit, verify actual deployment and update handover. Do not make successive speculative production pushes. Record limitations, approvals and open questions. No future initiative is approved just because included in this roadmap.
