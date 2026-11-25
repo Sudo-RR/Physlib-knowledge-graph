@@ -80,7 +80,11 @@ jobs:
           for id in $runs; do
             tmp=$(mktemp -d)
             if gh run download "$id" --repo "$GITHUB_REPOSITORY" --name elaborated-full-evidence --dir "$tmp" && node scripts/publish-elaborated.mjs publish "$tmp" "$id"; then
-              rm -rf "$tmp"
+              native=$(mktemp -d)
+              if gh run download "$id" --repo "$GITHUB_REPOSITORY" --name native-full-evidence --dir "$native"; then
+                node scripts/pack-native-metadata.mjs publish site/data/geneva-elaborated.json "$native" site/data/geneva-native "$id" || { rm -rf site/data/geneva-native; echo "::warning::Native companion rejected; graph remains available"; }
+              fi
+              rm -rf "$native" "$tmp"
               break
             fi
             rm -rf "$tmp"

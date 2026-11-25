@@ -5,6 +5,9 @@ on:
     paths:
       - 'scripts/elaborated-pilot.mjs'
       - 'scripts/run-elaborated-pilot.mjs'
+      - 'scripts/native-lean-metadata.lean'
+      - 'scripts/pack-native-metadata.mjs'
+      - 'test/native-metadata-shards.test.mjs'
       - 'test/elaborated-pilot.test.mjs'
       - '.github/workflows/elaborated-pilot.yml'
   workflow_dispatch:
@@ -15,7 +18,7 @@ permissions:
 jobs:
   pilot:
     runs-on: ubuntu-24.04
-    timeout-minutes: 55
+    timeout-minutes: 100
     strategy:
       fail-fast: false
       matrix:
@@ -69,3 +72,30 @@ jobs:
           path: pilot-evidence/
           if-no-files-found: warn
           retention-days: 14
+      - name: Export full native Lean declaration metadata
+        id: native
+        if: matrix.scope == 'full'
+        continue-on-error: true
+        timeout-minutes: 55
+        working-directory: .pilot-physlib
+        run: |
+          set -eu
+          mkdir -p ../native-evidence
+          /usr/bin/time -v -o ../native-evidence/native.time.txt lake env lean --run ../scripts/native-lean-metadata.lean ../pilot-evidence/snapshot.json ../native-evidence/native.jsonl --jsonl Physlib PhyslibAlpha QuantumInfo
+          git diff --exit-code
+          cp ../pilot-evidence/provenance.json ../native-evidence/provenance.json
+          (cd ../native-evidence && sha256sum native.jsonl > native.sha256)
+      - name: Validate full native metadata before publication artifact
+        id: validate_native
+        if: matrix.scope == 'full' && steps.native.outcome == 'success'
+        continue-on-error: true
+        run: node scripts/pack-native-metadata.mjs validate pilot-evidence/snapshot.json native-evidence
+      - uses: actions/upload-artifact@v4
+        if: matrix.scope == 'full' && steps.native.outcome == 'success' && steps.validate_native.outcome == 'success'
+        with:
+          name: native-full-evidence
+          path: native-evidence/
+          retention-days: 14
+      - name: Report optional native metadata status
+        if: matrix.scope == 'full' && (steps.native.outcome != 'success' || steps.validate_native.outcome != 'success')
+        run: echo '::warning::Native full metadata unavailable; validated result-graph extraction remains usable.'

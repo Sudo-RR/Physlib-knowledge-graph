@@ -1,11 +1,13 @@
 import {indexElaborated} from './geneva-elaborated.js';
 import {declarationLocator} from './geneva-declaration-navigation.js';
+import {nativeLoader} from './geneva-native-metadata.js';
+let loadNative=null;
 let index=null,version=0,loadPublished=null,publication=null,locator=null,active=null,trail=[],travelUI=null;
 const LIMIT=150*1024*1024;
 export function setupElaboratedImport(production,refresh,onTravel,onReset){
  const input=document.getElementById('elaboratedFile'),status=document.getElementById('elaboratedStatus');
  let pending=null;
- const apply=(snapshot,label)=>{const next=indexElaborated(snapshot,production);index=next;locator=declarationLocator(production,index);if(active&&!locator.locate(active)){active=null;trail=[];onReset?.();}status.textContent=label+' · '+index.local.size.toLocaleString()+' PhysLib declarations · '+snapshot.dependencies.length.toLocaleString()+' recorded relationships · partial scope';refresh();travelUI?.render();if(active)travelUI?.select(active,false);};
+ const apply=(snapshot,label)=>{const next=indexElaborated(snapshot,production);index=next;locator=declarationLocator(production,index);loadNative=nativeLoader(index);if(active&&!locator.locate(active)){active=null;trail=[];onReset?.();}status.textContent=label+' · '+index.local.size.toLocaleString()+' PhysLib declarations · '+snapshot.dependencies.length.toLocaleString()+' recorded relationships · partial scope';refresh();travelUI?.render();if(active)travelUI?.select(active,false);};
  input.onchange=async()=>{const file=input.files[0];if(!file)return;const token=++version;try{if(file.size>LIMIT)throw Error('Snapshot exceeds 150 MiB browser import limit');const snapshot=JSON.parse(await file.text());if(token===version)apply(snapshot,'Loaded locally');}catch(e){if(token===version)status.textContent='Import rejected: '+e.message;}};
  const manifestPromise=fetch('data/geneva-elaborated-manifest.json',{cache:'no-cache'}).then(async r=>{
   if(!r.ok)return {status:'unavailable',reason:'No published extraction manifest.'};
@@ -34,6 +36,25 @@ export function setupElaboratedImport(production,refresh,onTravel,onReset){
  const tools=document.getElementById('elaboratedTools');tools.addEventListener('toggle',()=>{if(tools.open&&!index)void loadPublished();});
  travelUI=setupTravel(production,onTravel);return travelUI;
 }
+function attachNative(parent,row,production){
+ const add=(tag,text,p)=>{const e=document.createElement(tag);if(text!==null)e.textContent=text;p.append(e);return e;};
+ const section=add('details',null,parent);section.dataset.nativeMetadata=row.id;add('summary','Native Lean signature, range and direct references',section);const content=add('div',null,section);let loaded=false,loading=false;
+ const action=async()=>{if(loaded||loading)return;loading=true;content.textContent='Loading verified native metadata…';try{
+  const metadata=await loadNative?.(row);content.replaceChildren();
+  if(!metadata){add('p','No matching native metadata is published for this declaration yet.',content);content.dataset.nativeState='unavailable';return;}
+  loaded=true;content.dataset.nativeState='loaded';
+  if(metadata.statement){const pre=add('pre',metadata.statement,content);pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px';}else add('p','Signature unavailable from Lean pretty-printer.',content);
+  const range=metadata.range,path=production.modulePaths[row.module];
+  if(range){const link=add('a','Exact source: lines '+range.line+'–'+range.endLine+' · columns '+range.column+'–'+range.endColumn,content);link.href='https://github.com/leanprover-community/physlib/blob/'+production.model.source.revision+'/'+path.split('/').map(encodeURIComponent).join('/')+'#L'+range.line+'-L'+range.endLine;link.target='_blank';link.rel='noopener noreferrer';}
+  else add('p','No exact declaration range recorded in the Lean environment.',content);
+  const refs=metadata.directReferences;add('p','Direct expression constants, distinct from the scoped and potentially routed graph.',content);
+  for(const [label,records] of [['Type references',refs.type],['Value references',refs.value]]){
+   const d=add('details',null,content);add('summary',label+' ('+records.length+')',d);if(label==='Value references'&&!refs.valueAvailable){add('p','Lean value unavailable; this is not an empty proof.',d);continue;}
+   let offset=0;const list=add('div',null,d);const more=()=>{for(const x of records.slice(offset,offset+60)){const line=add('div',x.id+' · '+x.module,list);line.className='qualified-edge';if(index?.nodes.get(x.id)?.module===x.module&&locator?.locate(x.id)){const b=add('button','Travel to exact declaration',line);b.type='button';b.onclick=()=>travelUI?.select(x.id);}else if(x.module.startsWith('Mathlib.')&&/^[A-Za-z0-9_.]+$/.test(x.module)){const a=add('a','Pinned Mathlib module',line);a.href='https://github.com/leanprover-community/mathlib4/blob/'+index.source.mathlibRevision+'/'+x.module.replaceAll('.','/')+'.lean';a.target='_blank';a.rel='noopener noreferrer';}}offset+=60;if(offset<records.length){const b=add('button','Show more',d);b.type='button';b.onclick=()=>{b.remove();more();};}};d.addEventListener('toggle',()=>{if(d.open&&!offset)more();});
+  }
+ }catch(e){content.textContent='Native metadata unavailable: '+e.message;content.dataset.nativeState='error';}finally{loading=false;}};
+ section.addEventListener('toggle',()=>{if(section.open)void action();});
+}
 function setupTravel(production,onTravel){
  const $=id=>document.getElementById(id),root=$('declarationTravel'),query=$('qualifiedQuery'),kind=$('qualifiedKind'),results=$('qualifiedResults'),detail=$('qualifiedDetail'),back=$('declarationBack'),status=$('qualifiedStatus');
  const add=(tag,text,p)=>{const e=document.createElement(tag);if(text!==null)e.textContent=text;p.append(e);return e;};
@@ -51,7 +72,7 @@ function setupTravel(production,onTravel){
   const title=add('h3',row.id,detail);title.dataset.activeDeclaration=row.id;add('p',row.kind+' · '+row.module,detail);
   add('p',n.origin.placement==='inferred-role'?'Location: inferred role building within exact owning module complex.':'Location: exact owning module complex; no verified individual role building.',detail);
   const src=add('a',row.line?'Pinned source range':'Pinned source module',detail);src.href='https://github.com/leanprover-community/physlib/blob/'+production.model.source.revision+'/'+production.modulePaths[row.module].split('/').map(encodeURIComponent).join('/')+(row.line?'#L'+row.line:'');src.target='_blank';src.rel='noopener noreferrer';
-  if(row.statement){const pre=add('pre',row.statement,detail);pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere';}
+  attachNative(detail,row,production);
   add('p',n.totals.out+' prerequisite records · '+n.totals.in+' dependent records · '+n.totals.sameComplex+' within this complex · '+n.totals.external+' external records. '+n.groups.length+' inter-complex directional groups. Map shows up to 14 groups per direction, subject to filters.',detail);
   add('small','Expression relationships may be routed through omitted declarations; not certified direct proof edges. Mathlib references are scoped; no fabricated external buildings.',detail);
   for(const [label,edges,key] of [['Prerequisites',index.uses.get(active)||[],'to'],['Dependents',index.usedBy.get(active)||[],'from']]){
@@ -86,8 +107,7 @@ export function elaboratedPanel(parent,production,c,onSelect){
  for(const row of rows.slice(0,limit)){const detail=add('details',null,result);add('summary',row.id+' · '+row.kind,detail);detail.ontoggle=()=>{if(!detail.open||detail.dataset.loaded)return;detail.dataset.loaded='1';
  const travel=add('button','Explore declaration in city',detail);travel.type='button';travel.dataset.exploreDeclaration=row.id;travel.onclick=()=>travelUI?.select(row.id);
  const flags=[row.hasSorry===true?'own sorry':null,row.sorryTainted===true?'reported sorry dependency':null,row.axiomTainted===true?'reported custom axiom dependency':null,row.isUnsafe===true?'unsafe/partial':null].filter(Boolean);if(flags.length)add('p',flags.join(' · '),detail);
- if(row.statement){const pre=add('pre',row.statement,detail);pre.style.cssText='white-space:pre-wrap;overflow-wrap:anywhere;font-size:11px';}
- if(row.directReferences){const refs=row.directReferences;for(const [title,records] of [['Direct type references',refs.type],['Direct value references',refs.value]]){const sub=add('details',null,detail);add('summary',title+' ('+records.length+')',sub);if(title==='Direct value references'&&!refs.valueAvailable)add('p','Lean value unavailable; absence cannot be inferred.',sub);let offset=0;const more=()=>{for(const x of records.slice(offset,offset+100))add('div',x.id+' · '+x.module,sub);offset+=100;if(offset<records.length){const b=add('button','Show more',sub);b.type='button';b.onclick=()=>{b.remove();more();};}};more();}}
+ attachNative(detail,row,production);
  const path=production.modulePaths[row.module];const link=add('a',row.line?'Open pinned declaration range':'Open pinned source module',detail);link.href='https://github.com/leanprover-community/physlib/blob/'+production.model.source.revision+'/'+path.split('/').map(encodeURIComponent).join('/')+(row.line?'#L'+row.line+(row.range?.endLine?'-L'+row.range.endLine:''):'');link.target='_blank';link.rel='noopener noreferrer';
  for(const [title,edges,key] of [['Recorded prerequisites',index.uses.get(row.id)||[],'to'],['Recorded dependents',index.usedBy.get(row.id)||[],'from']]){const sub=add('details',null,detail);add('summary',title+' ('+edges.length+')',sub);let shown=0;const more=()=>{for(const e of edges.slice(shown,shown+100)){const target=index.nodes.get(e[key]),line=add('div',target.id+' · '+e.kind,sub);const location=locator?.locate(target.id);if(location){const b=add('button','Travel to '+target.id,line);b.type='button';b.onclick=()=>travelUI?.select(target.id);}else add('small',' · '+target.module,line);}shown+=100;if(shown<edges.length){const b=add('button','Show more relationships',sub);b.type='button';b.onclick=()=>{b.remove();more();};}};more();}
  };}if(rows.length>limit){const b=add('button','Show more declarations',result);b.type='button';b.onclick=()=>{limit+=50;render();};}}

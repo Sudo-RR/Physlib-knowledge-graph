@@ -25,7 +25,7 @@ def recordedRange (env : Environment) (n : Name) : Json :=
       ("endLine", toJson r.range.endPos.line), ("endColumn", toJson r.range.endPos.column)]
 
 def printSignature (env : Environment) (n : Name) : IO Json := do
-  let ctx : Core.Context := { fileName := "", fileMap := default, maxHeartbeats := 0, currNamespace := n.getPrefix }
+  let ctx : Core.Context := { fileName := "", fileMap := default, maxHeartbeats := 2000000, currNamespace := n.getPrefix }
   try
     let (sig, _) ← (Meta.MetaM.run' (PrettyPrinter.ppSignature n)).toIO ctx { env }
     return Json.str (toString sig.fmt)
@@ -37,6 +37,8 @@ def references (env : Environment) (names : Array Name) : Json :=
 
 unsafe def main (args : List String) : IO UInt32 := do
   let input :: output :: roots := args | throw (IO.userError "Usage: metadata <snapshot> <output> <root>...")
+  let streaming := roots.head? == some "--jsonl"
+  let roots := if streaming then roots.drop 1 else roots
   if roots.isEmpty then throw (IO.userError "No roots")
   let raw ← IO.ofExcept (Json.parse (← IO.FS.readFile input))
   let req : RequestedSnapshot ← IO.ofExcept (fromJson? raw)
@@ -47,15 +49,25 @@ unsafe def main (args : List String) : IO UInt32 := do
   let matched := env.constants.fold (init := #[]) fun acc n ci =>
     if wanted[n.toString]? == some (moduleName env n).toString then acc.push (n, ci) else acc
   let mut rows : Array Json := #[]
+  let stream ← if streaming then some <$> IO.FS.Handle.mk output .write else pure none
+  let mut count : Nat := 0
   for (n, ci) in matched.qsort (fun a b => Name.lt a.1 b.1) do
     let signature ← printSignature env n
     let value := ci.value? (allowOpaque := true)
-    rows := rows.push (Json.mkObj [
+    let row := Json.mkObj [
       ("id", Json.str n.toString), ("module", Json.str (moduleName env n).toString),
       ("statement", signature), ("range", recordedRange env n),
       ("valueAvailable", toJson value.isSome),
       ("typeReferences", references env ci.type.getUsedConstants),
-      ("valueReferences", references env (value.map (·.getUsedConstants) |>.getD #[]))])
-  IO.FS.writeFile output (toString (toJson rows))
-  IO.println s!"Native Lean metadata: {rows.size}/{req.declarations.size} matched"
+      ("valueReferences", references env (value.map (·.getUsedConstants) |>.getD #[]))]
+    match stream with
+    | some h => h.putStrLn row.compress
+    | none => rows := rows.push row
+    count := count + 1
+    if count % 1000 == 0 then IO.println s!"Native metadata progress: {count}/{req.declarations.size}"
+  match stream with
+  | some h => h.flush
+  | none => IO.FS.writeFile output (toString (toJson rows))
+  IO.println s!"Native Lean metadata: {count}/{req.declarations.size} matched"
+  if count != req.declarations.size then throw (IO.userError "Native identity coverage mismatch")
   return 0

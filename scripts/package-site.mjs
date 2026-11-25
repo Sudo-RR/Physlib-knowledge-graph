@@ -49,4 +49,5 @@ if(landingHtml.includes('href="city-v2.html"')||landingHtml.includes('href="city
 for(const file of ['declarations.json','city-declarations.json','geneva-history.json','geneva-elaborated.json','geneva-elaborated-manifest.json']) {
   try {await stat(path.join(workspace,'site','data',file));await cp(path.join(workspace,'site','data',file),path.join(root,'data',file));} catch(error) {if(error.code!=='ENOENT')throw error;}
 }
+try {await stat(path.join(workspace,'site','data','geneva-native','manifest.json'));await cp(path.join(workspace,'site','data','geneva-native'),path.join(root,'data','geneva-native'),{recursive:true});}catch(error){if(error.code!=='ENOENT')throw error;}
 console.log(`Staged city-only site at ${root}`);
