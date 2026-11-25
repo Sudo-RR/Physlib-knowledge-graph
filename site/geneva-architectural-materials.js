@@ -46,7 +46,7 @@ export function applyFacadeProjection(material){
    #ifdef USE_INSTANCING
      vec3 dims=vec3(length(instanceMatrix[0].xyz),length(instanceMatrix[1].xyz),length(instanceMatrix[2].xyz));
      float span=mix(dims.x,dims.z,step(abs(normal.z),abs(normal.x)));
-     vec2 repetitions=max(vec2(1.0),floor(vec2(span/10.0,dims.y/12.0)+0.5));
+     vec2 repetitions=max(vec2(1.0),floor(vec2(span/4.0,dims.y/5.0)+0.5));
      #ifdef USE_MAP
        vMapUv*=repetitions;
      #endif
