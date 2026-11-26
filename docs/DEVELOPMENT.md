@@ -46,7 +46,7 @@ cp test/fixtures/city/mathlib-bridge.json site/data/mathlib-bridge.json
 node scripts/build-geneva-production.mjs
 npm run package:site
 npm run serve
-````
+```
 Open http://127.0.0.1:4173. Fixture preview has no complete elaborated/native companion or full inventory; do not report fixture metrics as production. If .physlib-source already exists, do not overwrite it; use a separate worktree or explicitly verify its revision and cleanliness. Production steps above remain authoritative for real data.
 
 ## Workstream process
