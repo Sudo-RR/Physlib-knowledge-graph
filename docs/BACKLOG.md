@@ -24,12 +24,27 @@ Rebaselined 25 November 2026 from verified production 5bcffd1 and handover 65e95
 | [#75](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/75) | I3 | Integration | PaperView exchange | 71,74 |
 | [#76](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/76) | I4 | Integration | Retrieval and agents | 71,74; coordinate 75 |
 | [#77](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/77) | I0.1 | Integration | Evidence contracts and coverage | — |
-| [#78](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/78) | I0.2 | Integration | Exact API/search citations | 77 |
+| [#78](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/78) | I0.2 / K2 | Integration | Exact API/search citations | 77, 85, 86 |
 | [#79](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/79) | I0.3 | Integration | Contributor usability and evidence | — |
 | [#80](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/80) | R1 | Operations | Release and recovery | — |
 
+## Knowledge-base milestone mapping (26 November 2026)
+
+The [K0–K7 specification](KNOWLEDGE-BASE.md) extends integration epic #65; rows below are authoritative for the next sequence. Existing I-issues retain their history; no duplicates or retired work recreated.
+
+| Milestone | Issue(s) | Work package | Dependencies |
+|---|---|---|---|
+| [K0](KNOWLEDGE-BASE.md#k0--canonical-schema) | [#85](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/85) | Canonical typed schema | Coordinate #77, #71 |
+| [K1](KNOWLEDGE-BASE.md#k1--ingestion-and-publication) | [#86](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/86) | SQLite ingestion and static publication | #85; #77, #80 |
+| [K2](KNOWLEDGE-BASE.md#k2--exact-declaration-and-api-map-reference-resolution) | [#78](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/78) (existing I0.2) | Exact declaration/API references | #85, #86, #77 |
+| [K3](KNOWLEDGE-BASE.md#k3--query-engine-and-analytics) | [#87](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/87) | Deterministic query engine and analytics | #85, #86, #77; #78 claim joins |
+| [K4](KNOWLEDGE-BASE.md#k4--macro-meso-micro-interfaces) | [#88](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/88) | Macro/Meso/Micro interfaces | #86, #78, #87; #79 |
+| [K5](KNOWLEDGE-BASE.md#k5--claim-reconciliation) | [#89](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/89) | Claim reconciliation and reusable-result candidates | #86, #78, #87 |
+| [K6](KNOWLEDGE-BASE.md#k6--formalisation-initiatives) | [#71](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/71), [#72](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/72), [#73](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/73), [#74](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/74) (I1/I2) | Initiative schema, draft, overlay, workflow | #71 parallel K0; relevant #78/#87/#89 evidence; #88 view adapter |
+| [K7](KNOWLEDGE-BASE.md#k7--semantic-retrieval-and-agent-integration) | [#76](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/76) (I4) | Semantic retrieval and agents | K1–K5; K6 review flow; coordinate #75 |
+
 ## Ready work
-Start [#66](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/66) (art baseline) and [#71](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/71) (initiative schema) independently. [#77](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/77), [#79](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/79) and [#80](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/80) are parallel maintenance work, not gates for the first initiative. I1b/I1c follow the schema; A1/A2 follow baseline, with A3 following A2. No artificial dependency between art and integration.
+Start #85 (K0 canonical schema) now, coordinate #77 evidence contracts and #80 revision freshness. #71 initiative schema may proceed independently in alignment with K0; pilot/overlay/workflow depend on relevant query and reconciliation evidence as specified above. #79 usability and #75 interoperability remain distinct, coordinated work packages. Art #66–70 and #81–84 remain independent and unchanged. No artificial art gate for integration.
 
 ## Definition of ready and done
 Every task links a spec section, declares scope/non-goals and dependencies, and has verifiable acceptance criteria. Report exact source and commit revisions, tests actually run, real browser/visual evidence where applicable, and blockers. A PR is not deployed simply because it is merged; no spec milestone is complete until its acceptance criteria are satisfied. Art approval is human; mathematical approval and verification must be evidence-backed.

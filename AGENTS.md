@@ -2,7 +2,7 @@
 
 ## Read first
 1. [Handover and current architecture](docs/HANDOVER.md).
-2. [PhysLib integration roadmap](docs/INTEGRATION-ROADMAP.md).
+2. [PhysLib integration roadmap](docs/INTEGRATION-ROADMAP.md) and [K0–K7 knowledge-base specification](docs/KNOWLEDGE-BASE.md).
 3. [Art specification and roadmap](docs/ART-ROADMAP.md).
 4. [Developer and release runbook](docs/DEVELOPMENT.md).
 5. [Production backlog](docs/BACKLOG.md) — start from an open mapped issue; link it in the PR. Do not use the historical issue plan.
@@ -10,7 +10,7 @@
 These are the current operational documents. Older milestone, Geneva and City v2 specifications are historical design/evidence records; preserve their useful invariants but do not resurrect superseded UI or layouts. Explicit current maintainer direction takes precedence. The repository is Sudo-RR/Physlib-knowledge-graph, default branch master. This is an independent contributor tool, not an official upstream PhysLib workflow.
 
 ## Two independent workstreams
-- **Integration** owns source identity, provenance, Lean extraction, module ownership, declaration relations, API-map evidence, initiatives, review and publication. Its next milestone is a versioned initiative/work-package model with a Classical Integrability draft.
+- **Integration** owns source identity, provenance, Lean extraction, module ownership, declaration relations, API-map evidence, initiatives, review and publication. Its next milestone is K0 canonical schema and K1 revision-aware structured ingestion, with K2–K5 query/analytics and Macro/Meso/Micro interfaces, then K6 initiatives and K7 retrieval/agents. Initiative schema may proceed alongside K0; preserve existing issue history and mapped dependencies.
 - **Art** owns appearance, presentation, non-semantic scenery, lighting, motion, camera defaults and static/animated visual signals. Its next milestone is the approved density/colour/beam/no-shadow art direction. Read ART-ROADMAP before renderer changes.
 - Treat the mathematical model as a read-only input to the art layer. Do not change IDs, role semantics, dependency types, source snapshot formats or allocation ownership to achieve an art target. Do not change the approved artistic baseline merely to implement integration.
 - Use separate branches/worktrees or clearly scoped commits (art/... and integration/... suggested). Avoid parallel edits to the shared renderer glue; coordinate interfaces and merge order. Neither roadmap blocks the other. Cross-cutting fixes must state their impact and preserve the contract.
@@ -20,6 +20,7 @@ These are the current operational documents. Older milestone, Geneva and City v2
 - Exact module ownership is authoritative. Do not join lexical command IDs to qualified elaborated names by fuzzy/short-name matching. Role building placement is explicitly inferred, not proof certification.
 - Module imports, scoped/potentially routed result-graph edges and native direct type/value constants are distinct evidence types. Do not label them all direct proofs. Missing ranges, values, edges or review marks mean unavailable or unrecorded, not false, independent or rejected.
 - Verify Physlib revision, pinned Mathlib revision, Lean toolchain, extractor revision and hashes for mathematical companions. Never display stale data as current. Mathlib extraction is scoped, not exhaustive.
+- Macro/Meso/Micro are views of a single typed revision-aware knowledge model. Keep canonical records separate from visible geometry. Use bounded, read-only, provenance-bearing queries; no unapproved global declaration rendering, hosted backend, stale joins or claim of semantic equivalence from a fingerprint. SQLite-first; evaluate further infrastructure only when needed.
 - API map references are citations, not coverage or completion claims. Preserve explicit TODO passages and source lines; TODO markers are not automatically individual tasks. Proposed initiative data is separately namespaced, explicitly draft until human review, and never part of the canonical existing-source graph. No automatic upstream PRs, approval, verification claims or merges.
 
 ## Approved public UI

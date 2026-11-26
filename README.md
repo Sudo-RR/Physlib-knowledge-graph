@@ -14,10 +14,11 @@ Explore subject boroughs and mathematical complexes, module imports, exact quali
 | [Handover](docs/HANDOVER.md) | Current architecture, validated baseline, limitations and next tasks |
 | [Art specification and roadmap](docs/ART-ROADMAP.md) | Separate visual direction: dense skyline, district lighting, animated beams, static roof lights, no shadows |
 | [PhysLib integration roadmap](docs/INTEGRATION-ROADMAP.md) | Mathematical data, construction sites, reviewable initiatives and future PaperView interoperability |
+| [Queryable knowledge base](docs/KNOWLEDGE-BASE.md) | K0–K7: canonical data, query engine, Macro/Meso/Micro, reconciliation and agents (planned) |
 | [Development runbook](docs/DEVELOPMENT.md) | Setup, testing, deployment and diagnostics |
 | [Production backlog](docs/BACKLOG.md) | GitHub issue-to-spec mapping, dependencies and ready work |
 
-The two roadmaps are independent. The art layer consumes the integration model without redefining it. Integration does not wait for visual polish. Next: **I1 — formalisation initiative schema and construction sites** and **A0–A3 — approved art direction**.
+The two roadmaps are independent. The art layer consumes the integration model without redefining it. Integration does not wait for visual polish. Next integration milestone: **K0 — canonical mathematical knowledge schema**, followed by revision-aware ingestion and queries. I1 initiative schema may proceed in parallel; art direction remains independent.
 
 ## Use the city
 WASD moves; arrow keys rotate/zoom in 3D and pan in the map. Drag pans, right/Shift-drag rotates, scroll/pinch zooms. M switches views, I toggles the sidebar, / searches, F focuses, Home resets and Esc clears. Select a coloured building or cyan Mathlib station; neutral scenery is decorative. In the map, click a source building to enter the oblique city. Search qualified declarations and travel through recorded relationships; open native metadata on demand. API-map overlays show cited complexes and explicit TODO passages, not verified completion.

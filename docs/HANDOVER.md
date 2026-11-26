@@ -3,7 +3,7 @@
 As of 25 November 2026, baseline commit [5bcffd1](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/5bcffd14b359790642e8a1d991039459eda204f7). Repository Sudo-RR/Physlib-knowledge-graph, default branch master. [Live city](https://sudo-rr.github.io/Physlib-knowledge-graph/). Project is an independent open-source-facing contributor interface, not an upstream PhysLib replacement.
 
 ## Start here
-Read [AGENTS.md](../AGENTS.md), [Integration roadmap](INTEGRATION-ROADMAP.md), [Art roadmap](ART-ROADMAP.md) and [Development runbook](DEVELOPMENT.md). These documents supersede stale instructions in earlier milestone specifications for current operation. There are two parallel next tasks: I1 initiative schema and construction sites; A0–A3 art composition, shadow removal, district lighting, beams and static roof signals. Coordinate shared renderer glue, do not conflate milestones.
+Read [AGENTS.md](../AGENTS.md), [Integration roadmap](INTEGRATION-ROADMAP.md), [Art roadmap](ART-ROADMAP.md) and [Development runbook](DEVELOPMENT.md). These documents supersede stale instructions in earlier milestone specifications for current operation. Current next integration task is K0 canonical schema (see latest section below); I1 schema may proceed in alignment. Art remains independent under the existing roadmap. Coordinate shared renderer glue, do not conflate milestones.
 
 ## Active issue tracker
 The new [production backlog](BACKLOG.md) maps 17 active issues (two epics, 14 work packages and one shared operations issue) to these specs. All 32 previously open historical issues were retired with replacement links; no discussion was erased. The [branch audit](BRANCH-AUDIT-20261125.md) records exact obsolete branch tips and conditional preservation/deletion; consult actual workflow results before reporting cleanup complete.
@@ -56,3 +56,7 @@ Issue #81 (A2.1/A3.1) tracks [district illumination](geneva/district-lighting.md
 
 ## Unified light blankets
 #84 (A3.3) supersedes narrow façade sweeps; see [district lighting](geneva/district-lighting.md). Same palette and roof signals, per-complex phase, broad skin in existing overlay. CI and visual acceptance pending.
+
+
+## Queryable knowledge base — 26 November 2026
+New approved [K0–K7 specification](KNOWLEDGE-BASE.md) and [issue mapping](BACKLOG.md). Start K0 #85, coordinate #77 and #80 for evidence/freshness. K1 #86, K2 #78, K3 #87, K4 #88, K5 #89, K6 #71–74, K7 #76. Existing I3 #75 and I0.3 #79 remain. No implementation yet; existing art and source graph unchanged. Latest validated deployment 0be0a27 (run 45779819262, 169/169 unit tests); graph companion was rejected for incompatible provenance, so fresh compatible extraction remains necessary. Do not treat the historical 5bcffd1 baseline counts as current live graph coverage.
