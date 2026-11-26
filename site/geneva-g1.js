@@ -8,6 +8,7 @@ import {districtColor,districtAreas,districtMotionAllowed} from './geneva-distri
 import {createDistrictLights} from './geneva-district-lighting.js';
 import {boroughEnvelopes,meshPlanOutline,roofOutline} from './geneva-topdown-plan.js';
 import {visibleCity,excludedArea} from './geneva-city-scope.js';
+import {breathingCity,rolePattern} from './geneva-breathing-city.js';
 import {networkRows,createBeamNetwork,beamMotionAllowed,beamCurve} from './geneva-beam-network.js';
 import {masterplan,validatePlan,capacity,VERSION} from './geneva-g1-geometry.js';
 import {roleNames} from './city-v2-model.js';
@@ -31,7 +32,7 @@ if(!study){
  try{const r=await fetch('data/geneva-production.json',{cache:'no-cache'});if(!r.ok)throw Error('Snapshot HTTP '+r.status);production=await r.json();if(production.layout?.version!=='geneva-source-1'||production.model?.source?.revision!==production.layout?.source?.revision||!production.layout.sites.length)throw Error('Invalid source layout snapshot');}
  catch(e){$('status').textContent='Source city unavailable: '+e.message+'. Reload the indexed city or open the architectural study.';throw e;}
 }
-const layout=visibleCity(production?.layout),model=production?.model;
+const model=production?.model,layout=breathingCity(visibleCity(production?.layout),model);
 let selectedId=null,selectedBuilding=null,selectedDeclaration=null,channel='both',filter='all',zoom=1,focusX=0,focusZ=0,dependencyGroup=null,sourceUI=null;
 const siteById=new Map((layout?.sites||[]).map(t=>[t.id,t])),buildingById=new Map([...(layout?.buildings||[]),...(layout?.stations||[])].map(t=>[t.id,t]));
 const semanticMeshes=[],subjectSprites=[],mapParts=[],lodMeshes=[];
@@ -53,7 +54,7 @@ el('rect',{x:-30,y:-30,width:1060,height:860,fill:'#172730'},svg);
 for(const s of p.sectors)el('polygon',{points:pts(s.polygon),fill:'#303e47'},svg);
 const boroughDefs=el('defs',{},svg),boroughLayer=el('g',{'pointer-events':'none','aria-label':'Physics boroughs derived from occupied city parcels'},svg);
 for(const sector of p.sectors){const clip=el('clipPath',{id:'borough-bank-'+sector.id},boroughDefs);el('polygon',{points:pts(sector.polygon)},clip);}
-const envelopes=boroughEnvelopes(layout?.sites||[],p.frame);
+const envelopes=boroughEnvelopes(layout?.sites||[],p.frame,{buffer:10});
 for(const region of envelopes){const color=districtColor(region.area);if(!color)continue;const group=el('g',{'data-borough-area':region.area,'data-borough-library':region.library,'data-borough-sites':region.siteIds.length,'data-borough-cells':region.cells,'clip-path':'url(#borough-bank-'+region.library+')'},boroughLayer);
  el('path',{d:region.path,fill:color,opacity:.24,'data-borough-fill':'true'},group);el('path',{d:region.boundary,fill:'none',stroke:color,'stroke-width':.65,'stroke-linejoin':'round','stroke-linecap':'round',opacity:.66,'data-borough-boundary':'true'},group);mapParts.push({element:group,area:region.area});}
 el('polygon',{points:pts(p.water),fill:'#193f54'},svg);
@@ -79,8 +80,13 @@ for(const t of towers){
  el('rect',{x:-t.w*.54,y:-t.d*.54,width:t.w*1.08,height:t.d*1.08,fill:'#4c5962',stroke:'#293740','stroke-width':.22},group);
  el('polygon',{points:pts(outline),fill:t.id&&color?color:roofPalette[t.style],opacity:t.id?.92:.66,stroke:t.id&&color?color:'#33424c','stroke-width':.46,'data-roof-outline':'true'},group);
  if(t.id){
-  group.dataset.districtColor=color||'';group.dataset.mapBuilding=t.id;group.dataset.mapRole=t.role;group.style.cursor='pointer';
-  el('rect',{x:-t.w*.24,y:-t.d*.24,width:t.w*.48,height:t.d*.48,fill:'#e1edf2',opacity:.46,'pointer-events':'none'},group);
+  group.dataset.districtColor=color||'';group.dataset.mapBuilding=t.id;group.dataset.mapRole=t.role;group.dataset.rolePattern=String(rolePattern(t));group.dataset.basicBearing=String(!!t.basicBearing);group.style.cursor='pointer';
+  const mark={stroke:'#e1edf2','stroke-width':.42,fill:'none',opacity:.85,'pointer-events':'none'},w=t.w*.22,d=t.d*.22,pattern=rolePattern(t);
+  if(pattern===1)for(const x of [-w,0,w])el('line',{x1:x,y1:-d,x2:x,y2:d,...mark},group);
+  else if(pattern===2)for(const x of [-w,w])for(const y of [-d,d])el('circle',{cx:x,cy:y,r:Math.min(w,d)*.27,fill:'#e1edf2',opacity:.85,'pointer-events':'none'},group);
+  else if(pattern===3)for(const y of [-d,0,d])el('line',{x1:-w,y1:y,x2:w,y2:y,...mark},group);
+  else if(pattern===4)el('rect',{x:-w,y:-d,width:2*w,height:2*d,...mark},group);
+  if(t.basicBearing)el('circle',{cx:0,cy:0,r:Math.min(w,d)*.42,fill:'#fff3db',stroke:'#26353d','stroke-width':.25,'pointer-events':'none','data-basic-marker':'true'},group);
   group.addEventListener('click',()=>enterFromMap(t.complexId,t.id));mapParts.push({element:group,area:t.area});const title=el('title',{},group);title.textContent=(roleNames[t.role]||t.role)+' · '+t.complexId+' · '+t.area;
  }
 }
@@ -223,7 +229,7 @@ function init3D(){
  camera=new THREE.OrthographicCamera(-650,650,550,-550,1,6000);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;const disposeSky=installSkyEnvironment(THREE,renderer,scene);setDusk();for(const m of facade)m.emissiveIntensity=.65;for(const t of [surfaces.concrete,surfaces.asphalt])t.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());for(const m of facade){m.map.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());m.emissiveMap.anisotropy=m.map.anisotropy;}host.append(renderer.domElement);
  // Separate transparent GPU layer: beam-only frames never redraw the high-DPR city.
  beamScene=new THREE.Scene();try{beamRenderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});beamRenderer.setClearColor(0x000000,0);beamRenderer.outputColorSpace=THREE.SRGBColorSpace;beamRenderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));$('beamOverlay').append(beamRenderer.domElement);host.dataset.beamRenderer='overlay';}catch(e){beamRenderer=null;host.dataset.beamRenderer='static-fallback';console.warn('Animated overlay unavailable:',e.message);}
- if(layout?.buildings.length){districtLights=createDistrictLights(layout.buildings,{imported:t=>!!synthKit[synthModel(t)],outline:t=>roofMeshes[synthModel(t)]||null});scene.add(districtLights.cap);if(beamRenderer)beamScene.add(districtLights.blanket);else scene.add(districtLights.blanket);host.dataset.districtLightingMode='complex-blanket';host.dataset.districtComplexes=String(new Set(districtLights.rows.map(r=>r.building.complexId)).size);host.dataset.districtLights=String(districtLights.rows.length);host.dataset.districtVisible=String(districtLights.rows.length);}
+ if(layout?.buildings.length){districtLights=createDistrictLights(layout.buildings,{imported:t=>!!synthKit[synthModel(t)],outline:t=>roofMeshes[synthModel(t)]||null});scene.add(districtLights.cap);if(beamRenderer)beamScene.add(districtLights.blanket);else scene.add(districtLights.blanket);host.dataset.districtLightingMode='complex-blanket';host.dataset.roleLighting='static-role-patterns';host.dataset.basicBuildings=String(layout.buildings.filter(t=>t.basicBearing).length);host.dataset.breathing=JSON.stringify(layout.breathing);host.dataset.districtComplexes=String(new Set(districtLights.rows.map(r=>r.building.complexId)).size);host.dataset.districtLights=String(districtLights.rows.length);host.dataset.districtVisible=String(districtLights.rows.length);}
  renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','3D city. Arrow keys pan, plus and minus zoom, Home resets. Use the mathematics sidebar for keyboard selection.');
  function resize(){if(host.hidden||!host.clientWidth||!host.clientHeight)return;const w=host.clientWidth,h=host.clientHeight;const aspect=w/h,first=!overviewFrame;overviewFrame=fitSkyline(towers,aspect);const half=overviewFrame.half;if(first){focusX=overviewFrame.x;focusZ=overviewFrame.z;zoom=landingZoom(aspect);updatePlanCamera();}host.dataset.landingZoom=String(landingZoom(aspect));host.dataset.skylineFit=JSON.stringify(overviewFrame);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();const gl=renderer.getContext(),limit=Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),gl.getParameter(gl.MAX_TEXTURE_SIZE));const ratio=renderScale(quality,devicePixelRatio,w,h,limit);const current=renderer.getSize(new THREE.Vector2());if(current.x!==w||current.y!==h||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);}if(beamRenderer){const size=beamRenderer.getSize(new THREE.Vector2());if(size.x!==w||size.y!==h)beamRenderer.setSize(w,h,false);}invalidate();}
  observer=new ResizeObserver(resize);observer.observe(host);resize();
@@ -345,20 +351,16 @@ function refreshNetwork(){
  for(const row of [...rows.filter(r=>!r.utility),...rows.filter(r=>r.utility)]){
   if(row.utility)utility++;else modules++;counts[row.key]++;
   const group=el('g',{'data-network-channel':row.key},globalMapLayer),a=row.from,b=row.to,dx=b.x-a.x,dz=b.z-a.z;
-  const width=row.utility?(row.focused?3.8:1.35):row.focused?2.3:.72,opacity=row.utility?(row.focused?.95:.73):row.focused?.95:selectedId?.12:.23;
+  const width=row.utility?(row.focused?4.2:2.1):row.focused?2.7:1.05,opacity=row.utility?(row.focused?.98:.90):row.focused?.95:selectedId?.12:.42;
   const draw=(path,color,extra={})=>el('path',{d:path,fill:'none',stroke:color,'stroke-width':width,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke',opacity,...extra},group);
-  if(row.utility){const points=beamCurve(row).getSpacedPoints(18);draw(points.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' '),linkColors.mathlib);}
-  else{const mx=(a.x+b.x)/2-dz*.045,mz=(a.z+b.z)/2+dx*.045;
-   if(row.key==='both'){
-    const ax=(a.x+mx)/2,az=(a.z+mz)/2,bx=(mx+b.x)/2,bz=(mz+b.z)/2,cx=(ax+bx)/2,cz=(az+bz)/2;
-    draw(`M${a.x} ${a.z} Q${ax} ${az} ${cx} ${cz}`,linkColors.out,{'data-pipe-end':'dependent'});
-    draw(`M${cx} ${cz} Q${bx} ${bz} ${b.x} ${b.z}`,linkColors.in,{'data-pipe-end':'prerequisite'});
-   }else draw(`M${a.x} ${a.z} Q${mx} ${mz} ${b.x} ${b.z}`,linkColors[row.key]);
-  }
+  const points=beamCurve(row,{outline:t=>roofMeshes[synthModel(t)]||null}).getSpacedPoints(18),path=pts=>pts.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' ');
+  if(row.utility)draw(path(points),linkColors.mathlib);
+  else if(row.key==='both'){draw(path(points.slice(0,10)),linkColors.out,{'data-pipe-end':'dependent'});draw(path(points.slice(9)),linkColors.in,{'data-pipe-end':'prerequisite'});}
+  else draw(path(points),linkColors[row.key]);
  }
- if(scene&&rows.length){beamMesh=createBeamNetwork(rows,{selected:!!selectedId});(beamRenderer?beamScene:scene).add(beamMesh);}
+ if(scene&&rows.length){beamMesh=createBeamNetwork(rows,{selected:!!selectedId,outline:t=>roofMeshes[synthModel(t)]||null});(beamRenderer?beamScene:scene).add(beamMesh);}
  $('beamOverlay').hidden=!beamRenderer||(!beamMesh&&!districtLights)||viewMode!=='oblique';
- host.dataset.networkModulePipes=String(modules);host.dataset.networkMathlibPipes=String(utility);host.dataset.networkChannels=JSON.stringify(counts);host.dataset.beamAnimated='false';host.dataset.beamTime='0';
+ host.dataset.networkGeometry='architectural-skywalk';host.dataset.networkModulePipes=String(modules);host.dataset.networkMathlibPipes=String(utility);host.dataset.networkChannels=JSON.stringify(counts);host.dataset.beamAnimated='false';host.dataset.beamTime='0';
 }
 function drawDependencies(){
  refreshNetwork();invalidate();declarationMapLayer.replaceChildren();moduleMapLayer.replaceChildren();$('three').dataset.declarationArcs='0';$('three').dataset.modulePipes='0';$('three').dataset.mathlibPipes='0';updateLinkReadout(channel==='off'?'Pipes hidden':'City network · '+$('three').dataset.networkModulePipes+' directed complex imports · '+$('three').dataset.networkMathlibPipes+' utility connections');
@@ -376,7 +378,7 @@ function drawDependencies(){
  const station=layout.stations.find(t=>t.complexId===selectedId),complex=complexById.get(selectedId),evidence=stationEvidence(complex);let utilityCount=0;
  if(station&&evidence.active&&(filter==='all'||c.area===filter)){
   const buildings=stationRoleLinks(complex,layout.buildings);
-  for(const b of buildings){const points=beamCurve({from:b,to:station,utility:true}).getSpacedPoints(18),path=points.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' ');el('path',{d:path,fill:'none',stroke:linkColors.mathlib,'stroke-width':3.2,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke','data-pipe-channel':'mathlib','marker-end':'url(#link-arrow-mathlib)'},moduleMapLayer);utilityCount++;}
+  for(const b of buildings){const points=beamCurve({from:b,to:station,utility:true},{outline:t=>roofMeshes[synthModel(t)]||null}).getSpacedPoints(18),path=points.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' ');el('path',{d:path,fill:'none',stroke:linkColors.mathlib,'stroke-width':3.2,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke','data-pipe-channel':'mathlib','marker-end':'url(#link-arrow-mathlib)'},moduleMapLayer);utilityCount++;}
  }
  $('three').dataset.modulePipes=String(count);$('three').dataset.mathlibPipes=String(utilityCount);
  updateLinkReadout('Module imports · '+links.out.length+'/'+links.totalOut+' uses · '+links.in.length+'/'+links.totalIn+' used by · '+evidence.count+' Mathlib module imports (role links by cited source modules).');
