@@ -1,29 +1,47 @@
 # PhysLib City
 
-A source-linked, interactive city for exploring formalised physics and planning future formalisation in [PhysLib](https://github.com/leanprover-community/physlib). Independent contributor tooling; not an official upstream replacement.
+**[Explore the live city](https://sudo-rr.github.io/Physlib-knowledge-graph/)** · [Current release and handover](docs/HANDOVER.md) · [Issues](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues) · [Builds](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions)
 
-**[Open the live city](https://sudo-rr.github.io/Physlib-knowledge-graph/)** · [GitHub Actions](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions)
+An independent, source-linked visualisation and contributor interface for [PhysLib](https://github.com/leanprover-community/physlib). Explore formalised physics as a Geneva-inspired city: districts represent physics subjects, complexes group related source modules, buildings represent inferred mathematical roles, and connections represent recorded dependencies. The city is a read-only companion to the existing upstream project, not an official replacement or proof certification system.
 
-Explore subject boroughs and mathematical complexes, module imports, exact qualified Lean declarations, native signatures and direct references, API maps and contributor evidence. The default Geneva-inspired city is dusk-only, full-detail oblique 3D with a top-down navigation map and collapsible resizable sidebar. Mathematical identities and evidence are tied to source revisions; civic scenery has no Lean identity.
+## What works today
 
-## Start here for contributors and agents
+- Interactive dusk city and north-up navigation map; search, select, zoom and follow source links.
+- Physics subject colours, role lighting, hierarchical import corridors and local Mathlib stations.
+- Revision-pinned module inventory, API-map passages and citations, qualified Lean declaration navigation, native signatures and direct expression references when compatible extraction is published.
+- Contributor activity/review evidence, research search and history; missing evidence remains explicitly unavailable.
 
-| Document | Purpose |
+The proposed queryable knowledge base, formalisation initiatives and PaperView interoperability are **future work**, not features already delivered.
+
+## Start here
+
+| Reader | Read |
 |---|---|
-| [AGENTS.md](AGENTS.md) | Binding repository instructions and workstream boundaries |
-| [Handover](docs/HANDOVER.md) | Current architecture, validated baseline, limitations and next tasks |
-| [Art specification and roadmap](docs/ART-ROADMAP.md) | Separate visual direction: dense skyline, district lighting, animated beams, static roof lights, no shadows |
-| [PhysLib integration roadmap](docs/INTEGRATION-ROADMAP.md) | Mathematical data, construction sites, reviewable initiatives and future PaperView interoperability |
-| [Queryable knowledge base](docs/KNOWLEDGE-BASE.md) | K0–K7: canonical data, query engine, Macro/Meso/Micro, reconciliation and agents (planned) |
-| [Development runbook](docs/DEVELOPMENT.md) | Setup, testing, deployment and diagnostics |
-| [Production backlog](docs/BACKLOG.md) | GitHub issue-to-spec mapping, dependencies and ready work |
+| New collaborator | [Handover](docs/HANDOVER.md), [Architecture](docs/ARCHITECTURE.md) |
+| Developer | [Development](docs/DEVELOPMENT.md), [data contract](docs/graph-data-contract.md) |
+| Coding agent | [AGENTS.md](AGENTS.md), then [Architecture](docs/ARCHITECTURE.md) |
+| Visual designer | [Art specification](docs/ART-ROADMAP.md) |
+| Mathematical integration | [Knowledge base K0–K7](docs/KNOWLEDGE-BASE.md), [integration roadmap](docs/INTEGRATION-ROADMAP.md) |
+| Next tasks | [Backlog](docs/BACKLOG.md) |
 
-The two roadmaps are independent. The art layer consumes the integration model without redefining it. Integration does not wait for visual polish. Next integration milestone: **K0 — canonical mathematical knowledge schema**, followed by revision-aware ingestion and queries. I1 initiative schema may proceed in parallel; art direction remains independent.
+For a complete directory, see [documentation index](docs/README.md).
 
-## Use the city
-WASD moves; arrow keys rotate/zoom in 3D and pan in the map. Drag pans, right/Shift-drag rotates, scroll/pinch zooms. M switches views, I toggles the sidebar, / searches, F focuses, Home resets and Esc clears. Select a coloured building or cyan Mathlib station; neutral scenery is decorative. In the map, click a source building to enter the oblique city. Search qualified declarations and travel through recorded relationships; open native metadata on demand. API-map overlays show cited complexes and explicit TODO passages, not verified completion.
+## Run locally
 
-## Development and provenance
-Node 22, npm, Git, Three.js and esbuild. Run npm ci, npm test and npm run build:city; follow the [runbook](docs/DEVELOPMENT.md) for actual source snapshots and Chromium tests. The Pages deployment uses exact revision checks and hash-verified lazy mathematical companions. Result-graph relationships can be routed and Mathlib coverage is scoped; native ranges/values may be unavailable. No proof certification is implied by the visualisation.
+Node 22, npm and Git; Three.js and esbuild. From the repository root:
 
-[Historical Geneva programme](docs/geneva/README.md) and [asset provenance](THIRD_PARTY_ASSETS.md) remain available. city-v2.html redirects to the current city; city-c4.html is a historical fallback/asset fixture, not a second public explorer. Historical milestone documents preserve design decisions but the current handover and roadmaps govern new work.
+```sh
+npm ci
+npm test
+npm run build:city
+```
+
+Build the revision-pinned fixture package or real-data package as described in [Development](docs/DEVELOPMENT.md), then `npm run serve` and open http://127.0.0.1:4173. The default server serves the packaged Geneva city. The legacy local explorer is explicitly opt-in with `npm run serve:legacy`.
+
+## Navigation
+
+WASD moves; arrows rotate/zoom in 3D and pan on the map. Drag pans, right/Shift-drag rotates, wheel/pinch zooms. M switches view, I opens the sidebar, / searches, F focuses, Home restores overview, Esc clears selection. Select a source building/station to inspect mathematics. In the map, dragging never selects label text.
+
+## Contributor boundaries
+
+Keep source identities, revision provenance and evidence semantics separate from art. No upstream writes or private correspondence. Read [third-party asset notices](THIRD_PARTY_ASSETS.md); the repository does not currently include a project-wide licence grant, so confirm licensing with the maintainer before redistribution or external reuse. Historical designs and benchmark evidence are preserved at the [pre-handover commit](https://github.com/Sudo-RR/Physlib-knowledge-graph/tree/2c12d5d21022a09fe9ff50e85195958e8adea569); they are not current instructions.

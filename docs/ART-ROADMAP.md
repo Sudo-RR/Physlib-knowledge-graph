@@ -1,118 +1,56 @@
-# PhysLib City — Art specification and roadmap
+# PhysLib City — current art specification
 
-Status: approved direction, implementation pending. 25 November 2026. This roadmap is independent of the [PhysLib integration roadmap](INTEGRATION-ROADMAP.md). Art determines how the city looks and feels; integration determines what the city knows. The current renderer is the source-linked Geneva G1 city, not the historical C.4 or terrain-only study.
-
-Execution tracker: [Art epic #64](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/64) · [Issue-to-spec mapping](BACKLOG.md). A0 #66, A1 #67, A2 #68, A3 #69, A4 #70.
+**Review baseline:** 2c12d5d, actual deployment 45820966954. See [Handover](HANDOVER.md). Visual work paused for collaborator review; no claim of human acceptance. [Art epic #64](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/64), [backlog](BACKLOG.md), independent of [integration](INTEGRATION-ROADMAP.md). This document supersedes earlier competing instructions; [prior detailed roadmap](https://github.com/Sudo-RR/Physlib-knowledge-graph/blob/2c12d5d21022a09fe9ff50e85195958e8adea569/docs/ART-ROADMAP.md) preserves design history and measurements.
 
 ## Art brief
-A large, visually strong retro-futuristic metropolis at dusk. The landing view should look expansive and densely built, with little negative space. Preserve the sharp architectural treatment accepted after rollback of the unsuccessful massing redesign (bedda3d). Architecture should remain coherent, not become uniform coloured boxes, needle towers or an empty geography diorama. Colour and light should make neighbourhoods recognisable and the city visibly alive.
-
-### Binding user requirements
-- Larger apparent city footprint on the landing page; remove most of the negative space, not merely make existing towers taller.
-- Distinct neighbourhood building colours using illuminated accents and animated coloured light beams/sweeps lighting up buildings.
-- Static luminous rooftop/cap signals on the top-down navigation view; the top view is made legible by the same district lighting vocabulary.
-- Remove **all shadows**, including simulated contact shadows, baked/procedural shadow patches, map offset/drop shadows and any shadow-map path. Lighting may retain material contrast, reflection and emissive definition, but no cast/contact shadow presentation.
-- Dusk only, highest practical resolution, full geometry, oblique public 3D; top view strictly a navigable map leading back into the city. Keep collapsible resizable overlay sidebar and existing navigation.
-- No change to mathematical semantics, extraction or roadmap priority.
+Dense, coherent retro-futuristic metropolis at dusk; architecture and source geography stay intact. District hue identifies physics; signature geometry identifies inferred role. No colour implies proof or review status. No underground Mathlib, geographic labels, invented edges or semantic scenery. Prefer clear architecture to overlaid clutter.
 
 ## A0 — Baseline and measurement
-Capture the currently deployed city (commit 5bcffd1, deployment 45680479487) in fixed overview, focus, map and mobile poses. Record viewport, DPR, source and renderer revisions, draw calls, triangles, textures, GPU/renderer and idle/interactive behaviour. Keep the accepted architectural model and source placements. Compare actual screenshots, not AI-generated concept renders. Historical approved sharp rendering: bedda3d; rejected massing: 6bf872c. Aesthetic acceptance requires maintainer review, not merely passing CI.
+#66. Review exact production evidence in Handover; use actual matched screenshots and viewport/DPR/renderer/triangle/draw-call measurements. Software Chromium is not hardware FPS. Human review #70 still open.
 
 ## A1 — Composition and density (first art work package)
-- Tighten the default oblique camera composition; use view fitting responsive to aspect ratio, without losing navigation to the entire source city.
-- Extend visible skyline and fill unused civic parcels with neutral non-semantic low/mid/high-rise context; balance massing against existing towers. Preserve source positions, building IDs, water, parks, roads, bridges and station/selection accessibility. Keep decorative scenery clearly distinguishable and non-selectable.
-- Use collision/clearance checks and deterministic art seed; no indiscriminate grid fill or drastic rescaling of semantic towers. No duplicate or invented semantic structures.
-- Measure empty-pixel fraction or occupied projected bounding area on matched viewport captures as a diagnostic; agree final composition visually. Do not set arbitrary acceptance percentages as if user-approved.
+#67. Preserve accepted architecture, bank geography, source placement and neutral scenery. No unsolicited massing redesign. Overview full-fit available; landing tighter. 
+## A1.2 — Immersive workspace and navigation
+#90. Compact 36px desktop header, full-bleed canvas, floating toolbar/search, resizable overlay sidebar, collapsed context. Initial landing zoom 1.20/1.28/1.38 by aspect; Overview resets to full fit. Keep map, search, keyboard, gestures and deep links.
 
 ## A2 — Shadowless lighting and district identity (can run alongside A1)
-- Audit directional shadow flags, shadow maps, contact-shadow geometry/texture functions, SVG offset rectangles and CSS shadow effects used for the city. Remove shadow effects, not surface detail or selection markers.
-- Preserve sharp façade textures, anti-aliasing, geometry and practical pixel budget. Tune dusk ambient/emissive exposure for separation between buildings.
-- Assign a deterministic district palette by existing subject/neighbourhood identity (library + area where needed); maintain semantic subject colours, add emissive accents rather than replacing mathematical ontology. Candidate families: amber/gold mechanics, cyan/blue quantum, violet/magenta relativity, emerald/teal supporting structures, cool white/silver utility. These are illustrative, not fixed assignments.
-- Match palette across 3D roofs/facades and SVG map signals. Reserve existing graph/evidence channel colours for their actual meanings; use shape, label, pattern and intensity as well as colour. Distinguish neutral scenery.
+#68. No cast/contact shadows; simulated ground contact shadows removed; avoid reintroducing shadow maps. Existing UI marker drop shadow is a readability treatment, not city lighting; remaining visual audit is open. Preserve material definition.
+## A2.1/A3.1 — PaperView-inspired district lighting
+#81. Original subject palette in geneva-district-palette.js; not copied PaperView assets. Previous sweeping façade effects superseded by A3.3/A3.7.
+## A2.2 — Top-down city geometry and irregular boroughs
+#83. North-up SVG from actual footprints and exclusive buffered occupied parcels; same identity and colour as 3D. Water and streets remain navigable.
+## A2.3 — District clearance and utility legibility
+#93. Presentation-only footprint scale .76 near district boundaries and .84 elsewhere; stations .84. Preserve canonical locations, heights and IDs. Remove boundary infill, borough buffer 10. Local continuous cyan utility strips represent recorded direct module imports.
+## A2.4 — Nighttime terrain and flowing rivers
+#91. Original dark procedural paving, width-aware road joins, warm curb accents and dark vegetation. Static river base plus directional stylised ripples in existing overlay; approximate depth proxies, no hydraulic simulation or true reflections. No changed road layout.
 
 ## A3 — Animated lighting and rooftop beacons
-- Implement reusable district-colour scan/sweep beams that visibly illuminate building facades in oblique 3D, with stable emissive accents on idle buildings, phase-offset animated highlights across neighbourhoods and stronger selected/related building activation.
-- Prefer instanced shared geometry/materials and shader time/phase uniforms, no per-building real-time lights or expensive full-screen bloom requirement. Consider restrained glow via transparent emissive geometry. Use bounded animation workload; stop/suspend when hidden, honour prefers-reduced-motion (static equivalent), avoid strobing and preserve click targets.
-- Add persistent static luminous rooftop caps/beacons for semantic buildings in 3D and equivalent static signals in top view. Selected/dependency/API-map states remain distinguishable and do not imply proof or construction status.
-- Maintain a read-only overlay interface for future initiative statuses; do not invent new semantic states or implement initiative lifecycle in art work.
+#69. Main scene on demand, separate existing overlay for animation, no additional context; static fallback and reduced-motion/pause respected.
+## A3.2 — Continuous conduits and street-level utilities
+#82. Pink/outgoing uses, orange/incoming used by relative to selection, cyan Mathlib street links. Unselected exact edge gradient dependent → prerequisite. Later A3.6 governs overview.
+## A3.3 — Unified district light blankets
+#84. One stable phase per complex, 0.9 Hz; faint .035–.11 opacity after A3.7. Existing overlay approximate, no shared city depth. Static when paused.
+## A3.4 — Architectural skywalks
+#93. Deterministic endpoint heights, 55% upper (.50–.95), 45% lower (.10–.50), minimum 2 world units, facing approximate façade, horizontal entry/exit and enclosed inclined span. Structural frame and translucent glazing .67 base alpha (.83 frame before strength). No actual collision routing.
+## A3.5 — Role lighting
+#93. Role and Basic.lean membership separate from subject and review. Earlier overlay patterns superseded by A3.7.
+## A3.6 — Hierarchical conduit visibility
+#94. Macro (zoom <2.4, no filter/selection): at most 20 largest unordered cross-library/subject district pairs, actual directed members counted, neutral corridor not a direct gateway dependency. Intra-district links omitted at macro, 24 utility routes maximum (one per station), all station beacons retained. Meso (zoom ≥2.4 or subject filter): nearest eligible district, up to 40 incident actual edges prioritising local/short routes, up to 80 local utilities. Micro: selected complex, 14 actual incident links per direction, exact selected utility role links. Declaration selection suppresses module skywalks, preserves bounded declaration arcs. Report coverage; identical projection in SVG and 3D. No canonical edge changes, road-aligned routing or globally shared multi-pair trunks.
+## A3.7 — High-contrast building role signatures
+#95. On real depth-tested facade materials: D three broad vertical ribs, R six panels, I three horizontal bands, L crown and side rails; unclassified no signature. Darken random windows; preserve district hue. Basic-bearing buildings get luminous base and separate roof dot; rooftop/map use matching large masks. Native multi-part geometry may repeat a pattern; small/occluded buildings remain a limitation.
 
 ## A4 — Visual polish and acceptance
-Tune colour balance, beam size/timing, map readability, foreground/background hierarchy and default composition. Capture real packaged-site overview/focus/map/mobile evidence. Test WASD, arrows, map-to-city, zoom/pan, sidebar, filters, declaration travel and all overlays. Verify no shadows, no lost source IDs or click targets, no overlap with controls, no WebGL errors. Record performance tradeoffs on comparable hardware; software CI smoke is not GPU FPS evidence. Obtain maintainer visual approval before promoting major changes. Preserve easy rollback.
-
-## File boundary
-Likely art-only implementation modules: site/geneva-architectural-materials.js, site/geneva-urban-materials.js, site/geneva-civic-render.js, new dedicated art/lighting modules and limited view glue in site/geneva-g1.js / .html. Layout ownership, scripts/extract.mjs, elaboration/native metadata, contributor/API-map/initiative schemas and graph publication are outside art scope. If an art geometry manifest is needed, derive it separately from canonical production data and keep non-semantic objects ID-free. Tests and documentation accompany each work package.
-
-## Definition of done
-Dense cinematic landing view; less empty space; recognisable coloured neighbourhoods; attractive scan/beam motion in oblique view; static rooftop lights in top view; shadow-free scene; preserved high-resolution full-detail dusk baseline; accessible and functional navigation; no changed mathematical identity or evidence semantics. No task marked done until real rendered evidence and maintainer acceptance. A1–A3 are independent of integration I1, and neither workstream may hold the other hostage.
-
-
-## Pre-demo clarity pass
-See [prototype legibility](geneva/prototype-legibility.md), related #68/#70/#79. This narrowly scoped pass is separate from the full A1–A4 artistic programme; do not mark those issues completed from this pass alone.
-
-
-## Pre-demo composition and network
-See [animated dependency network](geneva/animated-dependency-network.md). This is a focused A1/A3 presentation increment, not full art acceptance.
-
+#70. Check overview, focused complexes, map/mobile, role legibility, pipe clutter, keyboard/motion accessibility and no source identity changes. Review remains open; do not confuse functional CI with visual acceptance.
+## A4.1 — Skywalk and navigation legibility
+#96. Neutral aggregate near-white #e0edf5, strength .46, map opacity .60; retain translucent geometry/channel colours. White fitted word-wrapped labels on dark backing, sRGB untonemapped sprite, 14px overview/16px focus targets. Map-only text selection/native drag disabled; pointer navigation, clicks, sidebar text selection retained.
 
 ## City scope
-SharedFoundations is an application-generated fallback category, not a recognised physics subject or literal upstream directory. Exclude its complexes, buildings, stations, borough labels and incident visible pipes from the public city and subject list. Preserve canonical source data, exact identities and evidence; source-only records remain inspectable through references. No deletion of upstream files. The projection preserves other city coordinates.
-
-## A2.1/A3.1 — PaperView-inspired district lighting
-Tracked by [#81](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/81); refinement of A2 (#68) and A3 (#69), acceptance in A4 (#70). Reference: [PaperView concept map](https://paperview.org/roadmap/index.html), using a hierarchical family-colour vocabulary, not copying its exact colours (not verified). This is an original city palette.
-
-- Use one stable hue per physics subject, related subjects grouped into warm mechanics, blue quantum, violet geometry/gravity, coral field/particle and green thermal/statistical families; repeat a subject's colour across libraries. Distinct shades within families; retain labels and exact ownership. Mathlib stays cyan-white diamond/ring; pipe channels unchanged; neutral civic scenery receives no district lighting. SharedFoundations remains excluded.
-- Colour is luminous rather than painted: restrained architectural material tint, static roof cap/outline, light band scanning up visible façades. Match the same hue in SVG roof caps and borough labels, with a compact subject-colour key. Top-down map static; no global flicker, no claim of scientific activity or proof status.
-- Use deterministic building phase offsets and a smooth periodic scan (about 0.9 cycles/sec versus pipe phase 0.68 cycles/sec). Keep visible constant accents, modest peak intensity and no abrupt strobing. Pause motion/OS reduced motion retain a static colour signal. Pipes on/off affects pipes only.
-- Reuse the separate transparent WebGL overlay, batched geometry, time uniform and existing frame fences. No real per-building lights, full city animation redraw, extra renderer or full-screen bloom. Overlay is diagrammatic and does not share the city depth buffer; keep accents tightly aligned to source footprints. If overlay unavailable use static roof signals. Maintain full-detail dusk city and exact positions, source IDs, graph, station and API/evidence semantics.
-- Verify palette completeness, deterministic phases, excluded/nonsemantic geometry, matching map roofs, subject filters, toggles, static mode, animation without full city redraw, real packaged browser captures. Maintainer visual approval required; neither CI nor this increment closes the whole A2/A3 scope.
-
-## A3.2 — Continuous conduits and street-level utilities
-Tracked by [#82](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/82); refinement of #69, acceptance #70. Original all-pink overview came from selection-relative classification, not missing source edges. Each unique directed complex import now has a pink dependent end and orange prerequisite end, smoothly transitioned in 3D, divided at midpoint in SVG. Selected imports retain pink outgoing/orange incoming; explicit unselected channel modes use their respective single colour. No reciprocal links invented. Declaration dashed relationships retain their distinct channels.
-
-- Continuous dark casing, coloured body and luminous core with gentle travelling intensity waves instead of projectile heads. Maintain restrained background links, stronger selected links, independent district lighting and existing animation overlay.
-- Stronger blue-cyan utility conduits at street level with rounded parcel-aligned bends from importing role buildings to exact local Mathlib station. Render utilities after sky paths; matching SVG routes. This represents local parcel infrastructure, not actual city-road routing or new dependencies.
-- Preserve toggles, pause/reduced motion, skyline, palette and mathematical source. Tests verify colours, counts and utility geometry. Human visual acceptance remains required.
-
-## A2.2 — Top-down city geometry and irregular boroughs
-Tracked by [#83](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/83); related A2 (#68), #81 district lighting, #82 conduits, acceptance #70. North-up navigation is a plan projection of the same city: actual occupied site and role-building positions, scale, rotation, stations, roads, parks, water, civic infill and trees. Project actual imported architectural meshes into horizontal silhouettes (convex outline approximation), use the renderer's circular and rectangular dimensions for native forms, and show roof colour and local base footprint. This is a vector architectural plan, not a photoreal orthographic GPU image. No second scene or reallocation.
-
-Generate irregular borough envelopes from visible occupied complex parcels: deterministic nearest-distance-to-oriented-parcel assignment on a fine bounded grid; limit influence to nearby occupied sites, assign each cell once, merge runs and draw exterior edges. Clip by existing library-bank polygon and render below water, parks and actual road widths. This preserves real city separators, avoids overlapping district claims and permits disconnected neighbourhood patches. No invented geographical ownership; envelopes are visual guidance, not exact cadastral boundaries. Use the established #81 physics colour palette, visible roof colours, subtle ground tint and matching labels/legend. Neutral scenery and cyan utility stations stay distinct; SharedFoundations remains excluded.
-
-Preserve click targets, focus, zoom, map-to-city transition, filters, source evidence and dependency channels. Provide a map-specific unobtrusive colour key and use lighter overview dependency strokes so the map stays legible with pipes on. Test deterministic nonoverlapping parcel assignments, geometry projection, palette correspondence, filter and navigation; capture actual packaged map and mobile evidence, human acceptance. No changes to canonical source layout or integration.
-
-## A3.3 — Unified district light blankets
-Tracked by [#84](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/84); replaces the façade sweep treatment of A3.1 (#81), refines #69, acceptance #70. Use broad translucent district-coloured architectural face skins, not travelling strips, missiles or per-face scans. All role buildings and faces of a complex share one deterministic phase keyed by complex ID, with a common 0.9 Hz smooth sinusoidal intensity pulse. Complexes may differ in phase. Persistent low-level wash remains when paused or reduced-motion. Retain the district palette, static rooftop caps and #83 top-down borough colours; preserve pipe direction/colour, Mathlib utility distinction and source identity.
-
-Use a single batched façade blanket in the existing independent animation overlay, with broad geometry fitted to the original building forms (imported model outline and native round/stepped or rectangular forms), visible-facing surfaces and controlled translucent intensity to retain architectural detail. No extra WebGL context or full-scene animation redraw. Overlay remains diagrammatic and does not share city depth; simplified façade surfaces are visual approximations. Fallback keeps static light. Tests validate shared phase across complex roles, coverage, motion controls and unchanged navigation; real rendered visual review required. No source extraction or geometry allocation changes.
-
-
-## A1.2 — Immersive workspace and navigation
-Tracked by [#90](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/90); refines A1 (#67) and A4 (#70). Inspired by the graph-first [Riemann Atlas](https://octoinform.axiomatic.ai/riemann-atlas/): persistent search, compact controls and a dominant visual workspace. Reference public interface controls, not copied assets or exact pixel layout. Compact identity bar, full-bleed city/map below it, floating toolbar/search and context panels, collapsible help/legend. Keep all current controls and sidebar overlay; search uses existing complex/module index, not new semantic or declaration query claims. Responsive HUD reserves clearance above/below context panels, with primary controls reachable on narrow screens.
-
-Initial oblique composition deliberately zooms in (1.20 desktop / 1.28 intermediate / 1.38 portrait) from the existing full-fit frame, allowing peripheral clipping rather than forcing all buildings into the landing composition. Overview restores full-fit framing; pan, zoom, map and source search preserve access to all source locations. Keep city geometry, placement, palette, lighting, data and top-down semantic map unchanged. No extra GPU context or unapproved massing. Measure actual desktop/mobile workspace area, test persistent search and recovery, retain existing browser regression and obtain real visual acceptance. Visual quality still requires human review; this is not a claim of identical Atlas appearance or physical GPU performance.
-
-
-## A2.4 — Nighttime terrain and flowing rivers
-Tracked by [#91](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/91); refines #68 and #70. Keep authored bank/road geometry and mathematical positions. Use original dark world-space paving shaders, continuous width-aware road junctions, subtle wet-surface sheen and warm curb accents, no real lights or baked contact shadows. Water base is a static shader on the existing polygon; approximate branch-direction moving ripples and stylised glints in the existing transparent overlay, with low-cost depth proxies for land, bridges and buildings. No physically simulated flow or true scene reflections, no extra renderer or animated full-city redraw. Pause/reduced-motion retains static water; map remains semantic. References: SynthCity (emissive ground), procedural-city (road/footpath shader), cheapwater and Three.js flow-map showcase. Original code; no third-party shader/assets copied. Actual screenshot and performance acceptance pending.
-
-
-## A2.3 — District clearance and utility legibility
-Tracked by [#93](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/93), implemented in [4d1e77f](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/4d1e77fc307a156b4efacc4088f026fa57e62b29). Presentation-only breathingCity projection: scale role footprint dimensions to .76 at nearby cross-subject boundaries and .84 elsewhere, stations to .84; retain heights, canonical sites, centres, ownership and IDs. Remove decorative infill/towers near multiple subjects; use 10-unit borough envelope buffer. Ground circuits retain actual recorded import evidence, brighter continuous cyan and larger strokes, not additional graph edges. No actual road routing. Review whether gaps are sufficient and immersion maintained.
-
-## A3.4 — Architectural skywalks
-Tracked by #93. Replace airborne arcs with enclosed rectangular world-space spans, façade-facing anchors, horizontal exit/entry stubs and inclined main segment. Hash edge and endpoint deterministically; choose upper half with probability .55, lower with .45; sample .50–.95 or .10–.50 of height (minimum 2 units), no per-frame randomisation. Approximate façade outlines, semantic pink/orange endpoints and animated interior, dark structural rails, cyan utility paths at street level. Retain existing graph/filter semantics. No intermediate collision-routing or shared depth guarantee. Review visual attachments.
-
-## A3.5 — Role lighting
-Tracked by #93. District colour remains primary; static illuminated vertical ribs for data structures, dotted lattice for relations/instances, horizontal bands for interfaces, crown/edge frame for lemmas, muted unclassified pattern. Preserve complex-synchronised pulse, reduced-motion and static fallback. Basic.lean membership is actual module membership of role building; bright foundation band plus roof dot on map, not a new semantic role. Matching roof pattern glyphs, no inferred proof or approval status. Unit and production browser checks passed; rendered human acceptance outstanding.
-
-
-## A3.6 — Hierarchical conduit visibility
-[#94](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/94), refines #82/#93 and coordinates #88 without implementing the K4 knowledge-base interface. Macro (<2.4 zoom, no subject or selection): group actual complex imports by unordered pair of library/subject districts, preserve directed membership and forward/reverse counts, render at most 20 largest cross-district bundles (neutral shared visual span, representative actual gateway buildings; not direct gateway dependency). Suppress intra-district links at macro; 24 actual local cyan utilities max, one per station, station beacons remain. Meso (zoom ≥2.4 or subject filter): nearest eligible district, up to 40 incident actual complex edges prioritising internal/short routes; up to 80 actual local utility links. Micro selection: only actual incident links, up to 14 per direction, exact selected role-to-station links. Declaration selection: module skywalks suppressed, existing bounded declaration arcs remain. Same map and 3D rows; remove duplicate selected map strokes. Count represented/hidden edges and utility coverage; full source data unchanged. Preserve toggle, reduced motion, colours and 55/45 attachments. Neutral aggregate geometry uses stepped shared pair corridors, not road-following/collision-checked routing or a global shared trunk optimiser. No new mathematical relations; visual review pending. Skywalk glazing refined to .67 base alpha in 6853130 (frame .83 before strength).
-
-
-## A3.7 — High-contrast building role signatures
-[#95](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/95), supersedes the low-contrast A3.5 facade treatment (#93). Render static large patterns on actual facade materials (depth-tested, no per-building light objects), normalized geometry coordinates rather than fine tiled window UV: three broad vertical ribs (D), six large separated panels (R), three broad horizontal bands (I), bright crown and side rails (L), no role signature for unclassified. Suppress distracting random-window emission and reduce facade base brightness on source roles only. Preserve district hue and reduce complex-synchronised overlay wash to .035–.11 opacity, independently of static role signature. Existing base slab emits district colour when actual Basic.lean membership; corner roof dot independent of role. Larger dark roof caps with shared pattern masks (lemma perimeter), matching map glyphs, compact visual key. Do not change massing, positions, source ownership, pipes, terrain or integration. Distinct patterns verified by mask sampling, shader injection and browser checks; human visual acceptance still necessary, especially small projected towers/partial occlusion. Native multi-part meshes may repeat a signature per facade component. No exact silhouette-wide depth guarantee for the existing faint district overlay.
-
-
-## A4.1 — Skywalk and navigation legibility
-[#96](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/96), final polish of #94/#90 and visual acceptance #70. Neutral district aggregate glazing uses near-white #e0edf5 (was #a2b5c2), strength .46 (was .30), map opacity .60 (was .38); keep existing translucent shader, channel colours, geometry and route counts. Borough labels use fitted word-wrapped light text, dark backing/stroke and sRGB untonemapped sprite material; camera-scaled CSS font target 14px overview / 16px focus, preserve anchor/filter/toggle. Map text selection and native drag suppressed only in the map SVG, retaining pointer panning, clicks, keyboard and sidebar text selection. Test label sizing, map text drag and no selection, existing production browser gates. No layout or source changes. Actual visual review remains open.
+SharedFoundations is source-only in visible view. PhysLib, PhyslibAlpha and QuantumInfo remain actual source roots, with canonical graph retained. 
+## Pre-demo clarity pass
+Exact role chips, local utility evidence, separate dashed declaration relationships, selection and count readout retained. See [prototype note](geneva/prototype-legibility.md) as historical implementation record.
+## Pre-demo composition and network
+Current A1.2/A3.6/A4.1 supersede earlier all-edge overview and animated ribbon design.
+## File boundary
+Art consumes the mathematical manifest read-only. [Architecture](ARCHITECTURE.md) locates modules. No feature scope beyond current request.
+## Definition of done
+Issue mapped, precise code and tests, actual build and deploy evidence, limitations and human visual review. No further visual work without reviewed feedback.

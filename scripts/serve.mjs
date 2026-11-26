@@ -2,10 +2,11 @@ import { createServer } from 'node:http';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
-const root = path.resolve('site');
+const legacy=process.argv.includes('--legacy');
+const root = path.resolve(legacy?'site':'dist/site');
 createServer(async (req, res) => {
   // Opt-in local QA evidence sink. Never packaged into the static Pages site.
-  if(req.method==='POST'&&req.url==='/__city-benchmark'){
+  if(legacy&&req.method==='POST'&&req.url==='/__city-benchmark'){
     if(!['127.0.0.1','::1'].includes(req.socket.remoteAddress)||
       !['http://127.0.0.1:4173','http://localhost:4173'].includes(req.headers.origin)||
       !req.headers['content-type']?.startsWith('application/json')){res.writeHead(403).end();return;}
@@ -24,5 +25,5 @@ createServer(async (req, res) => {
     const body = await readFile(file);
     const type = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json' }[path.extname(file)] || 'application/octet-stream';
     res.writeHead(200, { 'Content-Type': `${type}; charset=utf-8` }).end(body);
-  } catch { res.writeHead(404).end('Not found. Generate data with npm run build:data.'); }
-}).listen(4173, '127.0.0.1', () => console.log('http://127.0.0.1:4173'));
+  } catch { res.writeHead(404).end('Not found. Build and package the city (see docs/DEVELOPMENT.md).'); }
+}).listen(4173, '127.0.0.1', () => console.log('http://127.0.0.1:4173 — '+(legacy?'legacy source preview':'packaged Geneva city')));

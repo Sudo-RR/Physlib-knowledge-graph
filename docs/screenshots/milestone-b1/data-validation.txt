@@ -1,5 +1,0 @@
-
-> validate:data
-> node scripts/validate.mjs
-
-Snapshot valid.

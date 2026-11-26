@@ -28,10 +28,29 @@ npx playwright install chromium
 node scripts/smoke-geneva-browser.mjs
 ```
 
-The authoritative ordering and runner dependencies are in [deploy.yml](../.github/workflows/deploy.yml). On Linux CI Playwright uses --with-deps. The source checkout must be clean; optional history and mathematical companions are built/validated as in workflow. Use npm run serve for local development (see scripts/serve.mjs); serve dist/site over HTTP for packaged testing. Native extraction needs matching elan/Lake toolchain, Mathlib cache, pinned result-graph checkout and Linux GNU time; follow [elaborated-pilot.yml](../.github/workflows/elaborated-pilot.yml) and [native-metadata.yml](../.github/workflows/native-metadata.yml), not an improvised global Lean version.
+The authoritative ordering and runner dependencies are in [deploy.yml](../.github/workflows/deploy.yml). On Linux CI Playwright uses --with-deps. The source checkout must be clean; optional history and mathematical companions are built/validated as in workflow. Use npm run serve after npm run package:site; it serves dist/site over HTTP (current production UI). Use npm run serve:legacy only for historical raw-site benchmarks. Native extraction needs matching elan/Lake toolchain, Mathlib cache, pinned result-graph checkout and Linux GNU time; follow [elaborated-pilot.yml](../.github/workflows/elaborated-pilot.yml) and [native-metadata.yml](../.github/workflows/native-metadata.yml), not an improvised global Lean version.
+
+## Fixture preview (fast, no Lean build)
+Use a clean disposable checkout/worktree: the following commands overwrite generated site/data files, not tracked source. Use Git Bash on Windows or a POSIX shell. The preview workflow uses this exact fixture revision; no fake source checkout.
+
+```sh
+npm ci
+npm run build:city
+revision=$(node -p 'require("./test/fixtures/city/graph.json").source.revision')
+git clone https://github.com/leanprover-community/physlib.git .physlib-source
+git -C .physlib-source checkout "$revision"
+mkdir -p site/data
+cp test/fixtures/city/graph.json site/data/graph.json
+cp test/fixtures/city/mathlib.json site/data/mathlib.json
+cp test/fixtures/city/mathlib-bridge.json site/data/mathlib-bridge.json
+node scripts/build-geneva-production.mjs
+npm run package:site
+npm run serve
+````
+Open http://127.0.0.1:4173. Fixture preview has no complete elaborated/native companion or full inventory; do not report fixture metrics as production. If .physlib-source already exists, do not overwrite it; use a separate worktree or explicitly verify its revision and cleanliness. Production steps above remain authoritative for real data.
 
 ## Workstream process
-Start with [the production backlog](BACKLOG.md) and corresponding GitHub issue. New issues and PRs use repository templates. Historical issues are reference evidence rather than the active queue. The [one-time branch audit](BRANCH-AUDIT-20261125.md) documents preservation of unique commits and safe retirement of historical branches.
+Start with [the production backlog](BACKLOG.md) and corresponding GitHub issue. New issues and PRs use repository templates. Historical issues are reference evidence rather than the active queue. The [archived one-time branch audit](https://github.com/Sudo-RR/Physlib-knowledge-graph/blob/2c12d5d21022a09fe9ff50e85195958e8adea569/docs/BRANCH-AUDIT-20261125.md) documents preservation of unique commits and safe retirement of historical branches.
 Use separate art and integration branches/worktrees. Keep code change plus tests/docs cohesive; no unrelated refactors. For art use actual production baseline screenshots in matched camera poses and report renderer/viewport, geometry, draw calls, idle/interaction; review before promotion. For integration use exact source IDs and negative fixtures for provenance, missing coverage and proposed/actual separation. Maintain compatibility and avoid shared-file conflicts. No force-push; prefer normal reviewed PRs or maintainer-authorised atomic master changes.
 
 ## Release gates

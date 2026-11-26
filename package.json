@@ -12,7 +12,8 @@
     "build:city": "esbuild site/city.js --bundle --format=esm --outfile=site/assets/city-bundle.js && esbuild site/city-v2.js --bundle --format=esm --outfile=site/assets/city-v2-bundle.js && esbuild site/geneva-g1.js --bundle --format=esm --outfile=site/assets/geneva-g1-bundle.js",
     "package:site": "node scripts/package-site.mjs",
     "test": "node --test",
-    "serve": "node scripts/serve.mjs"
+    "serve": "node scripts/serve.mjs",
+    "serve:legacy": "node scripts/serve.mjs --legacy"
   },
   "engines": {
     "node": ">=20"

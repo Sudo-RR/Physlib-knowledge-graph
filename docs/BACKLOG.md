@@ -1,6 +1,6 @@
 # Production backlog and issue-to-spec mapping
 
-Rebaselined 25 November 2026 from verified production 5bcffd1 and handover 65e95f8. GitHub Issues is the active execution tracker, while the two roadmap documents define scope. [All active issues](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues?q=is%3Aissue+is%3Aopen). 32 historical open issues were retired with not-planned/superseded reasons and replacement links; original descriptions and comments remain available. This does not claim that their historical requirements all shipped.
+Updated 26 November 2026 for review handover. GitHub Issues is the execution tracker; governing specs are current. 32 historical issues were retired with replacement links; history remains. Current confirmed application release: 2c12d5d (run 45820966954). Art implementation paused for feedback; human visual acceptance #70 remains open.
 
 - Art epic [#64](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/64) — [Art specification](ART-ROADMAP.md)
 - Integration epic [#65](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/65) — [Integration specification](INTEGRATION-ROADMAP.md)
@@ -33,6 +33,7 @@ Rebaselined 25 November 2026 from verified production 5bcffd1 and handover 65e95
 | [#94](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/94) | A3.6 | Art | Hierarchical conduit visibility | #82/#93; coordinate #88 |
 | [#95](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/95) | A3.7 | Art | High-contrast role signatures | #93/#84; acceptance #70 |
 | [#96](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/96) | A4.1 | Art | Final skywalk and navigation legibility | #94/#90; acceptance #70 |
+| [#97](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/97) | R1 | Operations | Contributor handover and repository hygiene | #80 |
 
 ## Knowledge-base milestone mapping (26 November 2026)
 
@@ -49,8 +50,10 @@ The [K0–K7 specification](KNOWLEDGE-BASE.md) extends integration epic #65; row
 | [K6](KNOWLEDGE-BASE.md#k6--formalisation-initiatives) | [#71](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/71), [#72](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/72), [#73](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/73), [#74](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/74) (I1/I2) | Initiative schema, draft, overlay, workflow | #71 parallel K0; relevant #78/#87/#89 evidence; #88 view adapter |
 | [K7](KNOWLEDGE-BASE.md#k7--semantic-retrieval-and-agent-integration) | [#76](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/76) (I4) | Semantic retrieval and agents | K1–K5; K6 review flow; coordinate #75 |
 
-## Ready work
-Start #85 (K0 canonical schema) now, coordinate #77 evidence contracts and #80 revision freshness. #71 initiative schema may proceed independently in alignment with K0; pilot/overlay/workflow depend on relevant query and reconciliation evidence as specified above. #79 usability and #75 interoperability remain distinct, coordinated work packages. Art #66–70 and #81–84 remain independent and unchanged. No artificial art gate for integration.
+## Ready work and status
+- **Art:** A1.2, A2.1–A2.4, A3.1–A3.7, A4.1 implemented in the confirmed review release, with earlier treatments superseded as noted in Art. #66 baseline evidence captured; #68 remaining shadow audit and #70 human acceptance open. Do not start another art iteration without feedback.
+- **Integration:** K0 #85 ready; #77/#80 parallel; #71 schema can proceed in alignment. K1–K7 are planned, not implemented. #75 interoperability is proposed and #79 usability remains open.
+- **Operations:** #97 handover hygiene (this change), #80 release reliability open. A green run with deploy-pages skipped is not publication.
 
 ## Definition of ready and done
 Every task links a spec section, declares scope/non-goals and dependencies, and has verifiable acceptance criteria. Report exact source and commit revisions, tests actually run, real browser/visual evidence where applicable, and blockers. A PR is not deployed simply because it is merged; no spec milestone is complete until its acceptance criteria are satisfied. Art approval is human; mathematical approval and verification must be evidence-backed.

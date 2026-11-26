@@ -1,90 +1,59 @@
-# PhysLib City — maintainer handover
+# Handover — 26 November 2026
 
-As of 25 November 2026, baseline commit [5bcffd1](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/5bcffd14b359790642e8a1d991039459eda204f7). Repository Sudo-RR/Physlib-knowledge-graph, default branch master. [Live city](https://sudo-rr.github.io/Physlib-knowledge-graph/). Project is an independent open-source-facing contributor interface, not an upstream PhysLib replacement.
+This is the review baseline for the independent PhysLib City prototype. Visual iteration is paused for collaborator feedback; no claim of upstream endorsement or partnership. [Open city](https://sudo-rr.github.io/Physlib-knowledge-graph/) · [Architecture](ARCHITECTURE.md) · [Development](DEVELOPMENT.md) · [Backlog](BACKLOG.md).
 
-## Start here
-Read [AGENTS.md](../AGENTS.md), [Integration roadmap](INTEGRATION-ROADMAP.md), [Art roadmap](ART-ROADMAP.md) and [Development runbook](DEVELOPMENT.md). These documents supersede stale instructions in earlier milestone specifications for current operation. Current next integration task is K0 canonical schema (see latest section below); I1 schema may proceed in alignment. Art remains independent under the existing roadmap. Coordinate shared renderer glue, do not conflate milestones.
+## Verified review release
 
-## Active issue tracker
-The new [production backlog](BACKLOG.md) maps 17 active issues (two epics, 14 work packages and one shared operations issue) to these specs. All 32 previously open historical issues were retired with replacement links; no discussion was erased. The [branch audit](BRANCH-AUDIT-20261125.md) records exact obsolete branch tips and conditional preservation/deletion; consult actual workflow results before reporting cleanup complete.
-
-## Verified production baseline
-[Deployment 45680479487](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45680479487), build job 139439385099 and deploy 139442153927 both successful. [Previous deployment 45679274759](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45679274759) also successful. 157/157 unit tests; actual packaged Chromium browser regression passed (full-detail/dusk, declaration traversal, native metadata loading, API overlays, evidence, camera navigation, legacy redirect/deep links, research, mobile map). Native extraction [45677319974](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45677319974) completed successfully, native full artifact 15053014189.
-- PhysLib 7910f51f9129ee4c5829216251c25a3a82042f1e; Mathlib fc4f59e577feb1a4956671bc04ac18aaaf8cd842; Lean leanprover/lean4:v4.36.0; result-graph 2ee55ff6e521eabe71ecddac797e12f64448a5b6.
-- 1,634 modules, 434 complexes, 1,478 role buildings, 434 stations, 30 boroughs, 43 API maps; snapshot-specific counts.
-- 34,959 elaborated local declarations, 304,781 scoped edges, 589 external Mathlib targets, 1,603 modules with records. Graph 67,292,872 bytes (lazy).
-- 34,959 native signatures, 30,926 exact ranges, 33,801 available values, 1,162,808 type references and 2,433,150 value references (reference records, not unique edges); 1,603 module shards, 60,811,582 bytes total, loaded on demand. Native raw graph hash 3281aaa7f132387556181852e4a51701f3daf87af04f85e641e9474f6ee982b0.
-- Chromium at 1440x900 viewport: 4242x2079 render buffer, DPR 3, full detail, 1,061,469 overview triangles and 734 draw calls, 0 idle redraws in measured interval. Software renderer results, not physical GPU frame-rate benchmarks.
-- Latest user art feedback is specified, not implemented. Current contact/plan shadows may remain. Formalisation initiative schema/editor, construction sites and PaperView integration are not implemented.
-
-## Architecture map
-| Layer | Key entry points |
+| Field | Verified value |
 |---|---|
-| Source scan | scripts/extract.mjs, scripts/extract-mathlib.mjs, scripts/city-v2-inventory.mjs |
-| Canonical grouping and placement | site/city-v2-model.js, site/geneva-production-layout.js, scripts/build-geneva-production.mjs |
-| Published mathematical graph | scripts/elaborated-pilot.mjs, scripts/run-elaborated-pilot.mjs, scripts/publish-elaborated.mjs, site/geneva-elaborated.js |
-| Native metadata | scripts/native-lean-metadata.lean, scripts/pack-native-metadata.mjs, site/geneva-native-metadata.js |
-| Declaration exploration | site/geneva-elaborated-panel.js, site/geneva-declaration-navigation.js, site/geneva-source-inspector.js, site/geneva-declaration-browser.js |
-| Contributor and planning | site/geneva-contributor.js, site/geneva-contributor-panel.js, site/geneva-api-maps.js, site/geneva-api-map-panel.js |
-| Presentation | site/geneva-g1.js, site/geneva-g1.html, site/geneva-architectural-materials.js, site/geneva-urban-materials.js, site/geneva-civic-render.js, site/geneva-navigation.js |
-| Publication | .github/workflows/deploy.yml, .github/workflows/elaborated-pilot.yml, .github/workflows/native-metadata.yml, scripts/package-site.mjs, scripts/smoke-geneva-browser.mjs |
+| Application revision | [2c12d5d](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/2c12d5d21022a09fe9ff50e85195958e8adea569) |
+| Production run | [45820966954](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45820966954) |
+| Build / deploy | Both succeeded, deploy-pages executed |
+| Unit tests | 182/182 passed |
+| Browser | All eight packaged Chromium phases passed, including map text drag and native declaration navigation |
+| PhysLib | `9027e3d7cb78c98452e2154d7e9428b15bae12aa` |
+| Mathlib | `fc4f59e577feb1a4956671bc04ac18aaaf8cd842` |
+| Lean | `leanprover/lean4:v4.36.0` |
+| Result-graph extractor | `2ee55ff6e521eabe71ecddac797e12f64448a5b6` |
+| Extraction | [45810885731](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45810885731) |
 
-## Data and semantics
-Graph JSON contains source imports and API file references; lexical commands are not elaborated identities. Exact module ownership maps to complexes; functional role buildings are inferred, not proof-level joins. PhyslibAlpha, Physlib and QuantumInfo occupy three distinct geographic regions; no public river labels or underground explorer. Decorative towers and infill are not mathematical entities. Source imports and declaration relationships use distinct visual channels; Mathlib stations are surface utility representations. Native references are constants directly present in Lean expressions, not automatically certified proof usage. Scoped result-graph edges may be contracted/routed; absence is not independence. Review/freshness data is evidence, not quality or proof certification. API map parser extracts explicit passages and citations, not inferred completion status.
+The counts below describe that exact snapshot, not a promise about future upstream heads.
 
-## Deployment and risks
-Pages is static, generated from clean revision-pinned sources; GitHub Actions builds source snapshots and bundles, selects matching successful extraction artifacts, verifies hashes and publishes only fresh revisions. Extraction and website build are decoupled. A new source revision may temporarily have no compatible mathematical companion; explicitly show unavailable. Full graph/metadata are lazy-loaded. Artifact retention is 14 days; scheduled extraction refreshes evidence. Keep no secrets in the browser. A previous stale deployment was correctly blocked when newer commits arrived, and Chromium timeouts were fixed by isolating browser phases; see [deployment reliability](geneva/deployment-reliability.md). No confirmed GPU/mobile touch hardware performance acceptance. Browser smoke is not subjective visual approval.
+| Coverage | Count |
+|---|---:|
+| Scoped source modules | 1,635 |
+| Source complexes | 435 |
+| Visible complexes (81 SharedFoundations excluded) | 354 |
+| Visible role buildings | 1,235 |
+| Physics subjects / occupied borough regions | 18 / 27 |
+| API maps | 44 |
+| Local elaborated declarations | 34,995 |
+| Scoped result-graph edges | 305,240 |
+| External recorded targets | 589 |
+| Modules with elaborated/native records | 1,604 |
+| Native signatures / ranges / available values | 34,995 / 30,962 / 33,837 |
+| Native type / value reference records | 1,164,560 / 2,438,533 |
 
-## Historical references
-[Geneva programme](geneva/README.md), [sharp rendering](geneva/sharp-rendering.md), [dusk navigation](geneva/dusk-navigation.md), [city navigation](geneva/city-navigation.md), [declaration navigation](geneva/declaration-navigation.md), [native metadata](geneva/full-native-metadata.md), [API planning](geneva/api-map-planning.md), [published graph](geneva/published-elaborated.md). Older C.4 and G1 studies are reference evidence, not current feature mandates.
+Result graph 67,402,780 bytes (lazy); native shards 60,914,205 bytes total (lazy module load). Hashes and exact provenance verified by the published companion manifests. Reference counts are not unique graph edges.
 
-## Handoff checklist
-Start from master head and current CI, choose art or integration work package, inspect relevant files, build/test branch, capture evidence, submit a scoped commit, verify actual deployment and update handover. Do not make successive speculative production pushes. Record limitations, approvals and open questions. No future initiative is approved just because included in this roadmap.
+Measured review rendering: 1440×864 CSS workspace (96% of 1440×900 viewport), 4320×2592 buffer at DPR 3, full-detail, 1,070,455 initial triangles, 849 initial draw calls, zero measured reduced-motion idle redraws. Macro shows 20 neutral corridors representing 167 of 745 eligible complex edges, 24 of 715 eligible utility routes. These are recorded software Chromium measurements, not hardware performance guarantees.
 
+## Walkthrough for a reviewer
+1. Open the city, inspect skyline, switch map, drag, zoom and select a complex.
+2. Search HamiltonianMechanics or another source module, inspect role buildings, Mathlib station and source links.
+3. Use qualified declaration search and inspect native type/value references. Distinguish exact direct refs from scoped graph edges.
+4. Browse API maps and explicit TODO passages; cited locations can be highlighted without claiming coverage.
+5. Review [art scope](ART-ROADMAP.md) and [future integration](INTEGRATION-ROADMAP.md).
 
-## Pre-demo milestone
-Before sharing externally, verify [prototype legibility](geneva/prototype-legibility.md) in the real deployed city: clear role identities, directional conduits and distinctive Mathlib stations. This is a presentation pass, not full initiative or art-roadmap completion.
+## Known limitations
+- Review is not proof of visual acceptance: human feedback remains open (#70). Dense small labels/buildings and approximate overlay depth can still affect legibility. Corridors are conceptual aggregates, not road-routed or collision-checked.
+- Source scanner and lexical role classification are partial/heuristic. Full Mathlib is not rendered; external graph targets are scoped. Native metadata is available only for matching extraction and recorded values/ranges.
+- API-map citation resolution is file-level plus parsed named references, not verified exact claim-to-declaration resolution. TODO reconciliation, structured query database, construction-site initiative lifecycle, PaperView exchange and RAG/agents are not implemented.
+- Publication skips a superseded upstream revision; green CI alone does not mean live release (#80). Never disable freshness or provenance checks. See [runbook](DEVELOPMENT.md).
+- Project-wide licence grant is not present in the repository; preserve third-party notices and resolve reuse terms with maintainer before external redistribution.
 
+## Next work (not yet started)
+K0 #85 canonical typed data schema, K1 #86 revision-aware ingestion, K2 #78 exact references, K3 #87 analytics, K4 #88 query-driven Macro/Meso/Micro, K5 #89 reconciliation, K6 #71–74 initiatives and K7 #76 retrieval/agents. PaperView exchange #75 is a proposed collaboration boundary; no integration or agreement implied. #77 evidence and #80 release reliability are cross-cutting; #79 usability remains open.
 
-## District lighting
-Issue #81 (A2.1/A3.1) tracks [district illumination](geneva/district-lighting.md). Separate original palette and batched accent renderer; no canonical source change. Deployment and visual acceptance require actual evidence.
-
-
-## Top-down borough map
-#83 (A2.2) tracks [geometry-derived top-down plan](geneva/topdown-boroughs.md). Shared layout and mesh silhouettes, exclusive buffered parcel envelopes, no new source ownership. CI and visual review pending.
-
-
-## Unified light blankets
-#84 (A3.3) supersedes narrow façade sweeps; see [district lighting](geneva/district-lighting.md). Same palette and roof signals, per-complex phase, broad skin in existing overlay. CI and visual acceptance pending.
-
-
-## Queryable knowledge base — 26 November 2026
-New approved [K0–K7 specification](KNOWLEDGE-BASE.md) and [issue mapping](BACKLOG.md). Start K0 #85, coordinate #77 and #80 for evidence/freshness. K1 #86, K2 #78, K3 #87, K4 #88, K5 #89, K6 #71–74, K7 #76. Existing I3 #75 and I0.3 #79 remain. No implementation yet; existing art and source graph unchanged. Latest validated deployment 0be0a27 (run 45779819262, 169/169 unit tests); graph companion was rejected for incompatible provenance, so fresh compatible extraction remains necessary. Do not treat the historical 5bcffd1 baseline counts as current live graph coverage.
-
-
-## Immersive workspace
-#90 (A1.2/A4) tracks [full-bleed city and persistent search](geneva/immersive-workspace.md). Initial camera closer; Overview restores full fit. Geometry and knowledge-base work unchanged. CI and visual acceptance pending.
-
-
-## Night terrain
-#91 A2.4: [night terrain](geneva/night-terrain.md). Original procedural paving, width-aware roads, animated river in existing overlay, no source/geometry allocation changes. CI/visual acceptance pending.
-
-
-## Release recovery — 26 November 2026
-Skywalk/spacing/role lights [4d1e77f](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/4d1e77fc307a156b4efacc4088f026fa57e62b29), now mapped to #93 and A2.3/A3.4/A3.5. Terrain PR #92 merged at 8259bea; preview passed 45803288552. Production run [45803762039](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45803762039): 176 unit tests passed, all packaged Chromium phases passed, but deploy-pages skipped because source freshness guard rejected built PhysLib 061be5c (current upstream at inspection 9027e3d). A green build is not a deployment. This documentation commit triggers a new production build with current pinned source; keep freshness gate intact. Native extraction run 45810885731 was in progress at inspection; do not claim compatible companion or deployed terrain until verified. No application code change.
-
-
-## Overview smoke synchronisation
-Run [45813173189](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45813173189) failed after 176/176 unit passes: software Chromium returned zoom 1.2 after the test waited for any later frame, rather than the reset camera pose (expected 1). Earlier run 45803762039 passed the same assertion. Make the test wait for rendered full-fit zoom, yaw and centre; retain exact assertion and timeout. No renderer/source/provenance changes. Screenshot timeout remains an outstanding diagnostic. Retry production; deployment not yet confirmed.
-
-
-## Hierarchical pipes
-Latest confirmed production before A3.6: [6853130](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/6853130e41788778f8b7fc443cd4e386d8de7388), [45816004277](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45816004277) build and actual deploy-pages succeeded. Terrain and translucency now published. #94 A3.6 replaces default full edge rendering with capped neutral district pair bundles, local meso routes, selected incident micro routes; declaration suppresses module skywalks. Actual edges retained; coverage counters, unit and browser tests added. Macro gateway geometry conceptual, no road routing or true shared multi-pair trunks. CI and visual acceptance of A3.6 pending. Integration K0–K7 unchanged.
-
-
-## Role signatures — A3.7
-#95 supersedes weak A3.5 overlay-only patterns with large static real-material emissive signatures, stronger roof/map marks and luminous Basic-bearing base slabs. Complex pulse becomes a secondary wash. Preserve geometry, terrain, pipes and data. Latest confirmed previous production aed4fc7 run 45817412229: 178 unit tests, Chromium and actual deploy-pages passed; measured 20 macro corridors from 745 eligible complex edges, 24 of 715 utilities shown; matching elaborated/native companion 34995 declarations. A3.7 CI/visual acceptance pending.
-
-
-## Final legibility polish — A4.1
-#96: brighter near-white neutral skywalks, high-contrast fitted screen-scaled 3D labels, map-only no-selection drag. Previous A3.7 run 45819060243 completed build and actual deploy-pages successfully. New implementation awaits CI and visual acceptance. No pipe topology, building geometry, terrain or mathematical changes.
+## Historical evidence and maintenance
+This handover supersedes the append-only earlier handover and obsolete milestones. [Exact pre-cleanup revision](https://github.com/Sudo-RR/Physlib-knowledge-graph/tree/2c12d5d21022a09fe9ff50e85195958e8adea569) preserves them, including [old handover](https://github.com/Sudo-RR/Physlib-knowledge-graph/blob/2c12d5d21022a09fe9ff50e85195958e8adea569/docs/HANDOVER.md), [branch audit](https://github.com/Sudo-RR/Physlib-knowledge-graph/blob/2c12d5d21022a09fe9ff50e85195958e8adea569/docs/BRANCH-AUDIT-20261125.md) and [historical screenshots/benchmarks](https://github.com/Sudo-RR/Physlib-knowledge-graph/tree/2c12d5d21022a09fe9ff50e85195958e8adea569/docs/screenshots). Cleanup #97 is scoped to documentation, local preview ergonomics and retired maintenance; the verified application baseline is unchanged. A new build of the cleanup commit must pass before calling that commit deployed.
