@@ -9,6 +9,7 @@ import {createDistrictLights} from './geneva-district-lighting.js';
 import {boroughEnvelopes,meshPlanOutline,roofOutline} from './geneva-topdown-plan.js';
 import {visibleCity,excludedArea} from './geneva-city-scope.js';
 import {breathingCity,rolePattern} from './geneva-breathing-city.js';
+import {roleRects} from './geneva-role-signatures.js';
 import {createBeamNetwork,beamMotionAllowed,beamCurve} from './geneva-beam-network.js';
 import {networkScope,networkProjection,networkSummary} from './geneva-network-hierarchy.js';
 import {masterplan,validatePlan,capacity,VERSION} from './geneva-g1-geometry.js';
@@ -83,12 +84,10 @@ for(const t of towers){
  el('polygon',{points:pts(outline),fill:t.id&&color?color:roofPalette[t.style],opacity:t.id?.92:.66,stroke:t.id&&color?color:'#33424c','stroke-width':.46,'data-roof-outline':'true'},group);
  if(t.id){
   group.dataset.districtColor=color||'';group.dataset.mapBuilding=t.id;group.dataset.mapRole=t.role;group.dataset.rolePattern=String(rolePattern(t));group.dataset.basicBearing=String(!!t.basicBearing);group.style.cursor='pointer';
-  const mark={stroke:'#e1edf2','stroke-width':.42,fill:'none',opacity:.85,'pointer-events':'none'},w=t.w*.22,d=t.d*.22,pattern=rolePattern(t);
-  if(pattern===1)for(const x of [-w,0,w])el('line',{x1:x,y1:-d,x2:x,y2:d,...mark},group);
-  else if(pattern===2)for(const x of [-w,w])for(const y of [-d,d])el('circle',{cx:x,cy:y,r:Math.min(w,d)*.27,fill:'#e1edf2',opacity:.85,'pointer-events':'none'},group);
-  else if(pattern===3)for(const y of [-d,0,d])el('line',{x1:-w,y1:y,x2:w,y2:y,...mark},group);
-  else if(pattern===4)el('rect',{x:-w,y:-d,width:2*w,height:2*d,...mark},group);
-  if(t.basicBearing)el('circle',{cx:0,cy:0,r:Math.min(w,d)*.42,fill:'#fff3db',stroke:'#26353d','stroke-width':.25,'pointer-events':'none','data-basic-marker':'true'},group);
+  const w=t.w*.34,d=t.d*.34,pattern=rolePattern(t),mark={fill:'#e5f0f5','pointer-events':'none'};
+  el('rect',{x:-w,y:-d,width:2*w,height:2*d,fill:'#14242f',opacity:.95,'pointer-events':'none'},group);
+  for(const [x0,y0,x1,y1] of roleRects(pattern,true))el('rect',{x:(x0*2-1)*w,y:(1-y1*2)*d,width:(x1-x0)*2*w,height:(y1-y0)*2*d,...mark,'data-role-signature':'true'},group);
+  if(t.basicBearing)el('circle',{cx:w*.60,cy:d*.60,r:Math.min(w,d)*.27,fill:'#fff3db',stroke:'#26353d','stroke-width':.18,'pointer-events':'none','data-basic-marker':'true'},group);
   group.addEventListener('click',()=>enterFromMap(t.complexId,t.id));mapParts.push({element:group,area:t.area});const title=el('title',{},group);title.textContent=(roleNames[t.role]||t.role)+' · '+t.complexId+' · '+t.area;
  }
 }
@@ -170,13 +169,13 @@ function init3D(){
  // No simulated contact shadows: night paving supplies surface detail.
  const civicDetail=renderCivicFabric(THREE,scene,civic,facade,surfaces);
  const batches=new Map(),dummy=new THREE.Object3D(),tinted=new Map(),beaconMaterials=new Map();
- function tintedFacade(t){if(!t.id)return facade[t.style];const key=t.area+'|'+t.style;if(!tinted.has(key)){const m=facade[t.style].clone();const color=new THREE.Color(districtColor(t.area)||t.color);m.color.lerp(color,.17);m.emissive.lerp(color,.55);applyFacadeProjection(m);tinted.set(key,m);}return tinted.get(key);}
+ function tintedFacade(t){if(!t.id)return facade[t.style];const key=t.area+'|'+t.style;if(!tinted.has(key)){const m=facade[t.style].clone();const color=new THREE.Color(districtColor(t.area)||t.color);m.color.lerp(color,.17);m.emissive.lerp(color,.55);applyFacadeProjection(m,{role:rolePattern(t),tint:color});tinted.set(key,m);}return tinted.get(key);}
  function beacon(color){if(!beaconMaterials.has(color))beaconMaterials.set(color,new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:1.4,roughness:.5}));return beaconMaterials.get(color);}
 
  let tier='detail';
  function part(t,geo,m,x,y,z,w,h,d,rx=0){const a=t.angle,c=Math.cos(a),s=Math.sin(a);dummy.position.copy(world(t.x+c*x+s*z,t.z-s*x+c*z,y));dummy.rotation.set(rx,a,0);dummy.scale.set(w,h,d);dummy.updateMatrix();const district=districtKey(t),key=geo.uuid+'|'+m.uuid+'|'+district+'|'+tier;if(!batches.has(key))batches.set(key,{geo,m,matrices:[],ids:[],area:t.area||null,district,tier});const batch=batches.get(key);batch.matrices.push(dummy.matrix.clone());batch.ids.push(t.id?{id:t.id,complexId:t.complexId}:null);}
  for(const t of towers){const {w,d,h,style}=t,fac=tintedFacade(t);
-  part(t,boxGeo,ivory,0,1,0,w*1.08,2,d*1.08);
+  part(t,boxGeo,t.basicBearing?beacon(districtColor(t.area)||t.color):ivory,0,1,0,w*1.08,2,d*1.08);
   if(t.role==='provisional'){
    part(t,boxGeo,fac,0,h*.5,0,w*.78,h*.96,d*.78);
    for(const x of [-.46,.46])for(const z of [-.46,.46])part(t,boxGeo,metal,x*w,h*.5,z*d,w*.055,h,d*.055);
@@ -231,7 +230,7 @@ function init3D(){
  camera=new THREE.OrthographicCamera(-650,650,550,-550,1,6000);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;const disposeSky=installSkyEnvironment(THREE,renderer,scene);setDusk();for(const m of facade)m.emissiveIntensity=.65;for(const t of [surfaces.concrete,surfaces.asphalt])t.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());for(const m of facade){m.map.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());m.emissiveMap.anisotropy=m.map.anisotropy;}host.append(renderer.domElement);
  // Separate transparent GPU layer: beam-only frames never redraw the high-DPR city.
  beamScene=new THREE.Scene();try{beamRenderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});beamRenderer.setClearColor(0x000000,0);beamRenderer.outputColorSpace=THREE.SRGBColorSpace;beamRenderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));$('beamOverlay').append(beamRenderer.domElement);host.dataset.beamRenderer='overlay';riverOverlay=createRiverOverlay(p,towers,civic,layout?.stations||[]);host.dataset.riverProxies=String(riverOverlay.proxyCount);}catch(e){beamRenderer=null;riverOverlay=null;host.dataset.beamRenderer='static-fallback';console.warn('Animated overlay unavailable:',e.message);}
- if(layout?.buildings.length){districtLights=createDistrictLights(layout.buildings,{imported:t=>!!synthKit[synthModel(t)],outline:t=>roofMeshes[synthModel(t)]||null});scene.add(districtLights.cap);if(beamRenderer)beamScene.add(districtLights.blanket);else scene.add(districtLights.blanket);host.dataset.districtLightingMode='complex-blanket';host.dataset.roleLighting='static-role-patterns';host.dataset.basicBuildings=String(layout.buildings.filter(t=>t.basicBearing).length);host.dataset.breathing=JSON.stringify(layout.breathing);host.dataset.districtComplexes=String(new Set(districtLights.rows.map(r=>r.building.complexId)).size);host.dataset.districtLights=String(districtLights.rows.length);host.dataset.districtVisible=String(districtLights.rows.length);}
+ if(layout?.buildings.length){districtLights=createDistrictLights(layout.buildings,{imported:t=>!!synthKit[synthModel(t)],outline:t=>roofMeshes[synthModel(t)]||null});scene.add(districtLights.cap);if(beamRenderer)beamScene.add(districtLights.blanket);else scene.add(districtLights.blanket);host.dataset.districtLightingMode='complex-blanket';host.dataset.roleLighting='depth-tested-emissive-signatures';host.dataset.roleMaterialCount=String(tinted.size);host.dataset.basicBuildings=String(layout.buildings.filter(t=>t.basicBearing).length);host.dataset.breathing=JSON.stringify(layout.breathing);host.dataset.districtComplexes=String(new Set(districtLights.rows.map(r=>r.building.complexId)).size);host.dataset.districtLights=String(districtLights.rows.length);host.dataset.districtVisible=String(districtLights.rows.length);}
  host.dataset.terrainStyle='night-paving-flow';host.dataset.riverAnimated='false';host.dataset.riverTime='0';
  renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','3D city. Arrow keys pan, plus and minus zoom, Home resets. Use the mathematics sidebar for keyboard selection.');
  function resize(){if(host.hidden||!host.clientWidth||!host.clientHeight)return;const w=host.clientWidth,h=host.clientHeight;const aspect=w/h,first=!overviewFrame;overviewFrame=fitSkyline(towers,aspect);const half=overviewFrame.half;if(first){focusX=overviewFrame.x;focusZ=overviewFrame.z;zoom=landingZoom(aspect);updatePlanCamera();}host.dataset.landingZoom=String(landingZoom(aspect));host.dataset.skylineFit=JSON.stringify(overviewFrame);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();const gl=renderer.getContext(),limit=Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),gl.getParameter(gl.MAX_TEXTURE_SIZE));const ratio=renderScale(quality,devicePixelRatio,w,h,limit);const current=renderer.getSize(new THREE.Vector2());if(current.x!==w||current.y!==h||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);}if(beamRenderer){const size=beamRenderer.getSize(new THREE.Vector2());if(size.x!==w||size.y!==h)beamRenderer.setSize(w,h,false);}invalidate();}

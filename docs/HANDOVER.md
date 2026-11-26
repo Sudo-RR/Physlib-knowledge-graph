@@ -80,3 +80,7 @@ Run [45813173189](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/run
 
 ## Hierarchical pipes
 Latest confirmed production before A3.6: [6853130](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/6853130e41788778f8b7fc443cd4e386d8de7388), [45816004277](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45816004277) build and actual deploy-pages succeeded. Terrain and translucency now published. #94 A3.6 replaces default full edge rendering with capped neutral district pair bundles, local meso routes, selected incident micro routes; declaration suppresses module skywalks. Actual edges retained; coverage counters, unit and browser tests added. Macro gateway geometry conceptual, no road routing or true shared multi-pair trunks. CI and visual acceptance of A3.6 pending. Integration K0–K7 unchanged.
+
+
+## Role signatures — A3.7
+#95 supersedes weak A3.5 overlay-only patterns with large static real-material emissive signatures, stronger roof/map marks and luminous Basic-bearing base slabs. Complex pulse becomes a secondary wash. Preserve geometry, terrain, pipes and data. Latest confirmed previous production aed4fc7 run 45817412229: 178 unit tests, Chromium and actual deploy-pages passed; measured 20 macro corridors from 745 eligible complex edges, 24 of 715 utilities shown; matching elaborated/native companion 34995 declarations. A3.7 CI/visual acceptance pending.

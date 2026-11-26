@@ -1,3 +1,4 @@
+import {roleSignatureGLSL} from './geneva-role-signatures.js';
 // PhysLib City architectural materials. Original procedural textures and
 // sky, no remote assets. Tiles repeat in approximate world units rather than
 // stretching a fixed number of windows over every tower.
@@ -38,7 +39,7 @@ function facadeTile(THREE,p,style){
  return {base,emissive};
 }
 // Installed on each clone too: Three.Material.clone does not preserve callbacks.
-export function applyFacadeProjection(material){
+export function applyFacadeProjection(material,{role=null,tint=null}={}){
  material.onBeforeCompile=shader=>{
   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying float vArchitectRoof;')
    .replace('#include <uv_vertex>',`#include <uv_vertex>
@@ -59,8 +60,24 @@ export function applyFacadeProjection(material){
    diffuseColor.rgb=mix(diffuseColor.rgb, diffuse*vec3(0.48,0.53,0.56),vArchitectRoof);`)
    .replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
    totalEmissiveRadiance*=1.0-vArchitectRoof;`);
+  // Apply the role signature directly to the real depth-tested mesh, not a
+  // translucent convex facade approximation. UVs are captured BEFORE tiling.
+  if(role!==null&&tint){
+   shader.uniforms.uRoleTint={value:tint};
+   shader.vertexShader=shader.vertexShader.replace('#include <common>','#include <common>\nvarying vec2 vRoleCoord;')
+    .replace('vArchitectRoof=smoothstep(0.58,0.90,abs(normal.y));',`vArchitectRoof=smoothstep(0.58,0.90,abs(normal.y));
+      vRoleCoord=vec2((abs(normal.x)>abs(normal.z)?position.z:position.x)+.5,position.y+.5);`);
+   shader.fragmentShader=shader.fragmentShader.replace('#include <common>',`#include <common>
+     uniform vec3 uRoleTint;varying vec2 vRoleCoord;
+     ${roleSignatureGLSL(false)}`)
+    .replace('totalEmissiveRadiance*=1.0-vArchitectRoof;',`totalEmissiveRadiance*=1.0-vArchitectRoof;
+     float roleLight=roleSignature(clamp(vRoleCoord,0.0,1.0),${Number(role).toFixed(1)})*(1.0-vArchitectRoof);
+     // Darken competing windows; the large uninterrupted strokes dominate.
+     diffuseColor.rgb*=mix(.34,.60,roleLight);
+     totalEmissiveRadiance=totalEmissiveRadiance*.16+mix(uRoleTint,vec3(1.0),.18)*roleLight*1.85;`);
+  }
  };
- material.customProgramCacheKey=()=> 'physlib-architectural-facade-v1';
+ material.customProgramCacheKey=()=>role===null?'physlib-architectural-facade-v1':'physlib-role-facade-v2-'+role;
  return material;
 }
 export function makeArchitecturalFacades(THREE){
