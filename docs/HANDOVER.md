@@ -52,3 +52,7 @@ Issue #81 (A2.1/A3.1) tracks [district illumination](geneva/district-lighting.md
 
 ## Top-down borough map
 #83 (A2.2) tracks [geometry-derived top-down plan](geneva/topdown-boroughs.md). Shared layout and mesh silhouettes, exclusive buffered parcel envelopes, no new source ownership. CI and visual review pending.
+
+
+## Unified light blankets
+#84 (A3.3) supersedes narrow façade sweeps; see [district lighting](geneva/district-lighting.md). Same palette and roof signals, per-complex phase, broad skin in existing overlay. CI and visual acceptance pending.

@@ -7,8 +7,8 @@ export const districtPalette=Object.freeze({
  StatisticalMechanics:'#7bca83',Thermodynamics:'#b5dc66',ProbabilisticTheory:'#46b69a'
 });
 export const districtAreas=Object.freeze(Object.keys(districtPalette));
-export const DISTRICT_SWEEP_HZ=.9;
+export const DISTRICT_BLANKET_HZ=.9;
 export function districtColor(area){return districtPalette[area]||null;}
 export function districtPhase(id){let h=2166136261;for(let i=0;i<id.length;i++)h=Math.imul(h^id.charCodeAt(i),16777619);return (h>>>0)/4294967296;}
-export function districtRows(buildings){return buildings.filter(t=>t.id&&t.complexId&&districtColor(t.area)&&!t.id.endsWith('::mathlib-station')).map(t=>({building:t,color:districtColor(t.area),phase:districtPhase(t.id),area:districtAreas.indexOf(t.area)}));}
+export function districtRows(buildings){return buildings.filter(t=>t.id&&t.complexId&&districtColor(t.area)&&!t.id.endsWith('::mathlib-station')).map(t=>({building:t,color:districtColor(t.area),phase:districtPhase(t.complexId),area:districtAreas.indexOf(t.area)}));}
 export function districtMotionAllowed({available,paused,reduced,visible}){return !!available&&!paused&&!reduced&&!!visible;}
