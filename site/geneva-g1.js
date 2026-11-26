@@ -9,7 +9,8 @@ import {createDistrictLights} from './geneva-district-lighting.js';
 import {boroughEnvelopes,meshPlanOutline,roofOutline} from './geneva-topdown-plan.js';
 import {visibleCity,excludedArea} from './geneva-city-scope.js';
 import {breathingCity,rolePattern} from './geneva-breathing-city.js';
-import {networkRows,createBeamNetwork,beamMotionAllowed,beamCurve} from './geneva-beam-network.js';
+import {createBeamNetwork,beamMotionAllowed,beamCurve} from './geneva-beam-network.js';
+import {networkScope,networkProjection,networkSummary} from './geneva-network-hierarchy.js';
 import {masterplan,validatePlan,capacity,VERSION} from './geneva-g1-geometry.js';
 import {roleNames} from './city-v2-model.js';
 import {subjectColors} from './geneva-production-layout.js';
@@ -115,7 +116,7 @@ function changeZoom(factor){const next=clamp(zoom*factor,.75,9);if(next===zoom)r
 function turn(angle){if(viewMode!=='oblique'||!angle)return;yaw=normalizeYaw(yaw+angle);invalidate();}
 const heldKeys=new Set();
 function navigate(keys,dt){const d=navigationDelta(keys,viewMode,yaw,zoom,dt);if(d.dx||d.dz)pan(d.dx,d.dz);if(d.rotation)turn(d.rotation);if(d.factor!==1)changeZoom(d.factor);}
-function updatePlanCamera(){const w=1060/zoom,h=860/zoom;svg.setAttribute('viewBox',`${500+focusX-w/2} ${400+focusZ-h/2} ${w} ${h}`);const marker=$('mapCameraMarker');if(marker)marker.setAttribute('transform',`translate(${500+focusX} ${400+focusZ}) rotate(${-yaw*180/Math.PI}) scale(${1/Math.sqrt(zoom)})`);}
+function updatePlanCamera(){const w=1060/zoom,h=860/zoom;svg.setAttribute('viewBox',`${500+focusX-w/2} ${400+focusZ-h/2} ${w} ${h}`);const marker=$('mapCameraMarker');if(marker)marker.setAttribute('transform',`translate(${500+focusX} ${400+focusZ}) rotate(${-yaw*180/Math.PI}) scale(${1/Math.sqrt(zoom)})`);if(networkKey&&!selectedId)refreshNetwork();}
 let sidebarWidth=360;
 function toggleSidebar(show){const aside=$('citySidebar'),next=show??aside.hidden;aside.hidden=!next;$('toggleSidebar').setAttribute('aria-expanded',String(next));$('toggleSidebar').textContent=next?'Explore ‹':'Explore ›';}
 function setSidebarWidth(w){const limit=Math.max(280,Math.min(760,innerWidth-24));sidebarWidth=clamp(w,280,limit);document.documentElement.style.setProperty('--sidebar-width',sidebarWidth+'px');const grip=$('sidebarGrip');grip.setAttribute('aria-valuemax',String(limit));grip.setAttribute('aria-valuenow',String(Math.round(sidebarWidth)));const expanded=sidebarWidth>=Math.min(620,limit);$('expandSidebar').setAttribute('aria-pressed',String(expanded));$('expandSidebar').textContent=expanded?'Reduce':'Enlarge';}
@@ -348,43 +349,33 @@ function mapPipe(layer,a,b,key,{dashed=false,bend=.12}={}){
 function updateLinkReadout(text){$('linkReadout').textContent=text;}
 function refreshNetwork(){
  const host=$('three');$('togglePipes').setAttribute('aria-pressed',String(channel!=='off'));$('togglePipes').textContent=channel==='off'?'Pipes off':'Pipes on';
- const key=[filter,channel,selectedId||'',!!selectedDeclaration].join('|');if(key===networkKey)return;networkKey=key;
+ const scope=networkScope(layout,{zoom,focusX,focusZ,filter,selected:selectedId,declaration:!!selectedDeclaration}),key=[filter,channel,selectedId||'',scope.level,scope.district].join('|');if(key===networkKey)return;networkKey=key;
  if(beamMesh){beamMesh.removeFromParent();beamMesh.geometry.dispose();beamMesh.material.dispose();beamMesh=null;}
- globalMapLayer.replaceChildren();const rows=networkRows(model,layout,filter,channel,selectedId);let modules=0,utility=0;const counts={out:0,in:0,both:0,mathlib:0};
+ globalMapLayer.replaceChildren();const {rows,stats}=networkProjection(model,layout,{filter,channel,selected:selectedId,scope});let modules=0,utility=0;const counts={out:0,in:0,both:0,mathlib:0,aggregate:0};
  for(const row of [...rows.filter(r=>!r.utility),...rows.filter(r=>r.utility)]){
   if(row.utility)utility++;else modules++;counts[row.key]++;
-  const group=el('g',{'data-network-channel':row.key},globalMapLayer),a=row.from,b=row.to,dx=b.x-a.x,dz=b.z-a.z;
-  const width=row.utility?(row.focused?4.2:2.1):row.focused?2.7:1.05,opacity=row.utility?(row.focused?.98:.90):row.focused?.95:selectedId?.12:.42;
+  const group=el('g',{'data-network-channel':row.key,...(row.aggregate?{'data-aggregate-count':row.members.length,'data-aggregate-forward':row.forward,'data-aggregate-reverse':row.reverse}: {})},globalMapLayer);if(row.aggregate){const title=el('title',{},group);title.textContent=row.districts.join(' ↔ ')+' · '+row.members.length+' directed complex edges ('+row.forward+' forward, '+row.reverse+' reverse); aggregate, not a direct dependency';}
+  const width=row.utility?(row.focused?3.2:1.5):row.aggregate?Math.min(3,1+.4*Math.log2(1+row.members.length)):row.focused?2.7:1.1,opacity=row.utility?(row.focused?.98:.7):row.aggregate?.38:row.focused?.95:.45;
   const draw=(path,color,extra={})=>el('path',{d:path,fill:'none',stroke:color,'stroke-width':width,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke',opacity,...extra},group);
   const points=beamCurve(row,{outline:t=>roofMeshes[synthModel(t)]||null}).getSpacedPoints(18),path=pts=>pts.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' ');
-  if(row.utility)draw(path(points),linkColors.mathlib);
+  if(row.utility)draw(path(points),linkColors.mathlib,row.focused?{'data-pipe-channel':'mathlib'}:{});
+  else if(row.aggregate)draw(path(points),'#a2b5c2');
   else if(row.key==='both'){draw(path(points.slice(0,10)),linkColors.out,{'data-pipe-end':'dependent'});draw(path(points.slice(9)),linkColors.in,{'data-pipe-end':'prerequisite'});}
-  else draw(path(points),linkColors[row.key]);
+  else draw(path(points),linkColors[row.key],row.focused?{'data-pipe-channel':row.key}:{});
  }
  if(scene&&rows.length){beamMesh=createBeamNetwork(rows,{selected:!!selectedId,outline:t=>roofMeshes[synthModel(t)]||null});(beamRenderer?beamScene:scene).add(beamMesh);}
  $('beamOverlay').hidden=!beamRenderer||(!beamMesh&&!districtLights&&!riverOverlay)||viewMode!=='oblique';
- host.dataset.networkGeometry='architectural-skywalk';host.dataset.networkModulePipes=String(modules);host.dataset.networkMathlibPipes=String(utility);host.dataset.networkChannels=JSON.stringify(counts);host.dataset.beamAnimated='false';host.dataset.beamTime='0';
+ host.dataset.networkGeometry='architectural-skywalk';host.dataset.networkHierarchy=JSON.stringify(stats);if(!selectedDeclaration)updateLinkReadout(channel==='off'?'Pipes hidden':networkSummary(stats));host.dataset.networkModulePipes=String(modules);host.dataset.networkMathlibPipes=String(utility);host.dataset.networkChannels=JSON.stringify(counts);host.dataset.beamAnimated='false';host.dataset.beamTime='0';
 }
 function drawDependencies(){
- refreshNetwork();invalidate();declarationMapLayer.replaceChildren();moduleMapLayer.replaceChildren();$('three').dataset.declarationArcs='0';$('three').dataset.modulePipes='0';$('three').dataset.mathlibPipes='0';updateLinkReadout(channel==='off'?'Pipes hidden':'City network · '+$('three').dataset.networkModulePipes+' directed complex imports · '+$('three').dataset.networkMathlibPipes+' utility connections');
+ refreshNetwork();invalidate();declarationMapLayer.replaceChildren();moduleMapLayer.replaceChildren();$('three').dataset.declarationArcs='0';$('three').dataset.modulePipes='0';$('three').dataset.mathlibPipes='0';if(channel==='off')updateLinkReadout('Pipes hidden');
  if(dependencyGroup)for(const o of [...dependencyGroup.children]){dependencyGroup.remove(o);o.geometry?.dispose();o.material?.dispose();}
  if(!production||!selectedId||channel==='off')return;
  if(selectedDeclaration){drawDeclarationDependencies();return;}
- const c=siteById.get(selectedId),vec=(t,y)=>new THREE.Vector3(t.x-500,y,t.z-400),top=t=>Math.max(8,(tallest.get(t.id)?.h||0)*1.23)+3;
- const links=visibleModuleLinks(model.edges,selectedId,channel,filter,siteById);
- let count=0;
- for(const direction of ['out','in'])for(const e of links[direction]){
-  const a=siteById.get(e.from),b=siteById.get(e.to),start=vec(a,top(a)),end=vec(b,top(b)),mid=start.clone().lerp(end,.5),dx=b.x-a.x,dz=b.z-a.z;
-  mid.y+=Math.min(125,25+start.distanceTo(end)*.15);mid.x-=dz*.08;mid.z+=dx*.08;
-  mapPipe(moduleMapLayer,a,b,direction,{bend:.045});count++;
- }
- const station=layout.stations.find(t=>t.complexId===selectedId),complex=complexById.get(selectedId),evidence=stationEvidence(complex);let utilityCount=0;
- if(station&&evidence.active&&(filter==='all'||c.area===filter)){
-  const buildings=stationRoleLinks(complex,layout.buildings);
-  for(const b of buildings){const points=beamCurve({from:b,to:station,utility:true},{outline:t=>roofMeshes[synthModel(t)]||null}).getSpacedPoints(18),path=points.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' ');el('path',{d:path,fill:'none',stroke:linkColors.mathlib,'stroke-width':3.2,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke','data-pipe-channel':'mathlib','marker-end':'url(#link-arrow-mathlib)'},moduleMapLayer);utilityCount++;}
- }
- $('three').dataset.modulePipes=String(count);$('three').dataset.mathlibPipes=String(utilityCount);
- updateLinkReadout('Module imports · '+links.out.length+'/'+links.totalOut+' uses · '+links.in.length+'/'+links.totalIn+' used by · '+evidence.count+' Mathlib module imports (role links by cited source modules).');
+ const links=visibleModuleLinks(model.edges,selectedId,channel,filter,siteById),evidence=stationEvidence(complexById.get(selectedId));
+ const stats=JSON.parse($('three').dataset.networkHierarchy);
+ $('three').dataset.modulePipes=String(stats.skyRoutes);$('three').dataset.mathlibPipes=String(stats.utilityShown);
+ updateLinkReadout(networkSummary(stats)+' · '+links.out.length+'/'+links.totalOut+' uses · '+links.in.length+'/'+links.totalIn+' used by · '+evidence.count+' Mathlib module imports.');
 }
 function drawDeclarationDependencies(){
  if(channel==='mathlib')return;
@@ -455,7 +446,7 @@ if(production){
  setupResearchSearch(production,(id,b,focus)=>selectComplex(id,b,focus));
  $('historyTools').addEventListener('toggle',()=>{if($('historyTools').open&&!$('historyTools').dataset.loaded){$('historyTools').dataset.loaded='true';setupHistory(production);}});
  $('status').textContent=($('three').dataset.error?'3D unavailable; flat plan active · ':'')+layout.version+' · '+layout.sites.length+' source complexes visible ('+(production.layout.sites.length-layout.sites.length)+' excluded) · '+layout.buildings.length+' role buildings · '+layout.boroughs.length+' boroughs · '+model.source.revision.slice(0,12);
- $('caption').textContent='Animated dependency pipes are on by default. Select a complex to emphasise its real links and role markers; use Pipes to hide the network. Cyan diamond beacons identify Mathlib stations; neutral buildings are scenery. WASD move · ←/→ rotate · ↑/↓ zoom · drag to pan · right-drag or Shift-drag to rotate · wheel/pinch zoom · F focus · M map/city · I sidebar · / search · Esc clear.';
+ $('caption').textContent='Pipes are on by default: overview shows neutral district bundles; zoom reveals local links; select a complex to show only its actual incident links and role markers. Use Pipes to hide the network. Cyan diamond beacons identify Mathlib stations; neutral buildings are scenery. WASD move · ←/→ rotate · ↑/↓ zoom · drag to pan · right-drag or Shift-drag to rotate · wheel/pinch zoom · F focus · M map/city · I sidebar · / search · Esc clear.';
  const area=params.get('area');if(area&&area!==excludedArea&&model.areas.includes(area)){ $('subject').value=area;sourceUI.filter(area);}
  const initial=params.get('complex'),building=params.get('building'),declaration=params.get('declaration');if(initial&&complexById.get(initial)?.area===excludedArea){sourceUI.inspect(initial,null);toggleSidebar(true);}else if(initial&&siteById.has(initial)){const valid=buildingById.get(building)?.complexId===initial||building===initial+'::mathlib-station';selectComplex(initial,valid?building:null,true);}if(declaration){toggleSidebar(true);void sourceUI.restoreDeclaration(declaration);}const api=params.get('apiMap');if(api&&apiMapUI.select(api))toggleSidebar(true);
 }else{

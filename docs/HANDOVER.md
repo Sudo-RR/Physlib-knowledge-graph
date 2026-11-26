@@ -76,3 +76,7 @@ Skywalk/spacing/role lights [4d1e77f](https://github.com/Sudo-RR/Physlib-knowled
 
 ## Overview smoke synchronisation
 Run [45813173189](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45813173189) failed after 176/176 unit passes: software Chromium returned zoom 1.2 after the test waited for any later frame, rather than the reset camera pose (expected 1). Earlier run 45803762039 passed the same assertion. Make the test wait for rendered full-fit zoom, yaw and centre; retain exact assertion and timeout. No renderer/source/provenance changes. Screenshot timeout remains an outstanding diagnostic. Retry production; deployment not yet confirmed.
+
+
+## Hierarchical pipes
+Latest confirmed production before A3.6: [6853130](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/6853130e41788778f8b7fc443cd4e386d8de7388), [45816004277](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45816004277) build and actual deploy-pages succeeded. Terrain and translucency now published. #94 A3.6 replaces default full edge rendering with capped neutral district pair bundles, local meso routes, selected incident micro routes; declaration suppresses module skywalks. Actual edges retained; coverage counters, unit and browser tests added. Macro gateway geometry conceptual, no road routing or true shared multi-pair trunks. CI and visual acceptance of A3.6 pending. Integration K0–K7 unchanged.

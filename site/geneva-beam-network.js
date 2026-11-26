@@ -51,6 +51,7 @@ export function beamCurve(row,{outline=()=>null}={}){
  }
  // Straight horizontal exit and entry stubs, with an enclosed inclined span.
  const stub=Math.min(4,span*.18),dir=flat.normalize(),exit=a.clone().addScaledVector(dir,stub),entry=b.clone().addScaledVector(dir,-stub);
+ if(row.aggregate){const y=Math.max(a.y,b.y)+3,mid=exit.clone().lerp(entry,.5),alongX=Math.abs(delta.x)>=Math.abs(delta.z),p=alongX?new THREE.Vector3(mid.x,y,exit.z):new THREE.Vector3(exit.x,y,mid.z),q=alongX?new THREE.Vector3(mid.x,y,entry.z):new THREE.Vector3(entry.x,y,mid.z);add(a,exit);add(exit,p);add(p,q);add(q,entry);add(entry,b);return path;}
  add(a,exit);add(exit,entry);add(entry,b);return path;
 }
 export function createBeamNetwork(rows,{selected=false,outline=()=>null}={}){
@@ -58,15 +59,15 @@ export function createBeamNetwork(rows,{selected=false,outline=()=>null}={}){
  const segments=18;
  function vertex(point,dir,s,d,p,color,k,w,isUtility){position.push(...point.toArray());tangent.push(...dir.toArray());side.push(s);distance.push(d);phase.push(p);tint.push(color.r,color.g,color.b);strength.push(k);width.push(w);utility.push(isUtility?1:0);}
  for(const row of [...rows.filter(r=>!r.utility),...rows.filter(r=>r.utility)]){
-  const curve=beamCurve(row,{outline}),points=curve.getSpacedPoints(segments),length=curve.getLength(),p=seed(row.id||''),startColor=new THREE.Color(channels[row.key==='both'?'out':row.key]),endColor=new THREE.Color(channels[row.key==='both'?'in':row.key]),base=position.length/3;
-  const k=row.utility?(row.focused?1:.95):row.focused?1:selected?.18:.78;
+  const curve=beamCurve(row,{outline}),points=curve.getSpacedPoints(segments),length=curve.getLength(),p=seed(row.id||''),startColor=new THREE.Color(row.aggregate?'#a2b5c2':channels[row.key==='both'?'out':row.key]),endColor=new THREE.Color(row.aggregate?'#a2b5c2':channels[row.key==='both'?'in':row.key]),base=position.length/3;
+  const k=row.utility?(row.focused?1:.78):row.aggregate?.30:row.focused?1:.46;
   const dirs=points.map((point,i)=>points[Math.min(segments,i+1)].clone().sub(points[Math.max(0,i-1)]).normalize());
   if(row.utility){
    for(let i=0;i<=segments;i++){const color=startColor.clone().lerp(endColor,i/segments);for(const sign of [-1,1])vertex(points[i],dirs[i],sign,i/segments*length,p,color,k,row.focused?7.5:5.7,true);if(i<segments){const j=base+i*2;indices.push(j,j+1,j+2,j+1,j+3,j+2);}}
   }else{
    // Four actual world-space faces, each with transverse coordinate for
    // dark structural rails and coloured glazing. No billboard extrusion.
-   const halfW=row.focused?1.55:1.15,halfH=row.focused?1.15:.88;
+   const halfW=row.aggregate?Math.min(2.1,.8+.18*Math.log2(1+row.members.length)):row.focused?1.55:1.05,halfH=row.aggregate?.7:row.focused?1.15:.80;
    for(let i=0;i<=segments;i++){
     const d=dirs[i],right=new THREE.Vector3(-d.z,0,d.x).normalize();if(right.lengthSq()<1e-8)right.set(1,0,0);
     const up=new THREE.Vector3().crossVectors(right,d).normalize();if(up.y<0)up.negate();
