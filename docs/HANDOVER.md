@@ -68,3 +68,7 @@ New approved [K0–K7 specification](KNOWLEDGE-BASE.md) and [issue mapping](BACK
 
 ## Night terrain
 #91 A2.4: [night terrain](geneva/night-terrain.md). Original procedural paving, width-aware roads, animated river in existing overlay, no source/geometry allocation changes. CI/visual acceptance pending.
+
+
+## Release recovery — 26 November 2026
+Skywalk/spacing/role lights [4d1e77f](https://github.com/Sudo-RR/Physlib-knowledge-graph/commit/4d1e77fc307a156b4efacc4088f026fa57e62b29), now mapped to #93 and A2.3/A3.4/A3.5. Terrain PR #92 merged at 8259bea; preview passed 45803288552. Production run [45803762039](https://github.com/Sudo-RR/Physlib-knowledge-graph/actions/runs/45803762039): 176 unit tests passed, all packaged Chromium phases passed, but deploy-pages skipped because source freshness guard rejected built PhysLib 061be5c (current upstream at inspection 9027e3d). A green build is not a deployment. This documentation commit triggers a new production build with current pinned source; keep freshness gate intact. Native extraction run 45810885731 was in progress at inspection; do not claim compatible companion or deployed terrain until verified. No application code change.
