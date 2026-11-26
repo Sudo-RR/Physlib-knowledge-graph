@@ -96,7 +96,7 @@ export function createBeamNetwork(rows,{selected=false,outline=()=>null}={}){
   float across=abs(vSide),pulse=.5+.5*cos(6.2831853*(vDistance/mix(78.0,14.0,vUtility)-uTime*.68+vPhase));
   vec3 rgb;float alpha;
   if(vUtility>0.5){float casing=1.0-smoothstep(.83,.98,across),core=1.0-smoothstep(.35,.62,across);rgb=mix(vTint*.22,mix(vTint,vec3(.73,1.0,.96),.35+.28*pulse),core);alpha=(.72*casing+.24*core)*vStrength;}
-  else{float rail=smoothstep(.68,.87,across),mullion=1.0-smoothstep(.055,.12,abs(fract(vDistance/7.0)-.5));float frame=max(rail,mullion);rgb=mix(vTint*(.58+.22*pulse),vec3(.055,.085,.11),frame);rgb=mix(rgb,vTint,.36*rail);alpha=(.90+.08*frame)*vStrength;}
+  else{float rail=smoothstep(.68,.87,across),mullion=1.0-smoothstep(.055,.12,abs(fract(vDistance/7.0)-.5));float frame=max(rail,mullion);rgb=mix(vTint*(.58+.22*pulse),vec3(.055,.085,.11),frame);rgb=mix(rgb,vTint,.36*rail);alpha=(.67+.16*frame)*vStrength;}
   gl_FragColor=vec4(rgb,clamp(alpha,0.0,1.0));
   #include <colorspace_fragment>
  }`});
