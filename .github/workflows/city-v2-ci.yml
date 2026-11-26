@@ -23,6 +23,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Read pinned fixture source revision
+        id: fixture
+        run: |
+          revision=$(node -e 'const g=require("./test/fixtures/city/graph.json");if(!/^[0-9a-f]{40}$/.test(g.source.revision))throw Error("Invalid fixture revision");console.log(g.source.revision)')
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v4
+        with:
+          repository: leanprover-community/physlib
+          ref: ${{ steps.fixture.outputs.revision }}
+          path: .physlib-source
+          persist-credentials: false
       - run: npm ci
       - run: npm test
       - run: npm run build:city
@@ -42,9 +53,8 @@ jobs:
           test -f dist/site/geneva-g1.html
           cmp dist/site/index.html dist/site/geneva-g1.html
           grep -q 'city-bundle\.' dist/site/city-c4.html
-          grep -q 'href="city-c4.html"' dist/site/index.html
           grep -q 'geneva-g1-bundle\.' dist/site/index.html
-          grep -q 'href="city-v2.html"' dist/site/index.html
+          ! grep -Eq 'href="city-(c4|v2)\.html"' dist/site/index.html
           ls dist/site/assets/geneva-g1-bundle.*.js >/dev/null
-          grep -q 'city-v2-bundle\.' dist/site/city-v2.html
-          ls dist/site/assets/city-v2-bundle.*.js >/dev/null
+          grep -Fq 'location.replace("index.html"+location.search+location.hash)' dist/site/city-v2.html
+          node --input-type=module -e 'import fs from "node:fs"; const p=JSON.parse(fs.readFileSync("dist/site/data/geneva-production.json"));const g=JSON.parse(fs.readFileSync("test/fixtures/city/graph.json"));if(p.model.source.revision!==g.source.revision||p.apiMaps.length!==p.contributor.maps.length||!p.apiMaps.length)throw Error("Fixture API map provenance or coverage mismatch")'

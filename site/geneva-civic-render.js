@@ -1,10 +1,11 @@
 // Original civic rendering inspired by SynthCity ground/storefront layer.
 // Instanced decorative scene: not mathematical nodes, no graph edges.
+import {nightPaving,roadJunctions} from './geneva-night-terrain.js';
 export function renderCivicFabric(THREE,scene,civic,facades,surfaces){
  const group=new THREE.Group();group.name='decorative civic infrastructure';scene.add(group);
  const mat=(c,r=.8)=>new THREE.MeshStandardMaterial({color:c,roughness:r});
- const asphalt=mat('#484f57'),curb=mat('#969da0'),mark=mat('#e1e4e3'),roof=mat('#aeb7bd'),stone=mat('#bfc7ca'),garden=mat('#54705a'),trunk=mat('#655e55'),leaf=[mat('#46624e'),mat('#607c61'),mat('#779077')],metal=mat('#78838b',.45);
- asphalt.map=surfaces.asphalt;
+ const asphalt=nightPaving('asphalt'),curb=mat('#4d5c66'),mark=new THREE.MeshStandardMaterial({color:'#9eabb0',emissive:'#63777d',emissiveIntensity:.42}),roof=mat('#aeb7bd'),stone=mat('#53636d'),garden=mat('#2f493e'),trunk=mat('#655e55'),leaf=[mat('#46624e'),mat('#607c61'),mat('#779077')],metal=mat('#78838b',.45);
+ const edge=new THREE.MeshStandardMaterial({color:'#a0a9a8',emissive:'#d6a56a',emissiveIntensity:.48,roughness:.7});
  const lit=new THREE.MeshStandardMaterial({color:'#ffb879',emissive:'#ff6a00',emissiveIntensity:.8});
  const box=new THREE.BoxGeometry(1,1,1),round=new THREE.CylinderGeometry(.5,.5,1,10),sphere=new THREE.IcosahedronGeometry(.5,1);
  const simpleRound=new THREE.CylinderGeometry(.5,.5,1,6),simpleSphere=new THREE.IcosahedronGeometry(.5,0),switchable=[];
@@ -16,12 +17,13 @@ export function renderCivicFabric(THREE,scene,civic,facades,surfaces){
  function line(a,b,width,y,m){const dx=b[0]-a[0],dz=b[1]-a[1],l=Math.hypot(dx,dz);if(l<.01)return;part(box,m,(a[0]+b[0])/2,y,(a[1]+b[1])/2,width,.08,l+.3,Math.atan2(dx,dz));}
  // Every route segment shares its junction coordinates. Round caps avoid
  // small gaps at bends, and a thin pavement apron gives roads real edges.
- const joints=new Map();
- for(const r of civic.roads){line(r.a,r.b,r.width+.5,.12,curb);line(r.a,r.b,r.width,.18,asphalt);
-  for(const q of [r.a,r.b])joints.set(q.join(','),q);
-  if(r.kind==='arterial'&&Math.hypot(r.a[0]-r.b[0],r.a[1]-r.b[1])>4){const a=r.a,b=r.b,lerp=f=>[a[0]+(b[0]-a[0])*f,a[1]+(b[1]-a[1])*f];line(lerp(.28),lerp(.65),.16,.25,mark);}
+ const joints=roadJunctions(civic.roads);
+ for(const r of civic.roads){line(r.a,r.b,r.width+.70,.12,curb);line(r.a,r.b,r.width,.18,asphalt);
+  const dx=r.b[0]-r.a[0],dz=r.b[1]-r.a[1],l=Math.hypot(dx,dz);if(l<4)continue;const nx=-dz/l,nz=dx/l,lerp=f=>[r.a[0]+dx*f,r.a[1]+dz*f];
+  if(r.kind==='arterial'){const count=Math.max(1,Math.floor(l/9));for(let i=0;i<count;i++)line(lerp((i+.20)/count),lerp((i+.65)/count),.16,.25,mark);}
+  for(const sign of [-1,1]){const offset=p=>[p[0]+nx*sign*(r.width/2+.15),p[1]+nz*sign*(r.width/2+.15)];line(offset(lerp(.13)),offset(lerp(.87)),.16,.24,edge);}
  }
- for(const [x,z] of joints.values()){part(round,curb,x,.12,z,5.5,.08,5.5);part(round,asphalt,x,.18,z,5,.08,5);}
+ for(const {point:[x,z],width} of joints){part(round,curb,x,.12,z,width+.7,.08,width+.7);part(round,asphalt,x,.18,z,width,.08,width);}
  for(const t of civic.infill){const {x,z,w,d,h,angle,style}=t;
   part(box,stone,x,.3,z,w*1.02,.6,d*1.02,angle);
   part(box,facades[style],x,h*.5+.4,z,w,h,d,angle);
