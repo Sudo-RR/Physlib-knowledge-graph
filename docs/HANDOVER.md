@@ -64,3 +64,7 @@ New approved [K0–K7 specification](KNOWLEDGE-BASE.md) and [issue mapping](BACK
 
 ## Immersive workspace
 #90 (A1.2/A4) tracks [full-bleed city and persistent search](geneva/immersive-workspace.md). Initial camera closer; Overview restores full fit. Geometry and knowledge-base work unchanged. CI and visual acceptance pending.
+
+
+## Night terrain
+#91 A2.4: [night terrain](geneva/night-terrain.md). Original procedural paving, width-aware roads, animated river in existing overlay, no source/geometry allocation changes. CI/visual acceptance pending.
