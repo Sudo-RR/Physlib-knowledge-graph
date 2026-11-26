@@ -32,6 +32,7 @@ Rebaselined 25 November 2026 from verified production 5bcffd1 and handover 65e95
 | [#93](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/93) | A2.3/A3.4/A3.5 | Art | District clearance, skywalks and role patterns | #82/#83/#84; acceptance #70 |
 | [#94](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/94) | A3.6 | Art | Hierarchical conduit visibility | #82/#93; coordinate #88 |
 | [#95](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/95) | A3.7 | Art | High-contrast role signatures | #93/#84; acceptance #70 |
+| [#96](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/96) | A4.1 | Art | Final skywalk and navigation legibility | #94/#90; acceptance #70 |
 
 ## Knowledge-base milestone mapping (26 November 2026)
 

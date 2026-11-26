@@ -84,3 +84,7 @@ Latest confirmed production before A3.6: [6853130](https://github.com/Sudo-RR/Ph
 
 ## Role signatures — A3.7
 #95 supersedes weak A3.5 overlay-only patterns with large static real-material emissive signatures, stronger roof/map marks and luminous Basic-bearing base slabs. Complex pulse becomes a secondary wash. Preserve geometry, terrain, pipes and data. Latest confirmed previous production aed4fc7 run 45817412229: 178 unit tests, Chromium and actual deploy-pages passed; measured 20 macro corridors from 745 eligible complex edges, 24 of 715 utilities shown; matching elaborated/native companion 34995 declarations. A3.7 CI/visual acceptance pending.
+
+
+## Final legibility polish — A4.1
+#96: brighter near-white neutral skywalks, high-contrast fitted screen-scaled 3D labels, map-only no-selection drag. Previous A3.7 run 45819060243 completed build and actual deploy-pages successfully. New implementation awaits CI and visual acceptance. No pipe topology, building geometry, terrain or mathematical changes.

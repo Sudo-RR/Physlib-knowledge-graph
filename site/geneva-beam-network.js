@@ -59,8 +59,8 @@ export function createBeamNetwork(rows,{selected=false,outline=()=>null}={}){
  const segments=18;
  function vertex(point,dir,s,d,p,color,k,w,isUtility){position.push(...point.toArray());tangent.push(...dir.toArray());side.push(s);distance.push(d);phase.push(p);tint.push(color.r,color.g,color.b);strength.push(k);width.push(w);utility.push(isUtility?1:0);}
  for(const row of [...rows.filter(r=>!r.utility),...rows.filter(r=>r.utility)]){
-  const curve=beamCurve(row,{outline}),points=curve.getSpacedPoints(segments),length=curve.getLength(),p=seed(row.id||''),startColor=new THREE.Color(row.aggregate?'#a2b5c2':channels[row.key==='both'?'out':row.key]),endColor=new THREE.Color(row.aggregate?'#a2b5c2':channels[row.key==='both'?'in':row.key]),base=position.length/3;
-  const k=row.utility?(row.focused?1:.78):row.aggregate?.30:row.focused?1:.46;
+  const curve=beamCurve(row,{outline}),points=curve.getSpacedPoints(segments),length=curve.getLength(),p=seed(row.id||''),startColor=new THREE.Color(row.aggregate?'#e0edf5':channels[row.key==='both'?'out':row.key]),endColor=new THREE.Color(row.aggregate?'#e0edf5':channels[row.key==='both'?'in':row.key]),base=position.length/3;
+  const k=row.utility?(row.focused?1:.78):row.aggregate?.46:row.focused?1:.46;
   const dirs=points.map((point,i)=>points[Math.min(segments,i+1)].clone().sub(points[Math.max(0,i-1)]).normalize());
   if(row.utility){
    for(let i=0;i<=segments;i++){const color=startColor.clone().lerp(endColor,i/segments);for(const sign of [-1,1])vertex(points[i],dirs[i],sign,i/segments*length,p,color,k,row.focused?7.5:5.7,true);if(i<segments){const j=base+i*2;indices.push(j,j+1,j+2,j+1,j+3,j+2);}}

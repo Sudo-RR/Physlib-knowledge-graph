@@ -1,3 +1,4 @@
+import {makeCityLabel,labelWorldSize} from './geneva-city-labels.js';
 import * as THREE from 'three';
 import {Line2} from 'three/addons/lines/Line2.js';
 import {LineGeometry} from 'three/addons/lines/LineGeometry.js';
@@ -142,6 +143,8 @@ function installDrag(target,move,orbit=null){
  target.addEventListener('click',e=>{if(dragged){dragged=false;e.preventDefault();e.stopImmediatePropagation();}},true);
  if(orbit)target.addEventListener('contextmenu',e=>e.preventDefault());target.style.cursor='grab';
 }
+// Native selection/drag is unwanted inside the interactive map, not the sidebar.
+for(const event of ['selectstart','dragstart'])svg.addEventListener(event,e=>e.preventDefault());
 installDrag(svg,(dx,dy)=>{const rect=svg.getBoundingClientRect(),scale=Math.min(rect.width/1060,rect.height/860)*zoom;pan(-dx/scale,-dy/scale);});
 svg.addEventListener('wheel',e=>{e.preventDefault();changeZoom(Math.exp(-e.deltaY*.001));},{passive:false});
 svg.addEventListener('dblclick',enterMapPoint);
@@ -224,9 +227,9 @@ function init3D(){
   updateEvidence();
  }
  started=performance.now();if(!matchMedia('(prefers-reduced-motion: reduce)').matches)massGroup.scale.y=.02;
- function sprite(text,sub,x,z){const c=document.createElement('canvas');c.width=1024;c.height=200;const g=c.getContext('2d');g.textAlign='center';g.font='bold 64px sans-serif';g.fillStyle='#263640';g.fillText(text,512,80);g.font='40px sans-serif';g.fillText(sub,512,138);const o=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),depthTest:false}));o.position.copy(world(x,z,112));o.scale.set(220,43,1);o.userData.isLabel=true;scene.add(o);return o;}
+ function sprite(text,sub,x,z){const o=makeCityLabel(THREE,text,sub);o.position.copy(world(x,z,112));scene.add(o);return o;}
  for(const s of p.sectors)sprite(s.id,'',...s.label);
- for(const b of layout?.boroughs||[]){const o=sprite(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),'',b.x,b.z);o.scale.set(105,21,1);o.position.y=92;o.userData.area=b.area;subjectSprites.push(o);}
+ for(const b of layout?.boroughs||[]){const o=sprite(b.area.replace(/([a-z])([A-Z])/g,'$1 $2'),'',b.x,b.z);o.position.y=92;o.userData.area=b.area;subjectSprites.push(o);}
  camera=new THREE.OrthographicCamera(-650,650,550,-550,1,6000);renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;const disposeSky=installSkyEnvironment(THREE,renderer,scene);setDusk();for(const m of facade)m.emissiveIntensity=.65;for(const t of [surfaces.concrete,surfaces.asphalt])t.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());for(const m of facade){m.map.anisotropy=Math.min(16,renderer.capabilities.getMaxAnisotropy());m.emissiveMap.anisotropy=m.map.anisotropy;}host.append(renderer.domElement);
  // Separate transparent GPU layer: beam-only frames never redraw the high-DPR city.
  beamScene=new THREE.Scene();try{beamRenderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});beamRenderer.setClearColor(0x000000,0);beamRenderer.outputColorSpace=THREE.SRGBColorSpace;beamRenderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));$('beamOverlay').append(beamRenderer.domElement);host.dataset.beamRenderer='overlay';riverOverlay=createRiverOverlay(p,towers,civic,layout?.stations||[]);host.dataset.riverProxies=String(riverOverlay.proxyCount);}catch(e){beamRenderer=null;riverOverlay=null;host.dataset.beamRenderer='static-fallback';console.warn('Animated overlay unavailable:',e.message);}
@@ -256,7 +259,7 @@ function init3D(){
     releaseFence(gl,renderFence);renderFence=null;
     const pitch=Math.PI*.19,d=1550,a=yaw;
     camera.position.set(focusX+Math.sin(a)*d*Math.cos(pitch),d*Math.sin(pitch),focusZ+Math.cos(a)*d*Math.cos(pitch));camera.lookAt(focusX,0,focusZ);camera.zoom=zoom;camera.updateProjectionMatrix();
-    for(const o of scene.children)if(o.userData.isLabel)o.visible=labels&&(!o.userData.area||filter==='all'||filter===o.userData.area);
+    const labelPPU=host.clientHeight*camera.zoom/(camera.top-camera.bottom);for(const o of scene.children)if(o.userData.isLabel){o.visible=labels&&(!o.userData.area||filter==='all'||filter===o.userData.area);const [w,h]=o.userData.labelPixels,sz=labelWorldSize(w,h,labelPPU,zoom);o.scale.set(sz.width,sz.height,1);}host.dataset.cityLabelStyle='screen-scaled-high-contrast';host.dataset.cityLabelFont=String(zoom>=2.4?16:14);
     if(beamMesh&&!beamRenderer){beamMesh.material.uniforms.uTime.value=0;beamMesh.material.uniforms.uResolution.value.set(host.clientWidth,host.clientHeight);}
     const lod=updateLod(),renderStart=performance.now();renderer.render(scene,camera);renderFence=submitFence(gl);const cpuRenderMs=performance.now()-renderStart;renderedFrames++;
     host.dataset.drawCalls=String(renderer.info.render.calls);host.dataset.triangles=String(renderer.info.render.triangles);
@@ -354,11 +357,11 @@ function refreshNetwork(){
  for(const row of [...rows.filter(r=>!r.utility),...rows.filter(r=>r.utility)]){
   if(row.utility)utility++;else modules++;counts[row.key]++;
   const group=el('g',{'data-network-channel':row.key,...(row.aggregate?{'data-aggregate-count':row.members.length,'data-aggregate-forward':row.forward,'data-aggregate-reverse':row.reverse}: {})},globalMapLayer);if(row.aggregate){const title=el('title',{},group);title.textContent=row.districts.join(' ↔ ')+' · '+row.members.length+' directed complex edges ('+row.forward+' forward, '+row.reverse+' reverse); aggregate, not a direct dependency';}
-  const width=row.utility?(row.focused?3.2:1.5):row.aggregate?Math.min(3,1+.4*Math.log2(1+row.members.length)):row.focused?2.7:1.1,opacity=row.utility?(row.focused?.98:.7):row.aggregate?.38:row.focused?.95:.45;
+  const width=row.utility?(row.focused?3.2:1.5):row.aggregate?Math.min(3,1+.4*Math.log2(1+row.members.length)):row.focused?2.7:1.1,opacity=row.utility?(row.focused?.98:.7):row.aggregate?.60:row.focused?.95:.45;
   const draw=(path,color,extra={})=>el('path',{d:path,fill:'none',stroke:color,'stroke-width':width,'stroke-linecap':'round','stroke-linejoin':'round','vector-effect':'non-scaling-stroke',opacity,...extra},group);
   const points=beamCurve(row,{outline:t=>roofMeshes[synthModel(t)]||null}).getSpacedPoints(18),path=pts=>pts.map((p,i)=>(i?'L':'M')+(p.x+500)+' '+(p.z+400)).join(' ');
   if(row.utility)draw(path(points),linkColors.mathlib,row.focused?{'data-pipe-channel':'mathlib'}:{});
-  else if(row.aggregate)draw(path(points),'#a2b5c2');
+  else if(row.aggregate)draw(path(points),'#e0edf5');
   else if(row.key==='both'){draw(path(points.slice(0,10)),linkColors.out,{'data-pipe-end':'dependent'});draw(path(points.slice(9)),linkColors.in,{'data-pipe-end':'prerequisite'});}
   else draw(path(points),linkColors[row.key],row.focused?{'data-pipe-channel':row.key}:{});
  }
