@@ -28,7 +28,6 @@ Rebaselined 25 November 2026 from verified production 5bcffd1 and handover 65e95
 | [#78](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/78) | I0.2 / K2 | Integration | Exact API/search citations | 77, 85, 86 |
 | [#79](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/79) | I0.3 | Integration | Contributor usability and evidence | — |
 | [#80](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/80) | R1 | Operations | Release and recovery | — |
-
 | [#91](https://github.com/Sudo-RR/Physlib-knowledge-graph/issues/91) | A2.4 | Art | Night terrain, streets and flowing rivers | #68/#70 |
 
 ## Knowledge-base milestone mapping (26 November 2026)
