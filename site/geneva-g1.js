@@ -3,7 +3,7 @@ import {Line2} from 'three/addons/lines/Line2.js';
 import {LineGeometry} from 'three/addons/lines/LineGeometry.js';
 import {LineMaterial} from 'three/addons/lines/LineMaterial.js';
 import {roleKeys,channels as linkColors,visibleModuleLinks,stationEvidence,stationRoleLinks} from './geneva-legibility.js';
-import {fitSkyline} from './geneva-landing-frame.js';
+import {fitSkyline,landingZoom} from './geneva-landing-frame.js';
 import {districtColor,districtAreas,districtMotionAllowed} from './geneva-district-palette.js';
 import {createDistrictLights} from './geneva-district-lighting.js';
 import {boroughEnvelopes,meshPlanOutline,roofOutline} from './geneva-topdown-plan.js';
@@ -225,7 +225,7 @@ function init3D(){
  beamScene=new THREE.Scene();try{beamRenderer=new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'high-performance'});beamRenderer.setClearColor(0x000000,0);beamRenderer.outputColorSpace=THREE.SRGBColorSpace;beamRenderer.setPixelRatio(Math.min(1.5,window.devicePixelRatio||1));$('beamOverlay').append(beamRenderer.domElement);host.dataset.beamRenderer='overlay';}catch(e){beamRenderer=null;host.dataset.beamRenderer='static-fallback';console.warn('Animated overlay unavailable:',e.message);}
  if(layout?.buildings.length){districtLights=createDistrictLights(layout.buildings,{imported:t=>!!synthKit[synthModel(t)],outline:t=>roofMeshes[synthModel(t)]||null});scene.add(districtLights.cap);if(beamRenderer)beamScene.add(districtLights.blanket);else scene.add(districtLights.blanket);host.dataset.districtLightingMode='complex-blanket';host.dataset.districtComplexes=String(new Set(districtLights.rows.map(r=>r.building.complexId)).size);host.dataset.districtLights=String(districtLights.rows.length);host.dataset.districtVisible=String(districtLights.rows.length);}
  renderer.domElement.tabIndex=0;renderer.domElement.setAttribute('aria-label','3D city. Arrow keys pan, plus and minus zoom, Home resets. Use the mathematics sidebar for keyboard selection.');
- function resize(){if(host.hidden||!host.clientWidth||!host.clientHeight)return;const w=host.clientWidth,h=host.clientHeight;const aspect=w/h,first=!overviewFrame;overviewFrame=fitSkyline(towers,aspect);const half=overviewFrame.half;if(first){focusX=overviewFrame.x;focusZ=overviewFrame.z;updatePlanCamera();}host.dataset.skylineFit=JSON.stringify(overviewFrame);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();const gl=renderer.getContext(),limit=Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),gl.getParameter(gl.MAX_TEXTURE_SIZE));const ratio=renderScale(quality,devicePixelRatio,w,h,limit);const current=renderer.getSize(new THREE.Vector2());if(current.x!==w||current.y!==h||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);}if(beamRenderer){const size=beamRenderer.getSize(new THREE.Vector2());if(size.x!==w||size.y!==h)beamRenderer.setSize(w,h,false);}invalidate();}
+ function resize(){if(host.hidden||!host.clientWidth||!host.clientHeight)return;const w=host.clientWidth,h=host.clientHeight;const aspect=w/h,first=!overviewFrame;overviewFrame=fitSkyline(towers,aspect);const half=overviewFrame.half;if(first){focusX=overviewFrame.x;focusZ=overviewFrame.z;zoom=landingZoom(aspect);updatePlanCamera();}host.dataset.landingZoom=String(landingZoom(aspect));host.dataset.skylineFit=JSON.stringify(overviewFrame);camera.left=-half*aspect;camera.right=half*aspect;camera.top=half;camera.bottom=-half;camera.zoom=zoom;camera.updateProjectionMatrix();const gl=renderer.getContext(),limit=Math.min(gl.getParameter(gl.MAX_RENDERBUFFER_SIZE),gl.getParameter(gl.MAX_TEXTURE_SIZE));const ratio=renderScale(quality,devicePixelRatio,w,h,limit);const current=renderer.getSize(new THREE.Vector2());if(current.x!==w||current.y!==h||renderer.getPixelRatio()!==ratio){renderer.setPixelRatio(ratio);renderer.setSize(w,h,false);}if(beamRenderer){const size=beamRenderer.getSize(new THREE.Vector2());if(size.x!==w||size.y!==h)beamRenderer.setSize(w,h,false);}invalidate();}
  observer=new ResizeObserver(resize);observer.observe(host);resize();
  let prev=performance.now(),lastKey='',lastVersion=-1,lastBeamFrame=-Infinity,lastBeamVersion=-1,beamFrames=0;
  const gl=renderer.getContext(),beamGL=beamRenderer?.getContext();let renderFence=null,beamFence=null;
@@ -417,7 +417,11 @@ function drawApiMap(){
 }
 function setApiMap(map){activeApiMap=map;const url=new URL(location.href);if(map){url.searchParams.set('apiMap',map.path);if(filter!=='all')sourceUI?.filter('all');}else url.searchParams.delete('apiMap');history.replaceState(null,'',url);drawApiMap();}
 function setDusk(){invalidate();if(!scene)return;scene.background.set('#273849');hemi.intensity=.42;sun.intensity=.65;scene.environmentIntensity=.24;for(const m of massGroup.children.map(o=>o.material).filter(m=>m?.emissiveMap))m.emissiveIntensity=.65;renderer.toneMappingExposure=1.15;}
-setupSidebar();mode('oblique');drawDependencies();
+setupSidebar();
+const stage=document.querySelector('.stage'),controls=document.querySelector('.controls'),selectionBar=document.querySelector('.selection-bar');
+function fitHud(){stage.style.setProperty('--hud-top',Math.ceil(controls.getBoundingClientRect().bottom-stage.getBoundingClientRect().top+8)+'px');stage.style.setProperty('--hud-bottom',Math.ceil(stage.getBoundingClientRect().bottom-selectionBar.getBoundingClientRect().top+8)+'px');}
+const hudObserver=new ResizeObserver(fitHud);hudObserver.observe(controls);hudObserver.observe(selectionBar);fitHud();
+mode('oblique');drawDependencies();
 for(const area of [...new Set((layout?.boroughs||[]).map(b=>b.area))].sort()){const color=districtColor(area);if(!color)continue;const row=document.createElement('span'),swatch=document.createElement('i');swatch.style.background=color;row.dataset.district=area;row.append(swatch,document.createTextNode(area.replace(/([a-z])([A-Z])/g,'$1 $2')));$('districtKey').append(row);$('mapDistrictLegend').append(row.cloneNode(true));}
 $('togglePipes').onclick=()=>{if(channel==='off'){channel=previousChannel==='off'?'both':previousChannel;}else{previousChannel=channel;channel='off';}$('channels').value=channel;drawDependencies();};
 $('pauseBeams').onclick=()=>{motionPaused=!motionPaused;$('pauseBeams').setAttribute('aria-pressed',String(motionPaused));$('pauseBeams').textContent=motionPaused?'Resume motion':'Pause motion';$('three').dataset.beamAnimated=String(beamMotionAllowed({available:!!beamRenderer&&!!beamMesh,paused:motionPaused,reduced:reducedMotion.matches,visible:!$('three').hidden&&!document.hidden,channel}));if(motionPaused&&beamMesh){beamMesh.material.uniforms.uTime.value=0;$('three').dataset.beamTime='0';}if(motionPaused&&districtLights){districtLights.blanket.material.uniforms.uTime.value=0;districtLights.blanket.material.uniforms.uMoving.value=0;$('three').dataset.districtTime='0';$('three').dataset.districtAnimated='false';}invalidate();};
@@ -428,7 +432,7 @@ window.addEventListener('keydown',e=>{
  if(navigationKeys.has(k)){if(!heldKeys.has(k)){heldKeys.add(k);navigate(new Set([k]),.045);}e.preventDefault();return;}
  if(e.repeat)return;let used=true;switch(k){
  case 'm':mode(viewMode==='plan'?'oblique':'plan');break;case 'home':resetCamera();break;case 'f':focusSelection();break;case 'i':toggleSidebar();break;
- case '/':if(production){toggleSidebar(true);$('searchSource').focus();}break;case 'escape':clearSelection();document.activeElement?.blur();break;
+ case '/':if(production){$('quickSearch').focus();}break;case 'escape':clearSelection();document.activeElement?.blur();break;
  case '1':case '2':case '3':if(production){const v=k==='1'?'out':k==='2'?'in':'mathlib';$('channels').value=v;channel=v;if(k==='3'&&selectedId)selectComplex(selectedId,selectedId+'::mathlib-station',true);drawDependencies();}break;
  default:used=false;}if(used)e.preventDefault();
 });
@@ -438,6 +442,10 @@ document.addEventListener('focusin',e=>{if(e.target.closest?.('input,textarea,se
 if(production){
  apiMapUI=setupApiMaps(production,setApiMap,id=>{selectComplex(id,null,true);if(viewMode==='plan')mode('oblique');});
  sourceUI=createSourceInspector({production,roleNames,subjectColors,onApiMap:path=>apiMapUI.select(path),onSelect:(id,b,focus)=>selectComplex(id,b,focus),onFilter:setFilter,onChannel:v=>{channel=v;drawDependencies();},onTravel:n=>{if(channel==='mathlib'||channel==='off'){channel='both';$('channels').value=channel;}selectComplex(n.origin.complex,n.origin.building,true,n);toggleSidebar(true);if(viewMode==='plan')mode('oblique');},onResetDeclaration:()=>{selectedDeclaration=null;updateSelection();drawDependencies();}});
+ const quick=$('quickSearch'),sourceSearch=$('searchSource');quick.disabled=false;
+ quick.addEventListener('input',()=>{toggleSidebar(true);sourceSearch.value=quick.value;sourceSearch.dispatchEvent(new Event('input',{bubbles:true}));});
+ sourceSearch.addEventListener('input',()=>{quick.value=sourceSearch.value;});
+ quick.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();toggleSidebar(true);const first=$('sourceList').querySelector('button');(first||sourceSearch).focus();}else if(e.key==='Escape'){quick.blur();}});
  $('evidenceMode').onchange=()=>{evidenceMode=$('evidenceMode').value;updateEvidence();};
  setupResearchSearch(production,(id,b,focus)=>selectComplex(id,b,focus));
  $('historyTools').addEventListener('toggle',()=>{if($('historyTools').open&&!$('historyTools').dataset.loaded){$('historyTools').dataset.loaded='true';setupHistory(production);}});

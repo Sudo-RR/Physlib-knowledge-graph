@@ -60,3 +60,7 @@ Issue #81 (A2.1/A3.1) tracks [district illumination](geneva/district-lighting.md
 
 ## Queryable knowledge base — 26 November 2026
 New approved [K0–K7 specification](KNOWLEDGE-BASE.md) and [issue mapping](BACKLOG.md). Start K0 #85, coordinate #77 and #80 for evidence/freshness. K1 #86, K2 #78, K3 #87, K4 #88, K5 #89, K6 #71–74, K7 #76. Existing I3 #75 and I0.3 #79 remain. No implementation yet; existing art and source graph unchanged. Latest validated deployment 0be0a27 (run 45779819262, 169/169 unit tests); graph companion was rejected for incompatible provenance, so fresh compatible extraction remains necessary. Do not treat the historical 5bcffd1 baseline counts as current live graph coverage.
+
+
+## Immersive workspace
+#90 (A1.2/A4) tracks [full-bleed city and persistent search](geneva/immersive-workspace.md). Initial camera closer; Overview restores full fit. Geometry and knowledge-base work unchanged. CI and visual acceptance pending.

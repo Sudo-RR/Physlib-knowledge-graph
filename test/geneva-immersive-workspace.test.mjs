@@ -1,0 +1,2 @@
+import test from 'node:test';import assert from 'node:assert/strict';import {fitSkyline,landingZoom} from '../site/geneva-landing-frame.js';
+test('immersive landing is tighter than recoverable full-fit overview at each aspect',()=>{const rows=[{x:100,z:100,w:20,d:20,h:70},{x:900,z:700,w:30,d:20,h:50}];for(const aspect of [.46,.9,1.67,2.4]){const fit=fitSkyline(rows,aspect);assert(Number.isFinite(fit.half)&&fit.half>0);assert(landingZoom(aspect)>1&&landingZoom(aspect)<1.5);assert(fit.half/landingZoom(aspect)<fit.half);}assert(landingZoom(.46)>landingZoom(1.67));});
